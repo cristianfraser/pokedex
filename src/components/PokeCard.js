@@ -22,55 +22,31 @@ const ImageContainer = styled.div`
 
 const InfoContainer = styled.div``;
 
-const getPokemonName = (pokemonNames, lang = 'en') => {
-  return pokemonNames.find((info) => info.language.name === lang).name;
-};
-
-function PokeCard({ name, number, url }) {
-  const {
-    status,
-    data: pokeInfo,
-    error,
-    isFetching,
-    isFetchingNextPage,
-    isFetchingPreviousPage,
-    fetchNextPage,
-    fetchPreviousPage,
-    hasNextPage,
-    hasPreviousPage,
-  } = useQuery(['pokemon', name], async () => {
-    const pokemonSpecies = await fetch(url).then((res) => res.json());
-
-    const pokemonUrl = pokemonSpecies.varieties.filter(
-      (variety) => !!variety.is_default
-    )[0].pokemon.url;
-
-    const pokemon = await fetch(pokemonUrl).then((res) => res.json());
-
-    console.log({ name, pokemonSpecies, pokemon });
-
-    return { ...pokemon, name: getPokemonName(pokemonSpecies.names) };
-  });
-
+function PokeCard({ pokemon }) {
   return (
     <Container>
       <ImageContainer>
-        {pokeInfo && (
-          <img src={pokeInfo.sprites.front_default} loading="lazy" />
-        )}
+        <img src={pokemon.sprites.front_default} loading="lazy" />
       </ImageContainer>
       <InfoContainer>
         <div>
-          {pokeInfo ? pokeInfo.name : name} - #{pokeInfo && pokeInfo.id}
+          {pokemon.name} - #{pokemon.pokedexNumber}
         </div>
-        {pokeInfo && (
-          <div>
-            {pokeInfo.types.map((type) => (
-              <TypePill key={type.slot} type={type.type} />
-            ))}
-          </div>
-        )}
+        <div>
+          {pokemon.types.map((type) => (
+            <TypePill key={type.slot} type={type.type} />
+          ))}
+        </div>
       </InfoContainer>
+    </Container>
+  );
+}
+
+export function EmptyPokeCard() {
+  return (
+    <Container>
+      <ImageContainer>loading</ImageContainer>
+      <InfoContainer></InfoContainer>
     </Container>
   );
 }

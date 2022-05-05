@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { useInfiniteQuery } from 'react-query';
 import { useInView } from 'react-intersection-observer';
 
-import PokeCard from './PokeCard';
+import PokeCard, { EmptyPokeCard } from './PokeCard';
+import TypeSelect from './TypeSelect';
 
 const PAGE_SIZE = 10;
 
@@ -19,6 +20,7 @@ const CardContainer = styled.div`
 
 function PokeCardList() {
   const [filterInput, setFilterInput] = useState('');
+  const [typeSelect, setTypeSelect] = useState('');
   const [total, setTotal] = useState(0);
   const { ref, inView } = useInView();
 
@@ -36,9 +38,8 @@ function PokeCardList() {
   } = useInfiniteQuery(
     ['pokemons', filterInput],
     async ({ pageParam = 0 }) => {
-      console.log({ pageParam });
       const res = await fetch(
-        `https://pokeapi.co/api/v2/pokemon/?limit=${PAGE_SIZE}&offset=${
+        `/pokemon/?limit=${PAGE_SIZE}&offset=${
           pageParam * PAGE_SIZE
         }&q=${filterInput}`
       ).then((res) => res.json());
@@ -47,9 +48,10 @@ function PokeCardList() {
       return res.results;
     },
     {
+      keepPreviousData: true,
       getNextPageParam: (lastPage, allPages) => {
-        // todo: return undefined on last page
         const maxPage = Math.ceil(total / PAGE_SIZE);
+
         return allPages.length === maxPage ? undefined : allPages.length;
       },
     }
@@ -61,12 +63,9 @@ function PokeCardList() {
     }
   }, [inView]);
 
-  console.log({ data });
-
   const pokemons = [];
 
   data?.pages.forEach((page) => {
-    console.log({ data, page });
     pokemons.push(...page);
   });
 
@@ -81,17 +80,18 @@ function PokeCardList() {
           value={filterInput}
           onChange={(event) => setFilterInput(event.target.value)}
         />
+
+        <TypeSelect value={typeSelect} onChange={setTypeSelect} />
       </FilterContainer>
       <CardContainer>
         {pokemons.map((pokemon) => (
-          <PokeCard
-            key={pokemon.pokemon_species.name}
-            name={pokemon.pokemon_species.name}
-            number={pokemon.pokemon_species.number}
-            url={pokemon.pokemon_species.url}
-          />
+          <PokeCard key={pokemon.id} pokemon={pokemon} />
         ))}
-        <div ref={ref} />
+        {hasNextPage && (
+          <div ref={ref}>
+            <EmptyPokeCard />
+          </div>
+        )}
       </CardContainer>
     </Container>
   );
