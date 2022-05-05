@@ -52,7 +52,13 @@ function PokeCardList() {
       getNextPageParam: (lastPage, allPages) => {
         const maxPage = Math.ceil(total / PAGE_SIZE);
 
-        return allPages.length === maxPage ? undefined : allPages.length;
+        console.log({
+          maxPage,
+          allPagesLength: allPages.length,
+          allPages,
+        });
+
+        return allPages.length >= maxPage ? undefined : allPages.length;
       },
     }
   );

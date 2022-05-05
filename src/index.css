@@ -95,6 +95,10 @@ video {
   line-height: 1.2;
 }
 
+html {
+  color: #212121;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
