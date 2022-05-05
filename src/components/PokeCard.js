@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { useQuery } from 'react-query';
+
 import TypePill from './TypePill';
 
 const Container = styled.div`
@@ -20,16 +22,35 @@ const ImageContainer = styled.div`
 
 const InfoContainer = styled.div``;
 
-function PokeCard({ name, url }) {
-  const [pokeInfo, setPokeInfo] = useState(null);
+const getPokemonName = (pokemonNames, lang = 'en') => {
+  return pokemonNames.find((info) => info.language.name === lang).name;
+};
 
-  useEffect(() => {
-    fetch(url)
-      .then((res) => res.json())
-      .then((res) => {
-        setPokeInfo(res);
-      });
-  }, [setPokeInfo]);
+function PokeCard({ name, number, url }) {
+  const {
+    status,
+    data: pokeInfo,
+    error,
+    isFetching,
+    isFetchingNextPage,
+    isFetchingPreviousPage,
+    fetchNextPage,
+    fetchPreviousPage,
+    hasNextPage,
+    hasPreviousPage,
+  } = useQuery(['pokemon', name], async () => {
+    const pokemonSpecies = await fetch(url).then((res) => res.json());
+
+    const pokemonUrl = pokemonSpecies.varieties.filter(
+      (variety) => !!variety.is_default
+    )[0].pokemon.url;
+
+    const pokemon = await fetch(pokemonUrl).then((res) => res.json());
+
+    console.log({ name, pokemonSpecies, pokemon });
+
+    return { ...pokemon, name: getPokemonName(pokemonSpecies.names) };
+  });
 
   return (
     <Container>
@@ -40,7 +61,7 @@ function PokeCard({ name, url }) {
       </ImageContainer>
       <InfoContainer>
         <div>
-          {name} - #{pokeInfo && pokeInfo.id}
+          {pokeInfo ? pokeInfo.name : name} - #{pokeInfo && pokeInfo.id}
         </div>
         {pokeInfo && (
           <div>
