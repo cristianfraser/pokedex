@@ -18,27 +18,49 @@ createServer({
     this.get(
       '/pokemon',
       async (schema, request) => {
-        if (request.params.id) {
-        }
-
-        // if (!_this.pokemon) {
-        //   const response = await fetch(
-        //     `https://pokeapi.co/api/v2/pokemon/?limit=1200`
-        //   );
-        //   const { results } = await response.json();
-
-        //   _this.pokemon = results;
-        // }
-
-        const { limit = 0, offset = 0, q = '' } = request.queryParams;
+        const {
+          limit = 0,
+          offset = 0,
+          q = '',
+          type1 = '',
+          type2 = '',
+        } = request.queryParams;
         const parsedLimit = parseInt(limit, 10);
         const parsedOffset = parseInt(offset, 10);
 
-        // console.log({ caca: _this.pokemon });
+        let typePokemon1 = [];
+        let typePokemon2 = [];
+        if (type1) {
+          const typeRes = await fetch(
+            `https://pokeapi.co/api/v2/type/${type1}`
+          ).then((res) => res.json());
+
+          typePokemon1 = typeRes.pokemon; // array
+        }
+        if (type2) {
+          const typeRes = await fetch(
+            `https://pokeapi.co/api/v2/type/${type2}`
+          ).then((res) => res.json());
+
+          typePokemon2 = typeRes.pokemon; // array
+        }
 
         const poke_raw = pokemon_entries.filter(
           (pokemon) =>
-            !q || pokemon.pokemon_species.name.includes(q.toLowerCase())
+            (!q ||
+              `${pokemon.entry_number} ${pokemon.pokemon_species.name}`.includes(
+                q.toLowerCase()
+              )) &&
+            (!type1 ||
+              typePokemon1.find(
+                (typePoke) =>
+                  typePoke.pokemon.name === pokemon.pokemon_species.name
+              )) &&
+            (!type2 ||
+              typePokemon2.find(
+                (typePoke) =>
+                  typePoke.pokemon.name === pokemon.pokemon_species.name
+              ))
         );
 
         const poke_raw_sliced = poke_raw.slice(
@@ -79,5 +101,7 @@ createServer({
       },
       { timing: 700 }
     );
+
+    // this.get('/type')
   },
 });

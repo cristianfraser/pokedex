@@ -18,6 +18,9 @@ const theme = {
   green: defaultGreen,
 
   textGray: '#607d8b',
+
+  primary: '#ff452b',
+  primaryTransparent: 'rgb(255 69 43 / 54%)',
 };
 
 export default theme;
