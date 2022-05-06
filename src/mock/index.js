@@ -5,15 +5,12 @@ const getPokemonName = (pokemonNames, lang = 'en') => {
   return pokemonNames.find((info) => info.language.name === lang).name;
 };
 
+let favorites = JSON.parse(localStorage.getItem('favorites') || '[1]');
+
 createServer({
   routes() {
-    let _this = this;
-    // this.urlPrefix = 'https://pokeapi.co/api/v2';
-
     this.passthrough();
     this.passthrough('https://pokeapi.co/api/v2/**');
-
-    // this.pokemon_entries = [];
 
     this.get(
       '/pokemon',
@@ -87,9 +84,6 @@ createServer({
 
         const res = await Promise.all(promises);
 
-        console.log({ res });
-        console.log({ poke_raw });
-
         return {
           count: poke_raw.length,
           results: res.map((r, index) => ({
@@ -99,9 +93,7 @@ createServer({
           })),
         };
       },
-      { timing: 700 }
+      { timing: 300 }
     );
-
-    // this.get('/type')
   },
 });

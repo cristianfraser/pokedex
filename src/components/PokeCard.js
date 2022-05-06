@@ -1,11 +1,8 @@
-import { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { useQuery } from 'react-query';
 
 import TypePill from './TypePill';
 import Pill from './Pill';
 import { keyframes } from 'styled-components';
-import { css } from 'styled-components';
 
 const Container = styled.div`
   position: relative;
@@ -151,19 +148,23 @@ const SpecialPillContainer = styled.div`
   right: 10px;
 `;
 
-function PokeCard({ pokemon }) {
+function PokeCard({ pokemon, showShiny }) {
+  const frontImage = showShiny
+    ? pokemon.sprites.front_shiny
+    : pokemon.sprites.front_default;
+  const backImage = showShiny
+    ? pokemon.sprites.back_shiny
+    : pokemon.sprites.back_default;
   return (
     <Container>
       <ImageContainer>
         <ImgFront
-          key={pokemon.sprites.front_default}
-          onlyImage={!pokemon.sprites.back_default}
-          src={pokemon.sprites.front_default}
+          key={frontImage}
+          onlyImage={!backImage}
+          src={frontImage}
           loading="lazy"
         />
-        {!!pokemon.sprites.back_default && (
-          <ImgBack src={pokemon.sprites.back_default} loading="lazy" />
-        )}
+        {!!backImage && <ImgBack src={backImage} loading="lazy" />}
       </ImageContainer>
       <InfoContainer>
         <PokedexNumber>#{pokemon.pokedexNumber}</PokedexNumber>
@@ -204,15 +205,6 @@ function PokeCard({ pokemon }) {
         {pokemon.is_legendary && <Pill>✨ Lengendary</Pill>}
         {pokemon.is_mythical && <Pill>✨ Mythical</Pill>}
       </SpecialPillContainer>
-    </Container>
-  );
-}
-
-export function EmptyPokeCard() {
-  return (
-    <Container>
-      <ImageContainer>loading</ImageContainer>
-      <InfoContainer></InfoContainer>
     </Container>
   );
 }

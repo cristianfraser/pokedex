@@ -6,7 +6,7 @@ const Input = styled.input`
   background-color: #fafbfc;
   border: 1px solid ${({ theme }) => theme.gray};
   display: inline-block;
-  transition: border-color 0.1s, box-shadow 0.1s;
+  transition: background-color 0.2s, border-color 0.1s, box-shadow 0.25s;
   height: 30px;
   padding: 5px 10px;
 

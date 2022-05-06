@@ -3,10 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from 'react-query';
 import { useInView } from 'react-intersection-observer';
 
-import PokeCard, { EmptyPokeCard } from './PokeCard';
+import PokeCard from './PokeCard';
 import TypeSelect from './TypeSelect';
 import Input from './Input';
 import Spinner from './Spinner';
+import Checkbox from './Checkbox';
 
 const PAGE_SIZE = 10;
 
@@ -69,6 +70,7 @@ function PokeCardList() {
   const [total, setTotal] = useState(0);
   const { ref, inView } = useInView();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showShiny, setShowShiny] = useState(false);
   const debounce = useRef(null);
 
   const {
@@ -78,11 +80,8 @@ function PokeCardList() {
     isFetching,
     isLoading,
     isFetchingNextPage,
-    isFetchingPreviousPage,
     fetchNextPage,
-    fetchPreviousPage,
     hasNextPage,
-    hasPreviousPage,
   } = useInfiniteQuery(
     ['pokemons', searchQuery, typeSelect, typeSelect2],
     async ({ pageParam = 0 }) => {
@@ -159,11 +158,27 @@ function PokeCardList() {
             <TypeSelect value={typeSelect2} onChange={setTypeSelect2} />
           </Label>
         )}
+
+        <div>
+          <Label style={{ flexDirection: 'row', marginBlockStart: 10 }}>
+            <Checkbox
+              checked={showShiny}
+              onChange={(event) => {
+                setShowShiny(event.target.checked);
+              }}
+            />
+            <span style={{ marginLeft: 5 }}>Show shiny forms</span>
+          </Label>
+        </div>
       </FilterContainer>
       <div style={{ position: 'relative' }}>
         <CardContainer isLoading={isFetching && !isFetchingNextPage}>
           {pokemons.map((pokemon) => (
-            <PokeCard key={pokemon.id} pokemon={pokemon} />
+            <PokeCard
+              key={pokemon.id}
+              pokemon={pokemon}
+              showShiny={showShiny}
+            />
           ))}
         </CardContainer>
         {isFetching && !isFetchingNextPage && (
