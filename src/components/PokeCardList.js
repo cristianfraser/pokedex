@@ -74,9 +74,7 @@ function PokeCardList() {
   const debounce = useRef(null);
 
   const {
-    status,
     data,
-    error,
     isFetching,
     isLoading,
     isFetchingNextPage,
@@ -114,7 +112,7 @@ function PokeCardList() {
     if (inView) {
       fetchNextPage();
     }
-  }, [inView]);
+  }, [inView, fetchNextPage]);
 
   const pokemons = [];
 

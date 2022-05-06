@@ -5,8 +5,6 @@ const getPokemonName = (pokemonNames, lang = 'en') => {
   return pokemonNames.find((info) => info.language.name === lang).name;
 };
 
-let favorites = JSON.parse(localStorage.getItem('favorites') || '[1]');
-
 createServer({
   routes() {
     this.passthrough();

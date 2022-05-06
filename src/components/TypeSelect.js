@@ -11,15 +11,12 @@ const Select = styled(Input)`
 `;
 
 function TypeSelect({ value, onChange }) {
-  const { status, data, error, isFetching, isLoading } = useQuery(
-    ['types'],
-    async () => {
-      const res = await fetch('https://pokeapi.co/api/v2/type').then((res) =>
-        res.json()
-      );
-      return res.results;
-    }
-  );
+  const { data } = useQuery(['types'], async () => {
+    const res = await fetch('https://pokeapi.co/api/v2/type').then((res) =>
+      res.json()
+    );
+    return res.results;
+  });
 
   const types = data ?? [];
 
