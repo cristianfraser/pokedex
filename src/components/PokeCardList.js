@@ -129,7 +129,7 @@ function PokeCardList() {
       <FilterContainer>
         <H2>Search Pokémon</H2>
         <Label htmlFor="nameFilter">
-          <span>by name</span>
+          <span>by name, pokédex #</span>
           <Input
             style={{ width: 250 }}
             id="nameFilter"
