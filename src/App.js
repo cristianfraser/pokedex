@@ -2,12 +2,19 @@ import styled from 'styled-components';
 
 import PokeCardList from './components/PokeCardList';
 
+const HEADER_HEIGHT = 62;
+
 const Header = styled.header`
+  z-index: 10;
   border-bottom: 1px solid #e9eaeb;
   padding: 16px;
   box-shadow: rgba(38, 50, 56, 0.15) 0px 4px 15px;
   display: flex;
   justify-content: center;
+  height: ${HEADER_HEIGHT}px;
+  position: fixed;
+  width: 100%;
+  background-color: ${({ theme }) => theme.white};
 `;
 
 const HeaderContent = styled.div`
@@ -17,6 +24,7 @@ const HeaderContent = styled.div`
 
 const Main = styled.main`
   padding: 30px;
+  padding-block-start: ${30 + HEADER_HEIGHT}px;
   text-align: center;
 `;
 

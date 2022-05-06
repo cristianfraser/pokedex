@@ -26,7 +26,6 @@ const Input = styled.input`
     outline: none;
     box-shadow: 0 0 0 0.2rem ${({ theme }) => theme.primaryTransparent};
     border-color: ${({ theme }) => theme.primary};
-    z-index: 1;
     position: relative;
   }
 

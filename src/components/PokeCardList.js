@@ -71,6 +71,7 @@ function PokeCardList() {
   const { ref, inView } = useInView();
   const [searchQuery, setSearchQuery] = useState('');
   const [showShiny, setShowShiny] = useState(false);
+  const [pageSize, setPageSize] = useState(10);
   const debounce = useRef(null);
 
   const {
@@ -81,11 +82,11 @@ function PokeCardList() {
     fetchNextPage,
     hasNextPage,
   } = useInfiniteQuery(
-    ['pokemons', searchQuery, typeSelect, typeSelect2],
+    ['pokemons', searchQuery, typeSelect, typeSelect2, pageSize],
     async ({ pageParam = 0 }) => {
       const res = await fetch(
-        `/pokemon/?limit=${PAGE_SIZE}&offset=${
-          pageParam * PAGE_SIZE
+        `/pokemon/?limit=${pageSize}&offset=${
+          pageParam * pageSize
         }&q=${searchQuery}&type1=${typeSelect}&&type2=${typeSelect2}`
       ).then((res) => res.json());
       setTotal(res.count);
@@ -95,7 +96,7 @@ function PokeCardList() {
     {
       keepPreviousData: true,
       getNextPageParam: (lastPage, allPages) => {
-        const maxPage = Math.ceil(total / PAGE_SIZE);
+        const maxPage = Math.ceil(total / pageSize);
 
         console.log({
           maxPage,
@@ -126,6 +127,22 @@ function PokeCardList() {
       <H1>National Pokédex</H1>
       <FilterContainer>
         <H2>Search Pokémon</H2>
+        <div style={{ marginBlockEnd: 5 }}>
+          <Label>
+            <span>page size</span>
+            <Input
+              as="select"
+              value={pageSize}
+              onChange={(event) =>
+                setPageSize(parseInt(event.target.value, 10))
+              }
+            >
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="40">40</option>
+            </Input>
+          </Label>
+        </div>
         <Label htmlFor="nameFilter">
           <span>by name, pokédex #</span>
           <Input
