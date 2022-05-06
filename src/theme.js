@@ -21,6 +21,8 @@ const theme = {
 
   primary: '#ff452b',
   primaryTransparent: 'rgb(255 69 43 / 54%)',
+
+  APP_MAX_WIDTH: 1080,
 };
 
 export default theme;

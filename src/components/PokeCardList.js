@@ -6,17 +6,52 @@ import { useInView } from 'react-intersection-observer';
 import PokeCard, { EmptyPokeCard } from './PokeCard';
 import TypeSelect from './TypeSelect';
 import Input from './Input';
+import Spinner from './Spinner';
 
 const PAGE_SIZE = 10;
 
+const H1 = styled.h1`
+  font-weight: 800;
+  font-size: 1.5rem;
+  margin-block-end: 30px;
+`;
+
+const H2 = styled.h2`
+  font-weight: 800;
+  font-size: 1.2rem;
+  margin-block-end: 10px;
+`;
+
+const Label = styled.label`
+  display: inline-flex;
+  flex-direction: column;
+  font-weight: 600;
+  font-size: 0.75rem;
+
+  &:not(:last-child) {
+    margin-inline-end: 5px;
+  }
+`;
+
 const Container = styled.div``;
 
-const FilterContainer = styled.div``;
+const SpinnerContainer = styled.div`
+  position: absolute;
+  right: 50%;
+  top: 250px;
+  transform: translate(50%, -50%);
+`;
+
+const FilterContainer = styled.div`
+  margin-block-end: 30px;
+`;
 
 const CardContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 200px);
+  grid-gap: 20px;
+  justify-content: space-evenly;
 
   ${({ isLoading }) => {
     if (isLoading)
@@ -91,43 +126,65 @@ function PokeCardList() {
   console.log({ pokemons, isFetching, isLoading });
   return (
     <Container>
+      <H1>National Pokédex</H1>
       <FilterContainer>
-        <h3>Search Pokemon:</h3>
-        <label htmlFor="nameFilter">by name:</label>
-        <Input
-          id="nameFilter"
-          value={filterInput}
-          onChange={(event) => {
-            clearTimeout(debounce.current);
-            const value = event.target.value;
-            setFilterInput(event.target.value);
+        <H2>Search Pokemon</H2>
+        <Label htmlFor="nameFilter">
+          <span>by name</span>
+          <Input
+            style={{ width: 250 }}
+            id="nameFilter"
+            value={filterInput}
+            placeholder="e. g.: Pikachu, 151"
+            onChange={(event) => {
+              clearTimeout(debounce.current);
+              const value = event.target.value;
+              setFilterInput(event.target.value);
 
-            debounce.current = setTimeout(() => {
-              setSearchQuery(value);
-            }, 500);
-          }}
-        />
+              debounce.current = setTimeout(() => {
+                setSearchQuery(value);
+              }, 500);
+            }}
+          />
+        </Label>
 
-        <label>
-          by type:
+        <Label>
+          <span>by type</span>
           <TypeSelect value={typeSelect} onChange={setTypeSelect} />
-        </label>
+        </Label>
 
-        <label>
-          by type:
-          <TypeSelect value={typeSelect2} onChange={setTypeSelect2} />
-        </label>
-      </FilterContainer>
-      <CardContainer isLoading={isFetching && !isFetchingNextPage}>
-        {pokemons.map((pokemon) => (
-          <PokeCard key={pokemon.id} pokemon={pokemon} />
-        ))}
-        {hasNextPage && (
-          <div ref={ref} style={{ width: '100%' }}>
-            loading more...
-          </div>
+        {!!typeSelect && (
+          <Label>
+            <span>by additional type</span>
+            <TypeSelect value={typeSelect2} onChange={setTypeSelect2} />
+          </Label>
         )}
-      </CardContainer>
+      </FilterContainer>
+      <div style={{ position: 'relative' }}>
+        <CardContainer isLoading={isFetching && !isFetchingNextPage}>
+          {pokemons.map((pokemon) => (
+            <PokeCard key={pokemon.id} pokemon={pokemon} />
+          ))}
+        </CardContainer>
+        {isFetching && !isFetchingNextPage && (
+          <SpinnerContainer>
+            <Spinner />
+          </SpinnerContainer>
+        )}
+        {!isFetching && !isFetchingNextPage && !pokemons.length && (
+          <SpinnerContainer style={{ top: 100 }}>
+            No Pokémon matching criteria found.
+          </SpinnerContainer>
+        )}
+      </div>
+      {hasNextPage && (
+        <div
+          ref={ref}
+          style={{ width: '100%', textAlign: 'center', padding: 40 }}
+        >
+          <Spinner />
+        </div>
+      )}
     </Container>
   );
 }

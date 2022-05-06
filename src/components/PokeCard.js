@@ -67,7 +67,6 @@ const WeightBox = styled.div`
 const HeightBar = styled.div`
   background-color: ${({ theme }) => theme.gray};
   display: flex;
-  gap: 1px;
   width: 120px;
 `;
 
@@ -75,6 +74,10 @@ const Height = styled.div`
   background-color: currentColor;
   height: 5px;
   width: ${({ percent }) => percent}%;
+
+  &:nth-child(5n) {
+    color: transparent;
+  }
 `;
 
 const Stat = styled.div`

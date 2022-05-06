@@ -4,6 +4,7 @@ import { useQuery } from 'react-query';
 import Input from './Input';
 
 const Select = styled(Input)`
+  width: 150px;
   &:focus {
     box-shadow: 0 0 0 0.2rem ${({ theme }) => theme.primaryTransparent};
   }
