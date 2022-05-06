@@ -8,8 +8,7 @@ import TypeSelect from './TypeSelect';
 import Input from './Input';
 import Spinner from './Spinner';
 import Checkbox from './Checkbox';
-
-const PAGE_SIZE = 10;
+import useGetPokemonQuery from '../queries';
 
 const H1 = styled.h1`
   font-weight: 800;
@@ -33,8 +32,6 @@ const Label = styled.label`
     margin-inline-end: 5px;
   }
 `;
-
-const Container = styled.div``;
 
 const SpinnerContainer = styled.div`
   position: absolute;
@@ -65,49 +62,27 @@ const CardContainer = styled.div`
 
 function PokeCardList() {
   const [filterInput, setFilterInput] = useState('');
-  const [typeSelect, setTypeSelect] = useState('');
-  const [typeSelect2, setTypeSelect2] = useState('');
-  const [total, setTotal] = useState(0);
-  const { ref, inView } = useInView();
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [additionalAdditionalSelectedType, setAdditionalFilterType] =
+    useState('');
+  const { ref, inView } = useInView();
   const [showShiny, setShowShiny] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const debounce = useRef(null);
 
   const {
-    data,
+    pokemon,
     isFetching,
-    isLoading,
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
-  } = useInfiniteQuery(
-    ['pokemons', searchQuery, typeSelect, typeSelect2, pageSize],
-    async ({ pageParam = 0 }) => {
-      const res = await fetch(
-        `/pokemon/?limit=${pageSize}&offset=${
-          pageParam * pageSize
-        }&q=${searchQuery}&type1=${typeSelect}&&type2=${typeSelect2}`
-      ).then((res) => res.json());
-      setTotal(res.count);
-
-      return res.results;
-    },
-    {
-      keepPreviousData: true,
-      getNextPageParam: (lastPage, allPages) => {
-        const maxPage = Math.ceil(total / pageSize);
-
-        console.log({
-          maxPage,
-          allPagesLength: allPages.length,
-          allPages,
-        });
-
-        return allPages.length >= maxPage ? undefined : allPages.length;
-      },
-    }
-  );
+  } = useGetPokemonQuery({
+    searchQuery,
+    filterType,
+    additionalAdditionalSelectedType,
+    pageSize,
+  });
 
   useEffect(() => {
     if (inView) {
@@ -115,15 +90,8 @@ function PokeCardList() {
     }
   }, [inView, fetchNextPage]);
 
-  const pokemons = [];
-
-  data?.pages.forEach((page) => {
-    pokemons.push(...page);
-  });
-
-  console.log({ pokemons, isFetching, isLoading });
   return (
-    <Container>
+    <>
       <H1>National Pokédex</H1>
       <FilterContainer>
         <H2>Search Pokémon</H2>
@@ -164,13 +132,16 @@ function PokeCardList() {
 
         <Label>
           <span>by type</span>
-          <TypeSelect value={typeSelect} onChange={setTypeSelect} />
+          <TypeSelect value={filterType} onChange={setFilterType} />
         </Label>
 
-        {(!!typeSelect || !!typeSelect2) && (
+        {(!!filterType || !!additionalAdditionalSelectedType) && (
           <Label>
             <span>by additional type</span>
-            <TypeSelect value={typeSelect2} onChange={setTypeSelect2} />
+            <TypeSelect
+              value={additionalAdditionalSelectedType}
+              onChange={setAdditionalFilterType}
+            />
           </Label>
         )}
 
@@ -188,7 +159,7 @@ function PokeCardList() {
       </FilterContainer>
       <div style={{ position: 'relative' }}>
         <CardContainer isLoading={isFetching && !isFetchingNextPage}>
-          {pokemons.map((pokemon) => (
+          {pokemon.map((pokemon) => (
             <PokeCard
               key={pokemon.id}
               pokemon={pokemon}
@@ -201,7 +172,7 @@ function PokeCardList() {
             <Spinner />
           </SpinnerContainer>
         )}
-        {!isFetching && !isFetchingNextPage && !pokemons.length && (
+        {!isFetching && !isFetchingNextPage && !pokemon.length && (
           <SpinnerContainer style={{ top: 100 }}>
             No Pokémon matching criteria found.
           </SpinnerContainer>
@@ -215,7 +186,7 @@ function PokeCardList() {
           <Spinner />
         </div>
       )}
-    </Container>
+    </>
   );
 }
 

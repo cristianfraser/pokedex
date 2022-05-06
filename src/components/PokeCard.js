@@ -1,8 +1,8 @@
 import styled from 'styled-components';
+import { keyframes } from 'styled-components';
 
 import TypePill from './TypePill';
 import Pill from './Pill';
-import { keyframes } from 'styled-components';
 
 const Container = styled.div`
   position: relative;
@@ -16,8 +16,6 @@ const Container = styled.div`
   padding: 15px;
   font-size: 0.875rem;
 `;
-
-const InfoContainer = styled.div``;
 
 const PokedexNumber = styled.h3`
   display: inline-block;
@@ -166,7 +164,7 @@ function PokeCard({ pokemon, showShiny }) {
         />
         {!!backImage && <ImgBack src={backImage} loading="lazy" />}
       </ImageContainer>
-      <InfoContainer>
+      <div>
         <PokedexNumber>#{pokemon.pokedexNumber}</PokedexNumber>
         <Name>{pokemon.name}</Name>
         <div>
@@ -199,7 +197,7 @@ function PokeCard({ pokemon, showShiny }) {
             </div>
           </div>
         </div>
-      </InfoContainer>
+      </div>
 
       <SpecialPillContainer>
         {pokemon.is_legendary && <Pill>✨ Lengendary</Pill>}

@@ -91,7 +91,7 @@ createServer({
           })),
         };
       },
-      { timing: 300 }
+      { timing: 200 }
     );
   },
 });

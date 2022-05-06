@@ -7,6 +7,7 @@ const Container = styled.div`
   font-weight: 600;
   font-size: 0.75rem;
   padding: 4.8px 8px;
+  cursor: default;
 `;
 
 function Pill({ className, children }) {
