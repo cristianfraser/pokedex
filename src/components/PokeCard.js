@@ -4,6 +4,8 @@ import { useQuery } from 'react-query';
 
 import TypePill from './TypePill';
 import Pill from './Pill';
+import { keyframes } from 'styled-components';
+import { css } from 'styled-components';
 
 const Container = styled.div`
   position: relative;
@@ -16,11 +18,6 @@ const Container = styled.div`
   border-radius: 12px;
   padding: 15px;
   font-size: 0.875rem;
-`;
-
-const ImageContainer = styled.div`
-  text-align: center;
-  height: 85px;
 `;
 
 const InfoContainer = styled.div``;
@@ -36,18 +33,81 @@ const Name = styled.h3`
   margin-block-end: 3px;
 `;
 
+const ImageContainer = styled.div`
+  position: relative;
+  text-align: center;
+  height: 85px;
+  display: flex;
+  overflow: hidden;
+`;
+
+const bounce = keyframes`
+  0% {
+    transform: translate(50%, -50%);
+  }
+  40% {
+    transform: translate(50%, -50%) translateX(-50%);
+  }
+  60% {
+    transform: translate(50%, -50%) translateX(-40%);
+  }
+  100% {
+    transform: translate(50%, -50);
+  }
+`;
+
 const ImgFront = styled.img`
   height: 100%;
+  position: absolute;
+
+  top: 50%;
+  right: 50%;
+  transform: translate(50%, -50%);
+  transition: transform 0.2s;
+
+  @media (prefers-reduced-motion) {
+    & {
+      transition: none;
+    }
+  }
+
+  &:last-child {
+    transition: none;
+  }
+
   ${Container}:hover & {
-    display: none;
+    transform: translate(50%, -50%) translateX(-200%);
+  }
+
+  ${Container}:hover &:last-child {
+    animation: ${bounce} 0.2s linear forwards;
+    transform: translate(50%, -50%);
+  }
+
+  @media (prefers-reduced-motion) {
+    & {
+      transition: none;
+    }
   }
 `;
 
 const ImgBack = styled.img`
   height: 100%;
-  display: none;
+  position: absolute;
+
+  top: 50%;
+  right: 50%;
+  transform: translate(50%, -50%) translateX(200%);
+  transition: transform 0.2s;
+
+  @media (prefers-reduced-motion) {
+    & {
+      transition: none;
+    }
+  }
+
   ${Container}:hover & {
-    display: initial;
+    transform: translate(50%, -50%);
   }
 `;
 
@@ -95,8 +155,15 @@ function PokeCard({ pokemon }) {
   return (
     <Container>
       <ImageContainer>
-        <ImgFront src={pokemon.sprites.front_default} loading="lazy" />
-        <ImgBack src={pokemon.sprites.back_default} loading="lazy" />
+        <ImgFront
+          key={pokemon.sprites.front_default}
+          onlyImage={!pokemon.sprites.back_default}
+          src={pokemon.sprites.front_default}
+          loading="lazy"
+        />
+        {!!pokemon.sprites.back_default && (
+          <ImgBack src={pokemon.sprites.back_default} loading="lazy" />
+        )}
       </ImageContainer>
       <InfoContainer>
         <PokedexNumber>#{pokemon.pokedexNumber}</PokedexNumber>

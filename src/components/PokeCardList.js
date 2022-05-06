@@ -51,7 +51,7 @@ const CardContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, 200px);
   grid-gap: 20px;
-  justify-content: space-evenly;
+  justify-content: center;
 
   ${({ isLoading }) => {
     if (isLoading)
@@ -128,7 +128,7 @@ function PokeCardList() {
     <Container>
       <H1>National Pokédex</H1>
       <FilterContainer>
-        <H2>Search Pokemon</H2>
+        <H2>Search Pokémon</H2>
         <Label htmlFor="nameFilter">
           <span>by name</span>
           <Input
@@ -153,7 +153,7 @@ function PokeCardList() {
           <TypeSelect value={typeSelect} onChange={setTypeSelect} />
         </Label>
 
-        {!!typeSelect && (
+        {(!!typeSelect || !!typeSelect2) && (
           <Label>
             <span>by additional type</span>
             <TypeSelect value={typeSelect2} onChange={setTypeSelect2} />
