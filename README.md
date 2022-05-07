@@ -11,13 +11,10 @@ In the project directory, you can run:
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
 # About the assignment
 
 - The chonse API was: https://pokeapi.co/docs
-  - There wasn't a specifid endpoint to get Pokémon listed and paginated, so a GET `/pokemon` endpoint was mocked.
+  - There wasn't a specifid endpoint to get Pokémon listed and paginated, so a GET `/pokemon` endpoint was mocked using PokéAPI.
   - GET `/pokemon` return a paginated query of Pokémon, allowing filtering by name, Pokédex entry number, or type.
 - Houm palette should be used:
   - Inputs use primary color for focus styling. `#ff452b`
