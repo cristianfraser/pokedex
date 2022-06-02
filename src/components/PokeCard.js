@@ -5,6 +5,7 @@ import { useInView } from 'react-intersection-observer';
 import TypePill from './TypePill';
 import Pill from './Pill';
 import { useGetPokemonDetailQuery } from '../queries';
+import { memo } from 'react';
 
 const Container = styled.div`
   position: relative;
@@ -148,7 +149,11 @@ const SpecialPillContainer = styled.div`
   right: 10px;
 `;
 
-function PokeCard({ pokemonName, pokemonNumber, showShiny }) {
+const PokeCard = memo(function PokeCard({
+  pokemonName,
+  pokemonNumber,
+  showShiny,
+}) {
   const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '450px' });
 
   const { pokemon, isLoading } = useGetPokemonDetailQuery({
@@ -230,6 +235,6 @@ function PokeCard({ pokemonName, pokemonNumber, showShiny }) {
       )}
     </Container>
   );
-}
+});
 
 export default PokeCard;

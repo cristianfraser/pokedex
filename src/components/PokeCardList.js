@@ -63,8 +63,7 @@ function PokeCardList() {
   const [filterInput, setFilterInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [additionalAdditionalSelectedType, setAdditionalFilterType] =
-    useState('');
+  const [additionalSelectedType, setAdditionalFilterType] = useState('');
   const { ref, inView } = useInView();
   const [showShiny, setShowShiny] = useState(false);
   const debounce = useRef(null);
@@ -75,7 +74,11 @@ function PokeCardList() {
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
-  } = useGetPokedexQuery();
+  } = useGetPokedexQuery({
+    searchQuery,
+    type1: filterType,
+    type2: additionalSelectedType,
+  });
 
   useEffect(() => {
     if (inView) {
@@ -112,11 +115,11 @@ function PokeCardList() {
           <TypeSelect value={filterType} onChange={setFilterType} />
         </Label>
 
-        {(!!filterType || !!additionalAdditionalSelectedType) && (
+        {(!!filterType || !!additionalSelectedType) && (
           <Label>
             <span>by additional type</span>
             <TypeSelect
-              value={additionalAdditionalSelectedType}
+              value={additionalSelectedType}
               onChange={setAdditionalFilterType}
             />
           </Label>
@@ -139,6 +142,7 @@ function PokeCardList() {
           {pokemonEntries.map((pokemon) => (
             <PokeCard
               key={pokemon.entry_number}
+              pokemonNumber={pokemon.entry_number}
               pokemonName={pokemon.pokemon_species.name}
               showShiny={showShiny}
             />
