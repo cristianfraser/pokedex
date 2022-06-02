@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useInfiniteQuery } from 'react-query';
+import { useInfiniteQuery, useQuery } from 'react-query';
 
-export default function useGetPokemonQuery({
+export function useGetPokemonQuery({
   searchQuery,
   filterType,
   additionalAdditionalSelectedType,
@@ -45,6 +45,66 @@ export default function useGetPokemonQuery({
   return {
     pokemon,
     total,
+    ...query,
+  };
+}
+
+const getPokemonName = (pokemonNames, lang = 'en') => {
+  return pokemonNames.find((info) => info.language.name === lang).name;
+};
+
+const getPokedexNumber = (pokemonNumbers, pokedex = 'national') => {
+  return pokemonNumbers.find((info) => info.pokedex.name === pokedex)
+    .entry_number;
+};
+
+export function useGetPokemonDetailQuery({ pokemon, enabled }) {
+  const { data, ...query } = useQuery(
+    ['pokemon', pokemon],
+    async () => {
+      const res = await fetch(
+        `https://pokeapi.co/api/v2/pokemon/${pokemon}`
+      ).then((res) => res.json());
+      const res2 = await fetch(
+        `https://pokeapi.co/api/v2/pokemon-species/${pokemon}`
+      ).then((res) => res.json());
+
+      return {
+        ...res,
+        ...res2,
+        name: getPokemonName(res2.names),
+        pokedexNumber: getPokedexNumber(res2.pokedex_numbers),
+      };
+    },
+    {
+      keepPreviousData: true,
+      enabled,
+    }
+  );
+
+  return {
+    pokemon: data,
+    ...query,
+  };
+}
+
+export function useGetPokedexQuery() {
+  const { data, ...query } = useQuery(
+    ['pokedex', 'national'],
+    async () => {
+      const res = await fetch(`https://pokeapi.co/api/v2/pokedex/1/`).then(
+        (res) => res.json()
+      );
+
+      return res.pokemon_entries;
+    },
+    {
+      keepPreviousData: true,
+    }
+  );
+
+  return {
+    pokemonEntries: data || [],
     ...query,
   };
 }

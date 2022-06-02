@@ -8,8 +8,6 @@ import { ThemeProvider } from 'styled-components';
 import theme from './theme';
 import { QueryClientProvider, QueryClient } from 'react-query';
 
-import './mock';
-
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 const queryClient = new QueryClient({

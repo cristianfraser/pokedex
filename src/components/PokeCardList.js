@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import { useEffect, useRef, useState } from 'react';
-import { useInfiniteQuery } from 'react-query';
 import { useInView } from 'react-intersection-observer';
 
 import PokeCard from './PokeCard';
@@ -8,7 +7,7 @@ import TypeSelect from './TypeSelect';
 import Input from './Input';
 import Spinner from './Spinner';
 import Checkbox from './Checkbox';
-import useGetPokemonQuery from '../queries';
+import { useGetPokedexQuery } from '../queries';
 
 const H1 = styled.h1`
   font-weight: 800;
@@ -68,21 +67,15 @@ function PokeCardList() {
     useState('');
   const { ref, inView } = useInView();
   const [showShiny, setShowShiny] = useState(false);
-  const [pageSize, setPageSize] = useState(10);
   const debounce = useRef(null);
 
   const {
-    pokemon,
+    pokemonEntries,
     isFetching,
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
-  } = useGetPokemonQuery({
-    searchQuery,
-    filterType,
-    additionalAdditionalSelectedType,
-    pageSize,
-  });
+  } = useGetPokedexQuery();
 
   useEffect(() => {
     if (inView) {
@@ -95,22 +88,6 @@ function PokeCardList() {
       <H1>National Pokédex</H1>
       <FilterContainer>
         <H2>Search Pokémon</H2>
-        <div style={{ marginBlockEnd: 5 }}>
-          <Label>
-            <span>page size</span>
-            <Input
-              as="select"
-              value={pageSize}
-              onChange={(event) =>
-                setPageSize(parseInt(event.target.value, 10))
-              }
-            >
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="40">40</option>
-            </Input>
-          </Label>
-        </div>
         <Label htmlFor="nameFilter">
           <span>by name, pokédex #</span>
           <Input
@@ -159,10 +136,10 @@ function PokeCardList() {
       </FilterContainer>
       <div style={{ position: 'relative' }}>
         <CardContainer isLoading={isFetching && !isFetchingNextPage}>
-          {pokemon.map((pokemon) => (
+          {pokemonEntries.map((pokemon) => (
             <PokeCard
-              key={pokemon.id}
-              pokemon={pokemon}
+              key={pokemon.entry_number}
+              pokemonName={pokemon.pokemon_species.name}
               showShiny={showShiny}
             />
           ))}
@@ -172,9 +149,9 @@ function PokeCardList() {
             <Spinner />
           </SpinnerContainer>
         )}
-        {!isFetching && !isFetchingNextPage && !pokemon.length && (
+        {!isFetching && !isFetchingNextPage && !pokemonEntries.length && (
           <SpinnerContainer style={{ top: 100 }}>
-            No Pokémon matching criteria found.
+            No criteria matching Pokémon found.
           </SpinnerContainer>
         )}
       </div>

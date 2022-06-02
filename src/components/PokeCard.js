@@ -1,8 +1,10 @@
 import styled from 'styled-components';
 import { keyframes } from 'styled-components';
+import { useInView } from 'react-intersection-observer';
 
 import TypePill from './TypePill';
 import Pill from './Pill';
+import { useGetPokemonDetailQuery } from '../queries';
 
 const Container = styled.div`
   position: relative;
@@ -146,63 +148,86 @@ const SpecialPillContainer = styled.div`
   right: 10px;
 `;
 
-function PokeCard({ pokemon, showShiny }) {
-  const frontImage = showShiny
-    ? pokemon.sprites.front_shiny
-    : pokemon.sprites.front_default;
-  const backImage = showShiny
-    ? pokemon.sprites.back_shiny
-    : pokemon.sprites.back_default;
+function PokeCard({ pokemonName, pokemonNumber, showShiny }) {
+  const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '450px' });
+
+  const { pokemon, isLoading } = useGetPokemonDetailQuery({
+    pokemon: pokemonName,
+    enabled: inView ?? false,
+  });
+
+  let frontImage, backImage;
+  const loading = isLoading || !pokemon;
+
+  if (!loading) {
+    frontImage = showShiny
+      ? pokemon.sprites.front_shiny
+      : pokemon.sprites.front_default;
+    backImage = showShiny
+      ? pokemon.sprites.back_shiny
+      : pokemon.sprites.back_default;
+  }
+
   return (
-    <Container>
+    <Container ref={ref}>
       <ImageContainer>
-        <ImgFront
-          key={frontImage}
-          onlyImage={!backImage}
-          src={frontImage}
-          loading="lazy"
-        />
-        {!!backImage && <ImgBack src={backImage} loading="lazy" />}
+        {!loading && (
+          <>
+            <ImgFront
+              key={frontImage}
+              onlyImage={!backImage}
+              src={frontImage}
+              loading="lazy"
+            />
+            {!!backImage && <ImgBack src={backImage} loading="lazy" />}
+          </>
+        )}
       </ImageContainer>
       <div>
-        <PokedexNumber>#{pokemon.pokedexNumber}</PokedexNumber>
-        <Name>{pokemon.name}</Name>
-        <div>
-          {pokemon.types.map((type) => (
-            <TypePill key={type.slot} type={type.type} />
-          ))}
-        </div>
-        <div>
-          <div>
-            <Stat>Weight: {pokemon.weight / 10} kg</Stat>
-            <Weight>
-              {[...new Array(Math.ceil(pokemon.weight / 100))].map(
-                (_, index) => (
-                  <WeightBox key={index} />
-                )
-              )}
-            </Weight>
-          </div>
-          <div>
-            <Stat>Height: {pokemon.height / 10} m</Stat>
+        <PokedexNumber>#{pokemonNumber}</PokedexNumber>
+        <Name>{loading ? pokemonName : pokemon.name}</Name>
+        {!loading && (
+          <>
             <div>
-              <HeightBar>
-                <Height
-                  percent={
-                    (pokemon.height / 2) *
-                    (1 + Math.cos(((Math.PI / 2) * pokemon.height) / 200))
-                  }
-                />
-              </HeightBar>
+              {pokemon.types.map((type) => (
+                <TypePill key={type.slot} type={type.type} />
+              ))}
             </div>
-          </div>
-        </div>
+            <div>
+              <div>
+                <Stat>Weight: {pokemon.weight / 10} kg</Stat>
+                <Weight>
+                  {[...new Array(Math.ceil(pokemon.weight / 100))].map(
+                    (_, index) => (
+                      <WeightBox key={index} />
+                    )
+                  )}
+                </Weight>
+              </div>
+              <div>
+                <Stat>Height: {pokemon.height / 10} m</Stat>
+                <div>
+                  <HeightBar>
+                    <Height
+                      percent={
+                        (pokemon.height / 2) *
+                        (1 + Math.cos(((Math.PI / 2) * pokemon.height) / 200))
+                      }
+                    />
+                  </HeightBar>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
-      <SpecialPillContainer>
-        {pokemon.is_legendary && <Pill>✨ Lengendary</Pill>}
-        {pokemon.is_mythical && <Pill>✨ Mythical</Pill>}
-      </SpecialPillContainer>
+      {!loading && (
+        <SpecialPillContainer>
+          {pokemon.is_legendary && <Pill>✨ Lengendary</Pill>}
+          {pokemon.is_mythical && <Pill>✨ Mythical</Pill>}
+        </SpecialPillContainer>
+      )}
     </Container>
   );
 }
