@@ -40,13 +40,18 @@ export function useGetPokemonDetailQuery({ pokemon, enabled }) {
   };
 }
 
-export function useGetPokedexQuery({ searchQuery, type1, type2 }) {
+export function useGetPokedexQuery({
+  name = 'national',
+  searchQuery,
+  type1,
+  type2,
+}) {
   const { data, ...query } = useQuery(
-    ['pokedex', 'national'],
+    ['pokedex', name],
     async () => {
-      const res = await fetch(`https://pokeapi.co/api/v2/pokedex/1/`).then(
-        (res) => res.json()
-      );
+      const res = await fetch(
+        `https://pokeapi.co/api/v2/pokedex/${name}/`
+      ).then((res) => res.json());
 
       return res.pokemon_entries;
     },

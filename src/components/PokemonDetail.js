@@ -4,6 +4,7 @@ import '@reach/dialog/styles.css';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGetPokemonDetailQuery } from '../queries';
+import VisuallyHidden from '@reach/visually-hidden';
 
 const Container = styled.div``;
 
@@ -32,8 +33,12 @@ function PokemonDetail() {
         aria-label="Pokemon Detail"
         style={{ boxShadow: '0px 10px 50px hsla(0, 0%, 0%, 0.33)' }}
       >
-        {pokemon && pokemon.name}
-        <button onClick={close}>Very nice.</button>
+        <div>
+          <button onClick={close}>
+            <VisuallyHidden>Close</VisuallyHidden> <span aria-hidden>×</span>{' '}
+          </button>
+        </div>
+        <div>{pokemon && pokemon.name}</div>
       </DialogContent>
     </DialogOverlay>
   );

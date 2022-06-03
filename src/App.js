@@ -57,8 +57,10 @@ function App() {
       <Main>
         <Content>
           <Routes>
-            <Route path="/pokedex" element={<PokeCardList />}>
-              <Route path=":pokemonNumber" element={<PokemonDetail />} />
+            <Route path="/pokedex">
+              <Route path=":pokedexName" element={<PokeCardList />}>
+                <Route path=":pokemonNumber" element={<PokemonDetail />} />
+              </Route>
             </Route>
           </Routes>
         </Content>

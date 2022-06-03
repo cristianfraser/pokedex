@@ -23,6 +23,14 @@ const Container = styled.div`
 
   color: inherit;
   text-decoration: inherit;
+
+  transition: 0.3s transform ease-out, 0.3s box-shadow;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 3px 5px -1px rgba(0, 0, 0, 0.2),
+      0px 6px 10px 0px rgba(0, 0, 0, 0.08), 0px 1px 18px 0px rgba(0, 0, 0, 0.26);
+  }
 `;
 
 const PokedexNumber = styled.h3`
@@ -78,14 +86,14 @@ const ImgFront = styled.img`
     transition: none;
   }
 
-  ${Container}:hover & {
+  /* ${Container}:hover & {
     transform: translate(50%, -50%) translateX(-200%);
   }
 
   ${Container}:hover &:last-child {
     animation: ${bounce} 0.2s linear forwards;
     transform: translate(50%, -50%);
-  }
+  } */
 
   @media (prefers-reduced-motion) {
     & {
@@ -109,9 +117,9 @@ const ImgBack = styled.img`
     }
   }
 
-  ${Container}:hover & {
+  /* ${Container}:hover & {
     transform: translate(50%, -50%);
-  }
+  } */
 `;
 
 const Weight = styled.div`

@@ -8,7 +8,7 @@ import Input from './Input';
 import Spinner from './Spinner';
 import Checkbox from './Checkbox';
 import { useGetPokedexQuery } from '../queries';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useParams } from 'react-router-dom';
 
 const H1 = styled.h1`
   font-weight: 800;
@@ -61,6 +61,7 @@ const CardContainer = styled.div`
 `;
 
 function PokeCardList() {
+  const { pokedexName } = useParams();
   const [filterInput, setFilterInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -76,6 +77,7 @@ function PokeCardList() {
     fetchNextPage,
     hasNextPage,
   } = useGetPokedexQuery({
+    name: pokedexName,
     searchQuery,
     type1: filterType,
     type2: additionalSelectedType,
