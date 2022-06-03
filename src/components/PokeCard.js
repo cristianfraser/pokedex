@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { keyframes } from 'styled-components';
 import { useInView } from 'react-intersection-observer';
+import { Link } from 'react-router-dom';
 
 import TypePill from './TypePill';
 import Pill from './Pill';
@@ -8,6 +9,7 @@ import { useGetPokemonDetailQuery } from '../queries';
 import { memo } from 'react';
 
 const Container = styled.div`
+  cursor: pointer;
   position: relative;
   box-shadow: 0px 3px 5px -1px rgba(0, 0, 0, 0.2),
     0px 6px 10px 0px rgba(0, 0, 0, 0.14), 0px 1px 18px 0px rgba(0, 0, 0, 0.12);
@@ -18,6 +20,9 @@ const Container = styled.div`
   border-radius: 12px;
   padding: 15px;
   font-size: 0.875rem;
+
+  color: inherit;
+  text-decoration: inherit;
 `;
 
 const PokedexNumber = styled.h3`
@@ -154,7 +159,7 @@ const PokeCard = memo(function PokeCard({
   pokemonNumber,
   showShiny,
 }) {
-  const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '450px' });
+  const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '200px' });
 
   const { pokemon, isLoading } = useGetPokemonDetailQuery({
     pokemon: pokemonName,
@@ -174,7 +179,7 @@ const PokeCard = memo(function PokeCard({
   }
 
   return (
-    <Container ref={ref}>
+    <Container as={Link} to={`${pokemonName}`} ref={ref}>
       <ImageContainer>
         {!loading && (
           <>

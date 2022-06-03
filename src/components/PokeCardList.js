@@ -8,6 +8,7 @@ import Input from './Input';
 import Spinner from './Spinner';
 import Checkbox from './Checkbox';
 import { useGetPokedexQuery } from '../queries';
+import { Outlet } from 'react-router-dom';
 
 const H1 = styled.h1`
   font-weight: 800;
@@ -112,7 +113,11 @@ function PokeCardList() {
 
         <Label>
           <span>by type</span>
-          <TypeSelect value={filterType} onChange={setFilterType} />
+          <TypeSelect
+            value={filterType}
+            filter={additionalSelectedType}
+            onChange={setFilterType}
+          />
         </Label>
 
         {(!!filterType || !!additionalSelectedType) && (
@@ -120,6 +125,7 @@ function PokeCardList() {
             <span>by additional type</span>
             <TypeSelect
               value={additionalSelectedType}
+              filter={filterType}
               onChange={setAdditionalFilterType}
             />
           </Label>
@@ -167,6 +173,8 @@ function PokeCardList() {
           <Spinner />
         </div>
       )}
+
+      <Outlet />
     </>
   );
 }

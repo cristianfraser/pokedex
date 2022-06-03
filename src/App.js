@@ -1,6 +1,8 @@
+import { Route, Routes } from 'react-router-dom';
 import styled from 'styled-components';
 
 import PokeCardList from './components/PokeCardList';
+import PokemonDetail from './components/PokemonDetail';
 
 const HEADER_HEIGHT = 62;
 
@@ -54,7 +56,11 @@ function App() {
       </Header>
       <Main>
         <Content>
-          <PokeCardList />
+          <Routes>
+            <Route path="/pokedex" element={<PokeCardList />}>
+              <Route path=":pokemonNumber" element={<PokemonDetail />} />
+            </Route>
+          </Routes>
         </Content>
       </Main>
     </div>

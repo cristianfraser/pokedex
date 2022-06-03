@@ -7,6 +7,7 @@ import reportWebVitals from './reportWebVitals';
 import { ThemeProvider } from 'styled-components';
 import theme from './theme';
 import { QueryClientProvider, QueryClient } from 'react-query';
+import { BrowserRouter } from 'react-router-dom';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -20,11 +21,13 @@ const queryClient = new QueryClient({
 
 root.render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <App />
-      </ThemeProvider>
-    </QueryClientProvider>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <App />
+        </ThemeProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );
 

@@ -7,7 +7,7 @@ const Select = styled(Input)`
   width: 150px;
 `;
 
-function TypeSelect({ value, onChange }) {
+function TypeSelect({ value, onChange, filter }) {
   const { data } = useQuery(['types'], async () => {
     const res = await fetch('https://pokeapi.co/api/v2/type').then((res) =>
       res.json()
@@ -26,11 +26,13 @@ function TypeSelect({ value, onChange }) {
       onChange={(event) => onChange(event.target.value)}
     >
       <option value="">-</option>
-      {types.map((t) => (
-        <option key={t.name} value={t.name}>
-          {t.name}
-        </option>
-      ))}
+      {types
+        .filter((type) => !filter || type.name !== filter)
+        .map((t) => (
+          <option key={t.name} value={t.name}>
+            {t.name}
+          </option>
+        ))}
     </Select>
   );
 }

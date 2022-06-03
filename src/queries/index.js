@@ -1,53 +1,4 @@
-import { useState } from 'react';
-import { useInfiniteQuery, useQuery } from 'react-query';
-
-export function useGetPokemonQuery({
-  searchQuery,
-  filterType,
-  additionalAdditionalSelectedType,
-  pageSize = 10,
-}) {
-  const [total, setTotal] = useState(0);
-  const { data, ...query } = useInfiniteQuery(
-    [
-      'pokemons',
-      searchQuery,
-      filterType,
-      additionalAdditionalSelectedType,
-      pageSize,
-    ],
-    async ({ pageParam = 0 }) => {
-      const res = await fetch(
-        `/pokemon/?limit=${pageSize}&offset=${
-          pageParam * pageSize
-        }&q=${searchQuery}&type1=${filterType}&&type2=${additionalAdditionalSelectedType}`
-      ).then((res) => res.json());
-      setTotal(res.count);
-
-      return res.results;
-    },
-    {
-      keepPreviousData: true,
-      getNextPageParam: (lastPage, allPages) => {
-        const maxPage = Math.ceil(total / pageSize);
-
-        return allPages.length >= maxPage ? undefined : allPages.length;
-      },
-    }
-  );
-
-  const pokemon = [];
-
-  data?.pages.forEach((page) => {
-    pokemon.push(...page);
-  });
-
-  return {
-    pokemon,
-    total,
-    ...query,
-  };
-}
+import { useQuery } from 'react-query';
 
 const getPokemonName = (pokemonNames, lang = 'en') => {
   return pokemonNames.find((info) => info.language.name === lang).name;
@@ -62,11 +13,11 @@ export function useGetPokemonDetailQuery({ pokemon, enabled }) {
   const { data, ...query } = useQuery(
     ['pokemon', pokemon],
     async () => {
-      const res = await fetch(
-        `https://pokeapi.co/api/v2/pokemon/${pokemon}`
-      ).then((res) => res.json());
       const res2 = await fetch(
         `https://pokeapi.co/api/v2/pokemon-species/${pokemon}`
+      ).then((res) => res.json());
+      const res = await fetch(
+        `https://pokeapi.co/api/v2/pokemon/${res2.id}`
       ).then((res) => res.json());
 
       return {
@@ -78,6 +29,7 @@ export function useGetPokemonDetailQuery({ pokemon, enabled }) {
     },
     {
       keepPreviousData: true,
+      staleTime: Infinity,
       enabled,
     }
   );
@@ -115,8 +67,6 @@ export function useGetPokedexQuery({ searchQuery, type1, type2 }) {
       res.pokemon.forEach(({ pokemon }) => {
         result[pokemon.name] = true;
       });
-
-      console.log({ result });
 
       return result;
     },
