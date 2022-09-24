@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 import PokeCardList from './components/PokeCardList';
 import PokemonDetail from './components/PokemonDetail';
+import PokeRowList from './components/PokeRowList';
 
 const HEADER_HEIGHT = 62;
 
@@ -28,10 +29,12 @@ const Main = styled.main`
   padding: 30px;
   padding-block-start: ${30 + HEADER_HEIGHT}px;
   text-align: center;
+  height: 100%;
 `;
 
 const Content = styled.div`
   width: 100%;
+  height: 100%;
   max-width: ${({ theme }) => theme.APP_MAX_WIDTH}px;
   display: inline-block;
   text-align: initial;
@@ -48,7 +51,7 @@ const Logo = styled.span`
 
 function App() {
   return (
-    <div>
+    <>
       <Header>
         <HeaderContent>
           <Logo>Pokédex</Logo>
@@ -60,14 +63,14 @@ function App() {
             <Route path="" element={<Navigate to="/pokedex" replace />} />
             <Route path="/pokedex">
               <Route path="" element={<Navigate to="/pokedex/1" replace />} />
-              <Route path=":pokedexName" element={<PokeCardList />}>
+              <Route path=":pokedexName" element={<PokeRowList />}>
                 <Route path=":pokemonNumber" element={<PokemonDetail />} />
               </Route>
             </Route>
           </Routes>
         </Content>
       </Main>
-    </div>
+    </>
   );
 }
 

@@ -38,14 +38,17 @@ const Stat = styled.div`
   margin: 5px 0 3px;
 `;
 
-function PokeStats({ pokemon }) {
-  return (
-    <Container>
+function PokeStats(pokemon) {
+  console.log({ pokemon });
+  return {
+    Types: (
       <div>
         {pokemon.types.map((type) => (
           <TypePill key={type.slot} type={type.type} />
         ))}
       </div>
+    ),
+    Weight: (
       <div>
         <Stat>Weight: {pokemon.weight / 10} kg</Stat>
         <Weight>
@@ -54,6 +57,8 @@ function PokeStats({ pokemon }) {
           ))}
         </Weight>
       </div>
+    ),
+    Height: (
       <div>
         <Stat>Height: {pokemon.height / 10} m</Stat>
         <div>
@@ -67,8 +72,8 @@ function PokeStats({ pokemon }) {
           </HeightBar>
         </div>
       </div>
-    </Container>
-  );
+    ),
+  };
 }
 
 export default PokeStats;
