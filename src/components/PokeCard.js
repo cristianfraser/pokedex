@@ -19,7 +19,7 @@ const Container = styled.div`
   height: 240px;
   border-radius: 12px;
   padding: 15px;
-  font-size: 0.875rem;
+  font-size: ${({ theme }) => theme.fontSizes.default};
 
   color: inherit;
   text-decoration: inherit;
@@ -36,7 +36,7 @@ const Container = styled.div`
 const PokedexNumber = styled.h3`
   display: inline-block;
   color: ${({ theme }) => theme.textGray};
-  font-size: 0.75rem;
+  font-size: ${({ theme }) => theme.fontSizes.small};
 `;
 
 const Name = styled.h3`
@@ -152,7 +152,7 @@ const Height = styled.div`
 `;
 
 const Stat = styled.div`
-  font-size: 0.75rem;
+  font-size: ${({ theme }) => theme.fontSizes.small};
   margin: 5px 0 3px;
 `;
 

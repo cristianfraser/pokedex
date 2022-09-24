@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import styled from 'styled-components';
 
 import PokeCardList from './components/PokeCardList';
@@ -57,7 +57,9 @@ function App() {
       <Main>
         <Content>
           <Routes>
+            <Route path="" element={<Navigate to="/pokedex" replace />} />
             <Route path="/pokedex">
+              <Route path="" element={<Navigate to="/pokedex/1" replace />} />
               <Route path=":pokedexName" element={<PokeCardList />}>
                 <Route path=":pokemonNumber" element={<PokemonDetail />} />
               </Route>
