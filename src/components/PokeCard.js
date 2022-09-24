@@ -7,6 +7,7 @@ import TypePill from './TypePill';
 import Pill from './Pill';
 import { useGetPokemonDetailQuery } from '../queries';
 import { memo } from 'react';
+import PokeStats from './PokeStats';
 
 const Container = styled.div`
   cursor: pointer;
@@ -204,40 +205,7 @@ const PokeCard = memo(function PokeCard({
       <div>
         <PokedexNumber>#{pokemonNumber}</PokedexNumber>
         <Name>{loading ? pokemonName : pokemon.name}</Name>
-        {!loading && (
-          <>
-            <div>
-              {pokemon.types.map((type) => (
-                <TypePill key={type.slot} type={type.type} />
-              ))}
-            </div>
-            <div>
-              <div>
-                <Stat>Weight: {pokemon.weight / 10} kg</Stat>
-                <Weight>
-                  {[...new Array(Math.ceil(pokemon.weight / 100))].map(
-                    (_, index) => (
-                      <WeightBox key={index} />
-                    )
-                  )}
-                </Weight>
-              </div>
-              <div>
-                <Stat>Height: {pokemon.height / 10} m</Stat>
-                <div>
-                  <HeightBar>
-                    <Height
-                      percent={
-                        (pokemon.height / 2) *
-                        (1 + Math.cos(((Math.PI / 2) * pokemon.height) / 200))
-                      }
-                    />
-                  </HeightBar>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+        {!loading && <PokeStats pokemon={pokemon} />}
       </div>
 
       {!loading && (

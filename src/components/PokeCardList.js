@@ -66,28 +66,15 @@ function PokeCardList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('');
   const [additionalSelectedType, setAdditionalFilterType] = useState('');
-  const { ref, inView } = useInView();
   const [showShiny, setShowShiny] = useState(false);
   const debounce = useRef(null);
 
-  const {
-    pokemonEntries,
-    isFetching,
-    isFetchingNextPage,
-    fetchNextPage,
-    hasNextPage,
-  } = useGetPokedexQuery({
+  const { pokemonEntries, isFetching } = useGetPokedexQuery({
     name: pokedexName,
     searchQuery,
     type1: filterType,
     type2: additionalSelectedType,
   });
-
-  useEffect(() => {
-    if (inView) {
-      fetchNextPage();
-    }
-  }, [inView, fetchNextPage]);
 
   return (
     <>
@@ -146,7 +133,7 @@ function PokeCardList() {
         </div>
       </FilterContainer>
       <div style={{ position: 'relative' }}>
-        <CardContainer isLoading={isFetching && !isFetchingNextPage}>
+        <CardContainer isLoading={isFetching}>
           {pokemonEntries.map((pokemon) => (
             <PokeCard
               key={pokemon.entry_number}
@@ -156,25 +143,17 @@ function PokeCardList() {
             />
           ))}
         </CardContainer>
-        {isFetching && !isFetchingNextPage && (
+        {isFetching && (
           <SpinnerContainer>
             <Spinner />
           </SpinnerContainer>
         )}
-        {!isFetching && !isFetchingNextPage && !pokemonEntries.length && (
+        {!isFetching && !pokemonEntries.length && (
           <SpinnerContainer style={{ top: 100 }}>
             No criteria matching Pokémon found.
           </SpinnerContainer>
         )}
       </div>
-      {hasNextPage && (
-        <div
-          ref={ref}
-          style={{ width: '100%', textAlign: 'center', padding: 40 }}
-        >
-          <Spinner />
-        </div>
-      )}
 
       <Outlet />
     </>

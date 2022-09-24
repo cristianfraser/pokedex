@@ -5,14 +5,34 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useGetPokemonDetailQuery } from '../queries';
 import VisuallyHidden from '@reach/visually-hidden';
+import TypePill from './TypePill';
+import PokeStats from './PokeStats';
 
 const Container = styled.div``;
 
+const CloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+
+  width: 20px;
+  height: 19px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+
+  &:hover {
+    background: #ececec;
+  }
+`;
+
 const NameTitle = styled.h1`
   display: inline-block;
-  font-size: ${({ theme }) => theme.fontSizes.default};
+  font-size: ${({ theme }) => theme.fontSizes.large};
   font-weight: 600;
-  margin-block-end: 30px;
+  /* margin-block-end: 5px; */
 `;
 
 const ImagesContainer = styled.div`
@@ -95,15 +115,17 @@ function PokemonDetail() {
         style={{
           boxShadow: '0px 10px 50px hsla(0, 0%, 0%, 0.33)',
           overflow: 'hidden',
+          position: 'relative',
+          borderRadius: 8,
         }}
       >
         {loading ? null : (
           <>
             <div>
-              <button onClick={close}>
+              <CloseButton onClick={close}>
                 <VisuallyHidden>Close</VisuallyHidden>
                 <span aria-hidden>×</span>
-              </button>
+              </CloseButton>
             </div>
 
             <ImagesContainer>
@@ -123,13 +145,17 @@ function PokemonDetail() {
             </ImagesContainer>
 
             <NameTitle>{pokemon.name}</NameTitle>
+            <PokeStats pokemon={pokemon} />
 
             <div>
-              {pokemon.pokedex_numbers.map(({ entry_number, pokedex }) => (
-                <div>
-                  <Link to={`../../${pokedex.name}`}>{pokedex.name}</Link>
-                </div>
-              ))}
+              <ul>
+                <h2>Found in these regions:</h2>
+                {pokemon.pokedex_numbers.map(({ entry_number, pokedex }) => (
+                  <li>
+                    <Link to={`../../${pokedex.name}`}>{pokedex.name}</Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </>
         )}
