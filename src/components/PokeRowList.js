@@ -8,9 +8,11 @@ import TypeSelect from './TypeSelect';
 import Input from './Input';
 import Spinner from './Spinner';
 import Checkbox from './Checkbox';
-import { useGetPokedexQuery } from '../queries';
+import { useGetPokedexQuery, useInfinitePokedexQuery } from '../queries';
 import { Outlet, useParams } from 'react-router-dom';
 import PokeRow from './PokeRow';
+import { useInView } from 'react-intersection-observer';
+import { useEffect } from 'react';
 
 const H1 = styled.h1`
   font-weight: 800;
@@ -64,10 +66,6 @@ const CardContainer = styled.div`
 
 function PokeRowList() {
   const { pokedexName } = useParams();
-  const [dimensions, setDimensions] = useState({
-    width: 500,
-    height: 300,
-  });
   const [filterInput, setFilterInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('');
@@ -75,27 +73,32 @@ function PokeRowList() {
   const [showShiny, setShowShiny] = useState(false);
   const debounce = useRef(null);
 
-  const { pokemonEntries, isFetching } = useGetPokedexQuery({
+  const { ref: inViewRef, inView } = useInView();
+
+  const {
+    pokedexLabel,
+    pokemonList,
+    isFetching,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfinitePokedexQuery({
     name: pokedexName,
     searchQuery,
     type1: filterType,
     type2: additionalSelectedType,
   });
 
-  const PokeRowRow = ({ index, style, data }) => {
-    console.log({ data: data[index] });
-    return (
-      <PokeRow
-        pokemonName={data[index].pokemon_species.name}
-        pokemonNumber={data[index].entry_number}
-        style={style}
-      />
-    );
-  };
+  useEffect(() => {
+    if (inView) {
+      fetchNextPage();
+    }
+  }, [inView]);
 
   return (
     <Container>
-      <H1>National Pokédex</H1>
+      <H1>{pokedexLabel} Pokédex</H1>
       <FilterContainer>
         <H2>Search Pokémon</H2>
         <Label htmlFor="nameFilter">
@@ -150,53 +153,34 @@ function PokeRowList() {
         </div>
       </FilterContainer>
 
-      <Measure
-        bounds
-        onResize={(contentRect) => {
-          setDimensions(contentRect.bounds);
-        }}
-      >
-        {({ measureRef }) => (
-          <div ref={measureRef} style={{ position: 'relative', flex: 1 }}>
-            <CardContainer
-              // className={className}
-              isLoading={isFetching}
+      <div style={{ position: 'relative', flex: 1 }}>
+        <CardContainer
+          // className={className}
+          isLoading={isFetching && !isFetchingNextPage}
+        >
+          {pokemonList.map((pokemon) => {
+            return <PokeRow pokemon={pokemon} showShiny={showShiny} />;
+          })}
+          {isFetching && !isFetchingNextPage && (
+            <SpinnerContainer>
+              <Spinner />
+            </SpinnerContainer>
+          )}
+          {!isFetching && !isFetchingNextPage && !pokemonList.length && (
+            <SpinnerContainer style={{ top: 100 }}>
+              No criteria matching Pokémon found.
+            </SpinnerContainer>
+          )}
+          {hasNextPage && (
+            <div
+              ref={inViewRef}
+              style={{ width: '100%', textAlign: 'center', padding: 40 }}
             >
-              <List
-                itemCount={pokemonEntries.length}
-                itemSize={90}
-                width={dimensions.width}
-                height={dimensions.height}
-                itemData={pokemonEntries}
-                overscanCount={5}
-              >
-                {PokeRowRow}
-                {/* {pokemonEntries.map((pokemon) => (
-              <div
-                key={pokemon.entry_number}
-                pokemonNumber={pokemon.entry_number}
-                pokemonName={pokemon.pokemon_species.name}
-                showShiny={showShiny}
-              >
-                {pokemon.entry_number}
-                {pokemon.pokemon_species.name}
-              </div>
-            ))} */}
-              </List>
-            </CardContainer>
-            {isFetching && (
-              <SpinnerContainer>
-                <Spinner />
-              </SpinnerContainer>
-            )}
-            {!isFetching && !pokemonEntries.length && (
-              <SpinnerContainer style={{ top: 100 }}>
-                No criteria matching Pokémon found.
-              </SpinnerContainer>
-            )}
-          </div>
-        )}
-      </Measure>
+              <Spinner />
+            </div>
+          )}
+        </CardContainer>
+      </div>
 
       <Outlet />
     </Container>

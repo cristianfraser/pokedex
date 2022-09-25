@@ -49,17 +49,17 @@ function PokeStats(pokemon) {
       </div>
     ),
     Weight: (
-      <div>
+      <>
         <Stat>Weight: {pokemon.weight / 10} kg</Stat>
         <Weight>
           {[...new Array(Math.ceil(pokemon.weight / 100))].map((_, index) => (
             <WeightBox key={index} />
           ))}
         </Weight>
-      </div>
+      </>
     ),
     Height: (
-      <div>
+      <>
         <Stat>Height: {pokemon.height / 10} m</Stat>
         <div>
           <HeightBar>
@@ -71,7 +71,7 @@ function PokeStats(pokemon) {
             />
           </HeightBar>
         </div>
-      </div>
+      </>
     ),
   };
 }

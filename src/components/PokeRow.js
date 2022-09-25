@@ -10,12 +10,13 @@ import { memo } from 'react';
 import PokeStats from './PokeStats';
 
 const Container = styled.div`
+  height: 120px;
   border: 1px solid red;
   display: flex;
   align-items: center;
   cursor: pointer;
   position: relative;
-  padding: 15px;
+  padding: 15px 0;
   font-size: ${({ theme }) => theme.fontSizes.default};
 
   color: inherit;
@@ -27,6 +28,10 @@ const Container = styled.div`
     /* transform: translateY(-3px);
     box-shadow: 0px 3px 5px -1px rgba(0, 0, 0, 0.2),
       0px 6px 10px 0px rgba(0, 0, 0, 0.08), 0px 1px 18px 0px rgba(0, 0, 0, 0.26); */
+  }
+
+  & > *:not(:last-child) {
+    margin-inline-start: 15px;
   }
 `;
 
@@ -47,7 +52,7 @@ const ImageContainer = styled.div`
   position: relative;
   text-align: center;
   height: 85px;
-  width: 150px;
+  width: 90px;
   display: flex;
   overflow: hidden;
 `;
@@ -122,73 +127,26 @@ const ImgBack = styled.img`
   } */
 `;
 
-const Weight = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 1px;
-`;
-
-const WeightBox = styled.div`
-  background-color: currentColor;
-  height: 4px;
-  width: 4px;
-`;
-
-const HeightBar = styled.div`
-  background-color: ${({ theme }) => theme.gray};
-  display: flex;
-  width: 120px;
-`;
-
-const Height = styled.div`
-  background-color: currentColor;
-  height: 5px;
-  width: ${({ percent }) => percent}%;
-
-  &:nth-child(5n) {
-    color: transparent;
-  }
-`;
-
-const Stat = styled.div`
-  font-size: ${({ theme }) => theme.fontSizes.small};
-  margin: 5px 0 3px;
-`;
-
 const SpecialPillContainer = styled.div`
   position: absolute;
   top: 10px;
-  right: 10px;
+  left: 10px;
 `;
 
-const PokeRow = ({ pokemonName, pokemonNumber, showShiny, style }) => {
-  const { pokemon, isLoading } = useGetPokemonDetailQuery({
-    pokemon: pokemonName,
-  });
-
-  let frontImage, backImage;
-  const loading = isLoading || !pokemon;
-
-  if (!loading) {
-    frontImage = showShiny
-      ? pokemon.sprites.front_shiny
-      : pokemon.sprites.front_default;
-    backImage = showShiny
-      ? pokemon.sprites.back_shiny
-      : pokemon.sprites.back_default;
-  }
-
-  if (loading || !pokemon) {
-    return null;
-  }
-
+const PokeRow = ({ pokemon, showShiny }) => {
   console.log({ pokemon });
+
+  const frontImage = showShiny
+    ? pokemon.sprites.front_shiny
+    : pokemon.sprites.front_default;
+  const backImage = showShiny
+    ? pokemon.sprites.back_shiny
+    : pokemon.sprites.back_default;
 
   const stats = PokeStats(pokemon);
 
   return (
-    <Container style={style} as={Link} to={`${pokemonName}`}>
+    <Container as={Link} to={`${pokemon.id}`}>
       <ImageContainer>
         <ImgFront
           key={frontImage}
@@ -200,8 +158,8 @@ const PokeRow = ({ pokemonName, pokemonNumber, showShiny, style }) => {
       </ImageContainer>
       <div style={{ width: 140 }}>
         {stats.Types}
-        <PokedexNumber>#{pokemonNumber}</PokedexNumber>
-        <Name>{loading ? pokemonName : pokemon.name}</Name>
+        <PokedexNumber>#{pokemon.pokedexNumber}</PokedexNumber>
+        <Name>{pokemon.name}</Name>
       </div>
 
       <div style={{ width: 140 }}>
@@ -209,12 +167,10 @@ const PokeRow = ({ pokemonName, pokemonNumber, showShiny, style }) => {
         {stats.Height}
       </div>
 
-      {!loading && (
-        <SpecialPillContainer>
-          {pokemon.is_legendary && <Pill>✨ Lengendary</Pill>}
-          {pokemon.is_mythical && <Pill>✨ Mythical</Pill>}
-        </SpecialPillContainer>
-      )}
+      <SpecialPillContainer>
+        {pokemon.is_legendary && <Pill>✨ Lengendary</Pill>}
+        {pokemon.is_mythical && <Pill>✨ Mythical</Pill>}
+      </SpecialPillContainer>
     </Container>
   );
 };

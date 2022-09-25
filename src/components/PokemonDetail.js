@@ -95,13 +95,14 @@ function PokemonDetail() {
 
   console.log({ pokemon, isLoading });
 
-  let frontImage, backImage, frontShinyImage, backShinyImage;
+  let frontImage, backImage, frontShinyImage, backShinyImage, stats;
 
   if (!loading) {
     frontImage = pokemon.sprites.front_default;
     frontShinyImage = pokemon.sprites.front_shiny;
     backImage = pokemon.sprites.back_default;
     backShinyImage = pokemon.sprites.back_shiny;
+    stats = PokeStats(pokemon);
   }
 
   return (
@@ -145,14 +146,20 @@ function PokemonDetail() {
             </ImagesContainer>
 
             <NameTitle>{pokemon.name}</NameTitle>
-            <PokeStats pokemon={pokemon} />
+            <div>
+              {stats.Types}
+              {stats.Weight}
+              {stats.Height}
+            </div>
 
             <div>
               <ul>
                 <h2>Found in these regions:</h2>
                 {pokemon.pokedex_numbers.map(({ entry_number, pokedex }) => (
                   <li>
-                    <Link to={`../../${pokedex.name}`}>{pokedex.name}</Link>
+                    <Link to={`../../${pokedex.name}`}>
+                      {pokedex.name} #{entry_number}
+                    </Link>
                   </li>
                 ))}
               </ul>
