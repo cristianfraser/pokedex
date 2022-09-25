@@ -11,7 +11,6 @@ import PokeStats from './PokeStats';
 
 const Container = styled.div`
   height: 120px;
-  border: 1px solid red;
   display: flex;
   align-items: center;
   cursor: pointer;
@@ -28,6 +27,10 @@ const Container = styled.div`
     /* transform: translateY(-3px);
     box-shadow: 0px 3px 5px -1px rgba(0, 0, 0, 0.2),
       0px 6px 10px 0px rgba(0, 0, 0, 0.08), 0px 1px 18px 0px rgba(0, 0, 0, 0.26); */
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid ${({ theme }) => theme.primaryTransparent};
   }
 
   & > *:not(:last-child) {

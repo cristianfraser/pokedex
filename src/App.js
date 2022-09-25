@@ -29,7 +29,6 @@ const Main = styled.main`
   padding: 30px;
   padding-block-start: ${30 + HEADER_HEIGHT}px;
   text-align: center;
-  height: 100%;
 `;
 
 const Content = styled.div`
