@@ -8,6 +8,7 @@ import Pill from './Pill';
 import { useGetPokemonDetailQuery } from '../queries';
 import { memo } from 'react';
 import PokeStats from './PokeStats';
+import StatCircle from './StatCircle';
 
 const Container = styled.div`
   height: 120px;
@@ -16,7 +17,7 @@ const Container = styled.div`
   cursor: pointer;
   position: relative;
   padding: 15px 0;
-  font-size: ${({ theme }) => theme.fontSizes.default};
+  font-size: ${({ theme }) => theme.fontSizes.small};
 
   color: inherit;
   text-decoration: inherit;
@@ -60,21 +61,6 @@ const ImageContainer = styled.div`
   overflow: hidden;
 `;
 
-const bounce = keyframes`
-  0% {
-    transform: translate(50%, -50%);
-  }
-  40% {
-    transform: translate(50%, -50%) translateX(-50%);
-  }
-  60% {
-    transform: translate(50%, -50%) translateX(-40%);
-  }
-  100% {
-    transform: translate(50%, -50);
-  }
-`;
-
 const ImgFront = styled.img`
   height: 100%;
   position: absolute;
@@ -83,31 +69,6 @@ const ImgFront = styled.img`
   right: 50%;
   transform: translate(50%, -50%);
   transition: transform 0.2s;
-
-  @media (prefers-reduced-motion) {
-    & {
-      transition: none;
-    }
-  }
-
-  &:last-child {
-    transition: none;
-  }
-
-  /* ${Container}:hover & {
-    transform: translate(50%, -50%) translateX(-200%);
-  }
-
-  ${Container}:hover &:last-child {
-    animation: ${bounce} 0.2s linear forwards;
-    transform: translate(50%, -50%);
-  } */
-
-  @media (prefers-reduced-motion) {
-    & {
-      transition: none;
-    }
-  }
 `;
 
 const ImgBack = styled.img`
@@ -135,6 +96,15 @@ const SpecialPillContainer = styled.div`
   top: 10px;
   left: 10px;
 `;
+
+const STATS = {
+  hp: { name: 'HP', max: 255 },
+  attack: { name: 'Atk', max: 190 },
+  defense: { name: 'Def', max: 230 },
+  'special-attack': { name: 'SpA', max: 194 },
+  'special-defense': { name: 'SpD', max: 130 },
+  speed: { name: 'Spd', max: 150 },
+};
 
 const PokeRow = ({ pokemon, showShiny }) => {
   console.log({ pokemon });
@@ -168,6 +138,22 @@ const PokeRow = ({ pokemon, showShiny }) => {
       <div style={{ width: 140 }}>
         {stats.Weight}
         {stats.Height}
+      </div>
+
+      <div style={{ display: 'flex' }}>
+        {pokemon.stats.map(({ base_stat, stat }) => (
+          <div style={{ marginInlineEnd: 10, textAlign: 'center' }}>
+            <div>{STATS[stat.name].name}</div>
+            <div>{base_stat}</div>
+            <div>
+              <StatCircle
+                stroke={6}
+                radius={20}
+                progress={Math.floor((base_stat / STATS[stat.name].max) * 100)}
+              />
+            </div>
+          </div>
+        ))}
       </div>
 
       <SpecialPillContainer>
