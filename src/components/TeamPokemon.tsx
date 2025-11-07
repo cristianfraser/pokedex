@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react'
 import { PokemonDetail } from '../queries/pokemon'
 import TypePill from './TypePill'
 
@@ -16,6 +17,100 @@ const TeamPokemon = ({
   onSelect,
   onRemove,
 }: TeamPokemonProps) => {
+  const [exitingTypes, setExitingTypes] = useState<string[]>([])
+  const [isAnimating, setIsAnimating] = useState(false)
+  const enteringRef = useRef<HTMLDivElement>(null)
+  const exitingRef = useRef<HTMLDivElement>(null)
+  const previousPokemonRef = useRef<PokemonDetail | null>(null)
+
+  // Use useLayoutEffect to set exiting types synchronously before paint
+  useLayoutEffect(() => {
+    if (pokemon && previousPokemonRef.current) {
+      const enteringTypes = pokemon.types.map(t => t.type.name)
+      const previousTypesArray = previousPokemonRef.current.types.map(
+        t => t.type.name
+      )
+
+      // Check if types changed
+      const typesChanged =
+        previousTypesArray.length !== enteringTypes.length ||
+        !previousTypesArray.every(
+          (type, index) => type === enteringTypes[index]
+        )
+
+      if (typesChanged && previousTypesArray.length > 0) {
+        // Types changed: set previous types as exiting synchronously
+        setExitingTypes([...previousTypesArray])
+        setIsAnimating(true)
+      } else if (!typesChanged) {
+        // Types are the same, clear exiting
+        setExitingTypes([])
+        setIsAnimating(false)
+      }
+    } else if (!pokemon) {
+      // No pokemon
+      setExitingTypes([])
+      setIsAnimating(false)
+    }
+
+    // Update ref for next render
+    previousPokemonRef.current = pokemon
+  }, [pokemon])
+
+  useLayoutEffect(() => {
+    if (isAnimating && exitingTypes.length > 0) {
+      // Apply initial transforms immediately (no transition) before paint
+      if (enteringRef.current) {
+        enteringRef.current.style.transition = 'none'
+        enteringRef.current.style.transform = 'translateY(calc(-100% - 2px))'
+      }
+      if (exitingRef.current) {
+        exitingRef.current.style.transition = 'none'
+        exitingRef.current.style.transform = 'translateY(0)'
+      }
+
+      // After paint, enable transitions and animate
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (enteringRef.current) {
+            enteringRef.current.style.transition = 'transform 0.3s ease-out'
+            enteringRef.current.style.transform = 'translateY(0)'
+          }
+          if (exitingRef.current) {
+            exitingRef.current.style.transition =
+              'transform 0.3s ease-out, opacity 0.3s'
+            exitingRef.current.style.transform = 'translateY(120%)'
+            exitingRef.current.style.opacity = '0.3'
+          }
+
+          // After animation completes, clear exiting types
+          setTimeout(() => {
+            setExitingTypes([])
+            setIsAnimating(false)
+            if (enteringRef.current) {
+              enteringRef.current.style.transition = ''
+              enteringRef.current.style.transform = ''
+            }
+            if (exitingRef.current) {
+              exitingRef.current.style.display = 'none'
+              exitingRef.current.style.transition = ''
+              exitingRef.current.style.transform = ''
+            }
+          }, 300)
+        })
+      })
+    } else if (!isAnimating) {
+      // No animation needed, reset transforms
+      if (enteringRef.current) {
+        enteringRef.current.style.transition = ''
+        enteringRef.current.style.transform = ''
+      }
+      if (exitingRef.current) {
+        exitingRef.current.style.transition = ''
+        exitingRef.current.style.transform = ''
+      }
+    }
+  }, [isAnimating, exitingTypes])
   if (!pokemon) {
     return (
       <div
@@ -88,10 +183,56 @@ const TeamPokemon = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-[5px] justify-center">
-          {pokemon.types.map(type => (
-            <TypePill key={type.slot} type={type.type} size="small" />
-          ))}
+        <div className="h-[18px] overflow-hidden relative">
+          {/* Entering types (current) */}
+          <div
+            ref={enteringRef}
+            className="flex flex-wrap gap-[5px] justify-center items-center h-[14px]"
+            style={{
+              // Apply initial transform immediately in render to prevent flash
+              transform:
+                isAnimating && exitingTypes.length > 0
+                  ? 'translateY(calc(-100% - 2px))'
+                  : undefined,
+              transition:
+                isAnimating && exitingTypes.length > 0 ? 'none' : undefined,
+            }}
+          >
+            {pokemon.types && pokemon.types.length > 0
+              ? pokemon.types.map(type => {
+                  const typeKey = `${type.type.name}-${type.slot}`
+                  return (
+                    <div
+                      key={typeKey}
+                      className="inline-block h-full flex items-center"
+                    >
+                      <TypePill type={type.type} size="small" />
+                    </div>
+                  )
+                })
+              : null}
+          </div>
+          {/* Exiting types (previous) */}
+          {exitingTypes.length > 0 && (
+            <div
+              ref={exitingRef}
+              className="absolute top-0 left-0 right-0 flex flex-wrap gap-[5px] justify-center items-center h-[14px]"
+              style={{
+                // Apply initial transform immediately in render to prevent flash
+                transform: isAnimating ? 'translateY(0)' : undefined,
+                transition: isAnimating ? 'none' : undefined,
+              }}
+            >
+              {exitingTypes.map(typeName => (
+                <div
+                  key={`exit-${typeName}`}
+                  className="inline-block h-full flex items-center"
+                >
+                  <TypePill type={{ name: typeName }} size="small" />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
