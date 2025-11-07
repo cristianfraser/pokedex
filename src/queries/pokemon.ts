@@ -1,4 +1,5 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 
 export interface PokemonListItem {
   name: string
@@ -89,116 +90,162 @@ const getPokedexNumber = (
   return pokedexInfo?.entry_number || 0
 }
 
-// Fetch detailed Pokemon information
-const fetchPokemonDetails = async (
-  pokemonName: string
-): Promise<PokemonDetail> => {
-  // First fetch pokemon-species to get ID and additional info
-  const speciesResponse = await fetch(
-    `https://pokeapi.co/api/v2/pokemon-species/${pokemonName}`
-  )
-  if (!speciesResponse.ok) {
-    throw new Error(`Failed to fetch Pokémon species: ${pokemonName}`)
-  }
-  const speciesData = await speciesResponse.json()
-
-  // Then fetch the actual pokemon data using the ID
-  const pokemonResponse = await fetch(
-    `https://pokeapi.co/api/v2/pokemon/${speciesData.id}`
-  )
-  if (!pokemonResponse.ok) {
-    throw new Error(`Failed to fetch Pokémon: ${pokemonName}`)
-  }
-  const pokemonData = await pokemonResponse.json()
-
-  // Combine the data
-  return {
-    ...pokemonData,
-    ...speciesData,
-    name: getPokemonName(speciesData.names),
-    pokedexNumber: getPokedexNumber(speciesData.pokedex_numbers),
-  }
-}
-
-const fetchPokemonList = async ({
-  pageParam = 0,
-  searchTerm = '',
-}: {
-  pageParam?: number
-  searchTerm?: string
-}): Promise<{
-  count: number
-  next: string | null
-  previous: string | null
-  results: PokemonDetail[]
-}> => {
-  const offset = (pageParam ?? 0) * POKEMON_PER_PAGE
-
-  // First fetch the list of Pokemon
-  const listResponse = await fetch(
-    `https://pokeapi.co/api/v2/pokemon/?limit=${POKEMON_PER_PAGE}&offset=${offset}`
-  )
-  if (!listResponse.ok) {
+// Fetch all Pokemon list from pokedex (only base species, no forms)
+const fetchAllPokemonList = async (): Promise<PokemonListItem[]> => {
+  // Use pokedex endpoint to get only base species (like the example)
+  const response = await fetch('https://pokeapi.co/api/v2/pokedex/national/')
+  if (!response.ok) {
     throw new Error('Failed to fetch Pokémon list')
   }
-  const listData: PokemonListResponse = await listResponse.json()
+  const pokedexData = await response.json()
 
-  // Filter by search term at the list level (before fetching details)
-  let filteredList = listData.results
-  if (searchTerm.trim()) {
-    const searchLower = searchTerm.toLowerCase().trim()
-    filteredList = listData.results.filter(item =>
-      item.name.toLowerCase().includes(searchLower)
-    )
-  }
-
-  // Fetch detailed information for each filtered Pokemon in parallel
-  const pokemonDetailsPromises = filteredList.map(item =>
-    fetchPokemonDetails(item.name)
+  // Extract pokemon_species names from pokedex entries
+  // This only includes base species, not form variants
+  return pokedexData.pokemon_entries.map(
+    (entry: {
+      entry_number: number
+      pokemon_species: { name: string; url: string }
+    }) => ({
+      name: entry.pokemon_species.name,
+      url: entry.pokemon_species.url,
+    })
   )
-
-  const pokemonDetails = await Promise.all(pokemonDetailsPromises)
-
-  // Filter detailed results by search term (name and pokedex number)
-  let filteredDetails = pokemonDetails
-  if (searchTerm.trim()) {
-    const searchLower = searchTerm.toLowerCase().trim()
-    filteredDetails = pokemonDetails.filter(
-      pokemon =>
-        pokemon.name.toLowerCase().includes(searchLower) ||
-        pokemon.pokedexNumber.toString().includes(searchTerm)
-    )
-  }
-
-  return {
-    count: listData.count,
-    next: listData.next,
-    previous: listData.previous,
-    results: filteredDetails,
-  }
 }
 
 export const usePokemonList = (searchTerm: string = '') => {
-  return useInfiniteQuery({
+  // First, fetch all Pokemon list (cached)
+  const { data: allPokemonList } = useQuery({
+    queryKey: ['pokemon', 'all-list'],
+    queryFn: fetchAllPokemonList,
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours - this list doesn't change often
+  })
+
+  // Filter the Pokemon list based on search term
+  const pokemonToQuery = useMemo(() => {
+    if (!allPokemonList) return []
+
+    if (!searchTerm.trim()) {
+      return allPokemonList
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim()
+    return allPokemonList.filter(item =>
+      item.name.toLowerCase().includes(searchLower)
+    )
+  }, [allPokemonList, searchTerm])
+
+  // Infinite query that paginates the filtered list
+  const query = useInfiniteQuery({
     queryKey: ['pokemon', 'list', searchTerm],
-    queryFn: ({ pageParam }) =>
-      fetchPokemonList({
-        pageParam: pageParam as number,
-        searchTerm,
-      }),
+    queryFn: async ({ pageParam = 0 }) => {
+      // Get the slice of Pokemon to fetch for this page
+      const pokemonToQueryPage = pokemonToQuery.slice(
+        (pageParam as number) * POKEMON_PER_PAGE,
+        ((pageParam as number) + 1) * POKEMON_PER_PAGE
+      )
+
+      // Fetch species data for all Pokemon in this page
+      // Handle 404s gracefully (some Pokemon might not have species entries)
+      const pokemonSpeciesPromiseArray = pokemonToQueryPage.map(pokeToQuery =>
+        fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokeToQuery.name}`)
+          .then(res => {
+            if (!res.ok) {
+              throw new Error(`Species not found: ${pokeToQuery.name}`)
+            }
+            return res.json()
+          })
+          .catch(error => {
+            console.warn(
+              `Failed to fetch species for ${pokeToQuery.name}:`,
+              error
+            )
+            return null
+          })
+      )
+
+      const pokemonSpeciesResults = await Promise.all(
+        pokemonSpeciesPromiseArray
+      )
+
+      // Filter out null results (Pokemon without species entries)
+      // Since we're using pokedex endpoint, all should be valid, but keep as safety
+      const pokemonSpecies = pokemonSpeciesResults.filter(
+        (species): species is NonNullable<typeof species> => species !== null
+      )
+
+      // Fetch detailed Pokemon data using species ID
+      const pokemonPromiseArray = pokemonSpecies.map(species =>
+        fetch(`https://pokeapi.co/api/v2/pokemon/${species.id}`)
+          .then(res => {
+            if (!res.ok) {
+              throw new Error(`Pokemon not found: ${species.id}`)
+            }
+            return res.json()
+          })
+          .catch(error => {
+            console.warn(
+              `Failed to fetch Pokemon for species ${species.id}:`,
+              error
+            )
+            return null
+          })
+      )
+
+      const pokemonResults = await Promise.all(pokemonPromiseArray)
+
+      // Filter out null results and combine with species data
+      const results: PokemonDetail[] = []
+      for (let i = 0; i < pokemonSpecies.length; i++) {
+        const pokemonData = pokemonResults[i]
+        const speciesData = pokemonSpecies[i]
+
+        if (pokemonData && speciesData) {
+          results.push({
+            ...pokemonData,
+            ...speciesData,
+            name: getPokemonName(speciesData.names),
+            pokedexNumber: getPokedexNumber(speciesData.pokedex_numbers),
+          })
+        }
+      }
+
+      return results
+    },
+    enabled: !!allPokemonList, // Only run when we have the full list
     initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) => {
-      // Safety check: if lastPage or allPages is undefined/not an array, return undefined
-      if (!lastPage || !Array.isArray(allPages)) {
+    getNextPageParam: (_lastPage, allPages) => {
+      if (!Array.isArray(allPages) || !pokemonToQuery.length) {
         return undefined
       }
-      // If there's a next page URL, return the next page number
-      if (lastPage.next) {
-        return allPages.length
-      }
-      // Otherwise, return undefined to signal no more pages
-      return undefined
+
+      const maxPage = Math.ceil(pokemonToQuery.length / POKEMON_PER_PAGE)
+      return allPages.length >= maxPage ? undefined : allPages.length
     },
     staleTime: 1000 * 60 * 60, // 1 hour - Pokémon data doesn't change often
   })
+
+  // Flatten all pages into a single array
+  const pokemonList = useMemo(() => {
+    const list: PokemonDetail[] = []
+    query.data?.pages.forEach(page => {
+      list.push(...page)
+    })
+    return list
+  }, [query.data])
+
+  return {
+    ...query,
+    data: query.data
+      ? {
+          ...query.data,
+          pages: query.data.pages.map(page => ({
+            count: pokemonToQuery.length,
+            next: null,
+            previous: null,
+            results: page,
+          })),
+        }
+      : undefined,
+    pokemonList,
+  }
 }

@@ -1,7 +1,8 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Card from '../components/Card'
 import Button from '../components/Button'
+import TypePill from '../components/TypePill'
 import { usePokemonList } from '../queries/pokemon'
 import { useDebounce } from '../hooks/useDebounce'
 
@@ -23,14 +24,11 @@ const Pokemon = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    pokemonList,
   } = usePokemonList(debouncedSearchTerm)
 
-  // Flatten all pages into a single array
-  // Results are already filtered by the query
-  const filteredPokemon = useMemo(() => {
-    if (!data?.pages) return []
-    return data.pages.flatMap(page => page.results)
-  }, [data])
+  // Use the flattened pokemonList from the query
+  const filteredPokemon = pokemonList || []
 
   // Get total count from first page
   const totalCount = data?.pages[0]?.count ?? 0
@@ -197,14 +195,9 @@ const Pokemon = () => {
                     <h3 className="text-xl font-semibold text-gray-900 mb-2 capitalize">
                       {pokemon.name}
                     </h3>
-                    <div className="flex flex-wrap gap-2 justify-center mb-4">
+                    <div className="flex flex-wrap gap-[5px] justify-center mb-4">
                       {pokemon.types.map(type => (
-                        <span
-                          key={type.slot}
-                          className="px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800 capitalize"
-                        >
-                          {type.type.name}
-                        </span>
+                        <TypePill key={type.slot} type={type.type} />
                       ))}
                     </div>
                     <Button
@@ -269,14 +262,9 @@ const Pokemon = () => {
                             </div>
                           </td>
                           <td className="px-4 py-1.5 whitespace-nowrap">
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-[5px]">
                               {pokemon.types.map(type => (
-                                <span
-                                  key={type.slot}
-                                  className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary-100 text-primary-800 capitalize"
-                                >
-                                  {type.type.name}
-                                </span>
+                                <TypePill key={type.slot} type={type.type} />
                               ))}
                             </div>
                           </td>

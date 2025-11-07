@@ -3,6 +3,7 @@ import { usePokemonList } from '../queries/pokemon'
 import type { PokemonDetail } from '../queries/pokemon'
 import Modal from '../components/Modal'
 import Button from '../components/Button'
+import TypePill from '../components/TypePill'
 
 const PokemonDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -77,14 +78,9 @@ const PokemonDetail = () => {
         {/* Types */}
         <div className="mb-6">
           <p className="text-sm text-gray-600 mb-2">Types</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-[5px]">
             {pokemon.types.map(type => (
-              <span
-                key={type.slot}
-                className="px-3 py-1 text-sm font-medium rounded-full bg-primary-100 text-primary-800 capitalize"
-              >
-                {type.type.name}
-              </span>
+              <TypePill key={type.slot} type={type.type} />
             ))}
           </div>
         </div>
