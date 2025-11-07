@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { usePokemonList } from '../queries/pokemon'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { fetchPokemonById } from '../queries/pokemon'
 import type { PokemonDetail } from '../queries/pokemon'
 import Modal from '../components/Modal'
 import Button from '../components/Button'
@@ -8,23 +9,89 @@ import TypePill from '../components/TypePill'
 const PokemonDetail = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { data } = usePokemonList()
+  const queryClient = useQueryClient()
 
-  // Find the Pokemon from the loaded pages
-  const pokemon: PokemonDetail | undefined = data?.pages
-    .flatMap(page => page.results)
-    .find(p => p.id.toString() === id || p.name === id)
+  // Check all cached Pokemon list queries (including filtered ones)
+  const findPokemonInCachedQueries = (): PokemonDetail | undefined => {
+    // Get all cached queries that match the Pokemon list pattern
+    const queryCache = queryClient.getQueryCache()
+    const pokemonListQueries = queryCache.findAll({
+      queryKey: ['pokemon', 'list'],
+      exact: false,
+    })
+
+    // Search through all cached Pokemon list queries
+    for (const query of pokemonListQueries) {
+      const data = query.state.data as
+        | {
+            pages: Array<PokemonDetail[] | { results: PokemonDetail[] }>
+          }
+        | undefined
+
+      if (data?.pages) {
+        for (const page of data.pages) {
+          // Handle both formats: direct array or object with results
+          const pokemonArray = Array.isArray(page)
+            ? page
+            : (page as { results: PokemonDetail[] }).results || []
+
+          const pokemon = pokemonArray.find(
+            (p: PokemonDetail) => p.id.toString() === id || p.name === id
+          )
+          if (pokemon) {
+            return pokemon
+          }
+        }
+      }
+    }
+
+    return undefined
+  }
+
+  // First try to find the Pokemon from any cached list queries
+  const pokemonFromList = findPokemonInCachedQueries()
+
+  // If not found in loaded data, fetch from API
+  const {
+    data: pokemonFromApi,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['pokemon', 'detail', id],
+    queryFn: () => fetchPokemonById(id!),
+    enabled: !pokemonFromList && !!id, // Only fetch if not in loaded data
+    staleTime: 1000 * 60 * 60, // 1 hour
+  })
+
+  const pokemon = pokemonFromList || pokemonFromApi
 
   const handleClose = () => {
     navigate('/pokemon')
   }
 
-  if (!pokemon) {
+  if (isLoading) {
+    return (
+      <Modal isOpen={true} onClose={handleClose} title="Loading...">
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+          <p className="mt-2 text-gray-600">Loading Pokémon...</p>
+        </div>
+      </Modal>
+    )
+  }
+
+  if (isError || !pokemon) {
     return (
       <Modal isOpen={true} onClose={handleClose} title="Pokémon Not Found">
         <div className="text-center py-8">
           <p className="text-gray-600 mb-4">
-            Pokémon with ID "{id}" not found in loaded data.
+            Pokémon with ID "{id}" not found.
+            {error && (
+              <span className="block mt-2 text-sm text-red-600">
+                {error.message}
+              </span>
+            )}
           </p>
           <Button onClick={handleClose}>Close</Button>
         </div>

@@ -33,7 +33,7 @@ const TypePill = ({ type }: TypePillProps) => {
 
   return (
     <span
-      className="text-white text-[0.7rem] px-[10px] pt-[2px] pb-[3px] rounded-full capitalize inline-block"
+      className="text-white text-[0.6rem] font-bold px-1.5 py-[1px] rounded-sm uppercase inline-block"
       style={{ backgroundColor }}
     >
       {type.name}

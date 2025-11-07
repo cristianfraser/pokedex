@@ -68,6 +68,8 @@ export interface PokemonDetail {
     name: string
     url: string
   }
+  is_legendary?: boolean
+  is_mythical?: boolean
 }
 
 const POKEMON_PER_PAGE = 20
@@ -88,6 +90,37 @@ const getPokedexNumber = (
 ): number => {
   const pokedexInfo = pokedexNumbers.find(info => info.pokedex.name === pokedex)
   return pokedexInfo?.entry_number || 0
+}
+
+// Fetch a single Pokemon by ID
+export const fetchPokemonById = async (
+  id: string | number
+): Promise<PokemonDetail> => {
+  // First fetch pokemon-species to get ID and additional info
+  const speciesResponse = await fetch(
+    `https://pokeapi.co/api/v2/pokemon-species/${id}`
+  )
+  if (!speciesResponse.ok) {
+    throw new Error(`Failed to fetch Pokémon species: ${id}`)
+  }
+  const speciesData = await speciesResponse.json()
+
+  // Then fetch the actual pokemon data using the ID
+  const pokemonResponse = await fetch(
+    `https://pokeapi.co/api/v2/pokemon/${speciesData.id}`
+  )
+  if (!pokemonResponse.ok) {
+    throw new Error(`Failed to fetch Pokémon: ${id}`)
+  }
+  const pokemonData = await pokemonResponse.json()
+
+  // Combine the data
+  return {
+    ...pokemonData,
+    ...speciesData,
+    name: getPokemonName(speciesData.names),
+    pokedexNumber: getPokedexNumber(speciesData.pokedex_numbers),
+  }
 }
 
 // Fetch all Pokemon list from pokedex (only base species, no forms)

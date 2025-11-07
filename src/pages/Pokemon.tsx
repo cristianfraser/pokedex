@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import Card from '../components/Card'
 import Button from '../components/Button'
 import TypePill from '../components/TypePill'
+import LegendaryTag from '../components/LegendaryTag'
+import MythicalTag from '../components/MythicalTag'
 import { usePokemonList } from '../queries/pokemon'
 import { useDebounce } from '../hooks/useDebounce'
 
@@ -198,6 +200,10 @@ const Pokemon = () => {
                         #{pokemon.pokedexNumber}
                       </span>
                     </div>
+                    <div className="mb-2 flex justify-center gap-1">
+                      {pokemon.is_legendary && <LegendaryTag />}
+                      {pokemon.is_mythical && <MythicalTag />}
+                    </div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2 capitalize">
                       {pokemon.name}
                     </h3>
@@ -263,8 +269,14 @@ const Pokemon = () => {
                             )}
                           </td>
                           <td className="px-4 py-1.5 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900 capitalize">
-                              {pokemon.name}
+                            <div className="flex flex-col gap-1">
+                              <div className="flex gap-1">
+                                {pokemon.is_legendary && <LegendaryTag />}
+                                {pokemon.is_mythical && <MythicalTag />}
+                              </div>
+                              <div className="text-sm font-medium text-gray-900 capitalize">
+                                {pokemon.name}
+                              </div>
                             </div>
                           </td>
                           <td className="px-4 py-1.5 whitespace-nowrap">
