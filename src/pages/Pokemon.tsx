@@ -5,15 +5,29 @@ import Button from '../components/Button'
 import TypePill from '../components/TypePill'
 import LegendaryTag from '../components/LegendaryTag'
 import MythicalTag from '../components/MythicalTag'
-import { usePokemonList } from '../queries/pokemon'
+import { usePokemonList, PokemonDetail } from '../queries/pokemon'
 import { useDebounce } from '../hooks/useDebounce'
+import { usePokemonContext } from '../contexts/PokemonContext'
 
 type ViewMode = 'grid' | 'table'
 
 const Pokemon = () => {
   const [searchTerm, setSearchTerm] = useState('')
-  const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const [viewMode, setViewMode] = useState<ViewMode>('table')
   const navigate = useNavigate()
+  const { addNext, addInPosition, selectedPosition, clearSelection } =
+    usePokemonContext()
+
+  const handleAddToTeam = (pokemon: PokemonDetail) => {
+    if (selectedPosition !== null) {
+      // If a slot is selected, add to that position
+      addInPosition(pokemon, selectedPosition)
+      clearSelection()
+    } else {
+      // Otherwise, use addNext to find first empty slot
+      addNext(pokemon)
+    }
+  }
 
   // Debounce search term to avoid excessive re-renders and API calls
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
@@ -212,13 +226,23 @@ const Pokemon = () => {
                         <TypePill key={type.slot} type={type.type} />
                       ))}
                     </div>
-                    <Button
-                      size="sm"
-                      className="w-full"
-                      onClick={() => navigate(`/pokemon/${pokemon.id}`)}
-                    >
-                      View Details
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleAddToTeam(pokemon)}
+                      >
+                        Add to Team
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="flex-1"
+                        onClick={() => navigate(`/pokemon/${pokemon.id}`)}
+                      >
+                        Battle Info
+                      </Button>
+                    </div>
                   </Card>
                 ))}
               </div>
@@ -249,8 +273,7 @@ const Pokemon = () => {
                       {filteredPokemon.map(pokemon => (
                         <tr
                           key={pokemon.id}
-                          className="hover:bg-gray-50 transition-colors cursor-pointer"
-                          onClick={() => navigate(`/pokemon/${pokemon.id}`)}
+                          className="hover:bg-gray-50 transition-colors"
                         >
                           <td className="px-4 py-1.5 whitespace-nowrap text-sm text-gray-500">
                             #{pokemon.pokedexNumber}
@@ -287,17 +310,31 @@ const Pokemon = () => {
                             </div>
                           </td>
                           <td className="px-4 py-1.5 whitespace-nowrap text-sm">
-                            <Button
-                              size="sm"
-                              onClick={(
-                                e?: React.MouseEvent<HTMLButtonElement>
-                              ) => {
-                                e?.stopPropagation()
-                                navigate(`/pokemon/${pokemon.id}`)
-                              }}
-                            >
-                              View
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={(
+                                  e?: React.MouseEvent<HTMLButtonElement>
+                                ) => {
+                                  e?.stopPropagation()
+                                  handleAddToTeam(pokemon)
+                                }}
+                              >
+                                Add to Team
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={(
+                                  e?: React.MouseEvent<HTMLButtonElement>
+                                ) => {
+                                  e?.stopPropagation()
+                                  navigate(`/pokemon/${pokemon.id}`)
+                                }}
+                              >
+                                Battle Info
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}

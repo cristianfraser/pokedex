@@ -2,6 +2,7 @@ interface TypePillProps {
   type: {
     name: string
   }
+  size?: 'default' | 'small'
 }
 
 const typeColors: Record<string, string> = {
@@ -27,13 +28,18 @@ const typeColors: Record<string, string> = {
   shadow: '#604e82',
 }
 
-const TypePill = ({ type }: TypePillProps) => {
+const TypePill = ({ type, size = 'default' }: TypePillProps) => {
   const typeName = type.name.toLowerCase()
   const backgroundColor = typeColors[typeName] || typeColors.unknown
 
+  const sizeClasses =
+    size === 'small'
+      ? 'text-[0.5rem] px-1 py-[1px]'
+      : 'text-[0.6rem] px-1.5 py-[1px]'
+
   return (
     <span
-      className="text-white text-[0.6rem] font-bold px-1.5 py-[1px] rounded-sm uppercase inline-block"
+      className={`text-white font-bold ${sizeClasses} rounded-sm uppercase inline-block`}
       style={{ backgroundColor }}
     >
       {type.name}
