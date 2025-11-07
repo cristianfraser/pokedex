@@ -1,11 +1,20 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Card from '../components/Card'
 import Button from '../components/Button'
 import { usePokemonList } from '../queries/pokemon'
-import type { PokemonListItem } from '../queries/pokemon'
+import { useDebounce } from '../hooks/useDebounce'
+
+type ViewMode = 'grid' | 'table'
 
 const Pokemon = () => {
   const [searchTerm, setSearchTerm] = useState('')
+  const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const navigate = useNavigate()
+
+  // Debounce search term to avoid excessive re-renders and API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+
   const {
     data,
     isLoading,
@@ -14,21 +23,14 @@ const Pokemon = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = usePokemonList()
+  } = usePokemonList(debouncedSearchTerm)
 
   // Flatten all pages into a single array
-  const allPokemon = useMemo(() => {
+  // Results are already filtered by the query
+  const filteredPokemon = useMemo(() => {
     if (!data?.pages) return []
     return data.pages.flatMap(page => page.results)
   }, [data])
-
-  // Filter Pokémon based on search term
-  const filteredPokemon = useMemo(() => {
-    if (!allPokemon.length) return []
-    return allPokemon.filter((pokemon: PokemonListItem) =>
-      pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [allPokemon, searchTerm])
 
   // Get total count from first page
   const totalCount = data?.pages[0]?.count ?? 0
@@ -39,11 +41,16 @@ const Pokemon = () => {
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const [target] = entries
-      if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+      if (
+        target.isIntersecting &&
+        hasNextPage &&
+        !isFetchingNextPage &&
+        !isLoading
+      ) {
         fetchNextPage()
       }
     },
-    [hasNextPage, isFetchingNextPage, fetchNextPage]
+    [hasNextPage, isFetchingNextPage, fetchNextPage, isLoading]
   )
 
   useEffect(() => {
@@ -61,48 +68,64 @@ const Pokemon = () => {
         observer.unobserve(element)
       }
     }
-  }, [handleObserver])
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-            <p className="mt-4 text-gray-600">Loading Pokémon...</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (isError) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <p className="text-red-600 text-lg mb-4">
-              Error loading Pokémon: {error?.message || 'Unknown error'}
-            </p>
-            <Button
-              variant="secondary"
-              onClick={() => window.location.reload()}
-            >
-              Retry
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  }, [handleObserver, filteredPokemon.length, debouncedSearchTerm])
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Pokémon Database
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Pokémon Database
+            </h1>
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-white text-primary-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-white text-primary-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
           <div className="max-w-md">
             <input
               type="text"
@@ -115,29 +138,173 @@ const Pokemon = () => {
           {totalCount > 0 && (
             <p className="mt-2 text-sm text-gray-600">
               Showing {filteredPokemon.length} of {totalCount} Pokémon
-              {searchTerm && ` (${allPokemon.length} loaded)`}
+              {debouncedSearchTerm && ' (filtered)'}
             </p>
+          )}
+          {isError && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm mb-2">
+                Error loading Pokémon: {error?.message || 'Unknown error'}
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </Button>
+            </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredPokemon.map(pokemon => (
-            <Card key={pokemon.name} hover className="text-center">
-              <div className="text-6xl mb-4">
-                {pokemon.name.charAt(0).toUpperCase()}
+        <div className="relative">
+          {/* Loading overlay */}
+          {isLoading && (
+            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+              <div className="text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <p className="mt-2 text-sm text-gray-600">Loading Pokémon...</p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2 capitalize">
-                {pokemon.name}
-              </h3>
-              <Button size="sm" className="w-full">
-                View Details
-              </Button>
-            </Card>
-          ))}
-        </div>
+            </div>
+          )}
 
-        {/* Infinite scroll trigger */}
-        {!searchTerm && <div ref={observerTarget} className="h-10 w-full" />}
+          {/* Grid/Table with opacity when loading */}
+          <div
+            className={`transition-opacity duration-200 ${
+              isLoading ? 'opacity-50' : 'opacity-100'
+            }`}
+          >
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredPokemon.map(pokemon => (
+                  <Card key={pokemon.id} hover className="text-center">
+                    {pokemon.sprites.front_default ? (
+                      <img
+                        src={pokemon.sprites.front_default}
+                        alt={pokemon.name}
+                        className="w-32 h-32 mx-auto mb-4 object-contain"
+                      />
+                    ) : (
+                      <div className="text-6xl mb-4">
+                        {pokemon.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="mb-2">
+                      <span className="text-sm text-gray-500">
+                        #{pokemon.pokedexNumber}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2 capitalize">
+                      {pokemon.name}
+                    </h3>
+                    <div className="flex flex-wrap gap-2 justify-center mb-4">
+                      {pokemon.types.map(type => (
+                        <span
+                          key={type.slot}
+                          className="px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800 capitalize"
+                        >
+                          {type.type.name}
+                        </span>
+                      ))}
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={() => navigate(`/pokemon/${pokemon.id}`)}
+                    >
+                      View Details
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          #
+                        </th>
+                        <th className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Sprite
+                        </th>
+                        <th className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Types
+                        </th>
+                        <th className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredPokemon.map(pokemon => (
+                        <tr
+                          key={pokemon.id}
+                          className="hover:bg-gray-50 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/pokemon/${pokemon.id}`)}
+                        >
+                          <td className="px-4 py-1.5 whitespace-nowrap text-sm text-gray-500">
+                            #{pokemon.pokedexNumber}
+                          </td>
+                          <td className="px-4 py-1.5 whitespace-nowrap">
+                            {pokemon.sprites.front_default ? (
+                              <img
+                                src={pokemon.sprites.front_default}
+                                alt={pokemon.name}
+                                className="w-10 h-10 object-contain"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-400 text-xs">
+                                {pokemon.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-1.5 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900 capitalize">
+                              {pokemon.name}
+                            </div>
+                          </td>
+                          <td className="px-4 py-1.5 whitespace-nowrap">
+                            <div className="flex flex-wrap gap-1">
+                              {pokemon.types.map(type => (
+                                <span
+                                  key={type.slot}
+                                  className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary-100 text-primary-800 capitalize"
+                                >
+                                  {type.type.name}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-4 py-1.5 whitespace-nowrap text-sm">
+                            <Button
+                              size="sm"
+                              onClick={(
+                                e?: React.MouseEvent<HTMLButtonElement>
+                              ) => {
+                                e?.stopPropagation()
+                                navigate(`/pokemon/${pokemon.id}`)
+                              }}
+                            >
+                              View
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Infinite scroll trigger - inside the container */}
+          <div ref={observerTarget} className="h-10 w-full" />
+        </div>
 
         {/* Loading indicator for next page */}
         {isFetchingNextPage && (
@@ -150,16 +317,16 @@ const Pokemon = () => {
         )}
 
         {/* End of list indicator */}
-        {!hasNextPage && allPokemon.length > 0 && !searchTerm && (
+        {!hasNextPage && filteredPokemon.length > 0 && !debouncedSearchTerm && (
           <div className="text-center py-8">
             <p className="text-gray-500">All Pokémon loaded!</p>
           </div>
         )}
 
-        {filteredPokemon.length === 0 && searchTerm && (
+        {filteredPokemon.length === 0 && debouncedSearchTerm && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">
-              No Pokémon found matching "{searchTerm}"
+              No Pokémon found matching "{debouncedSearchTerm}"
             </p>
             <Button
               variant="secondary"
