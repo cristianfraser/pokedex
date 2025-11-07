@@ -8,8 +8,10 @@ import About from './pages/About'
 function App() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="pt-20">
+      <div className="fixed top-0 left-0 right-0 z-50 w-full">
+        <Header />
+      </div>
+      <main className="pt-32">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route
