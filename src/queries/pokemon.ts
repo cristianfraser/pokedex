@@ -137,6 +137,7 @@ export const usePokemonList = (searchTerm: string = '') => {
   // Infinite query that paginates the filtered list
   const query = useInfiniteQuery({
     queryKey: ['pokemon', 'list', searchTerm],
+    placeholderData: previousData => previousData,
     queryFn: async ({ pageParam = 0 }) => {
       // Get the slice of Pokemon to fetch for this page
       const pokemonToQueryPage = pokemonToQuery.slice(
@@ -228,7 +229,9 @@ export const usePokemonList = (searchTerm: string = '') => {
   const pokemonList = useMemo(() => {
     const list: PokemonDetail[] = []
     query.data?.pages.forEach(page => {
-      list.push(...page)
+      if (Array.isArray(page)) {
+        list.push(...page)
+      }
     })
     return list
   }, [query.data])

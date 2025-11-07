@@ -19,6 +19,7 @@ const Pokemon = () => {
   const {
     data,
     isLoading,
+    isFetching,
     isError,
     error,
     fetchNextPage,
@@ -156,9 +157,12 @@ const Pokemon = () => {
         </div>
 
         <div className="relative">
-          {/* Loading overlay */}
-          {isLoading && (
-            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+          {/* Loading overlay - show when initial loading or when fetching (search change) with existing data */}
+          {(isLoading ||
+            (isFetching &&
+              !isFetchingNextPage &&
+              filteredPokemon.length > 0)) && (
+            <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10 rounded-lg">
               <div className="text-center">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
                 <p className="mt-2 text-sm text-gray-600">Loading Pokémon...</p>
@@ -166,10 +170,12 @@ const Pokemon = () => {
             </div>
           )}
 
-          {/* Grid/Table with opacity when loading */}
+          {/* Grid/Table with opacity when fetching (search change), but not when loading next page */}
           <div
             className={`transition-opacity duration-200 ${
-              isLoading ? 'opacity-50' : 'opacity-100'
+              isFetching && !isFetchingNextPage && filteredPokemon.length > 0
+                ? 'opacity-80'
+                : 'opacity-100'
             }`}
           >
             {viewMode === 'grid' ? (
