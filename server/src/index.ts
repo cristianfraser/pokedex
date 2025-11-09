@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3001
 // Allow your frontend domain
 app.use(
   cors({
-    origin: 'https://pokedex-6wpt.onrender.com',
+    origin: ['https://pokedex-6wpt.onrender.com', 'https://poketeam.crfrsr.io'],
   })
 )
 app.use(express.json())
@@ -26,7 +26,7 @@ initializeSchema(pool)
   .then(() => {
     console.log('Database initialized')
   })
-  .catch((error) => {
+  .catch(error => {
     console.error('Error initializing database:', error)
   })
 
