@@ -18,18 +18,20 @@ const FloatingPanel = ({ top }: FloatingPanelProps) => {
       }}
     >
       <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl px-4 sm:px-6 lg:px-8 py-4">
-        <div className="grid grid-cols-6 gap-4">
-          {/* 6 slots horizontally, 1 row */}
-          {pokemonList.map((pokemon, index) => (
-            <TeamPokemon
-              key={index}
-              pokemon={pokemon}
-              position={index}
-              isSelected={selectedPosition === index}
-              onSelect={() => selectPokemon(index)}
-              onRemove={() => removeInPosition(index)}
-            />
-          ))}
+        <div className="flex justify-center">
+          <div className="grid gap-4 team-pokemon-grid">
+            {/* 6 slots: 1 row of 6, or 2 rows of 3 on smaller screens */}
+            {pokemonList.map((pokemon, index) => (
+              <TeamPokemon
+                key={index}
+                pokemon={pokemon}
+                position={index}
+                isSelected={selectedPosition === index}
+                onSelect={() => selectPokemon(index)}
+                onRemove={() => removeInPosition(index)}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

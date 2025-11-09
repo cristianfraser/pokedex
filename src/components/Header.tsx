@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import FloatingPanel from './FloatingPanel'
 
 const Header = () => {
@@ -79,24 +79,30 @@ const Header = () => {
               </Link>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <Link
+              <NavLink
                 to="/"
-                className="text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? 'active' : ''}`
+                }
               >
                 Home
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/pokemon"
-                className="text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? 'active' : ''}`
+                }
               >
                 Pokémon
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/about"
-                className="text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? 'active' : ''}`
+                }
               >
                 About
-              </Link>
+              </NavLink>
             </nav>
           </div>
         </div>

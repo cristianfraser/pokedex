@@ -1,8 +1,11 @@
+import { cn } from '@/lib/utils'
+
 interface TypePillProps {
   type: {
     name: string
   }
-  size?: 'default' | 'small'
+  size?: 'default' | 'small' | 'icon'
+  className?: string
 }
 
 const typeColors: Record<string, string> = {
@@ -28,24 +31,79 @@ const typeColors: Record<string, string> = {
   shadow: '#604e82',
 }
 
-const TypePill = ({ type, size = 'default' }: TypePillProps) => {
+const typeLetters: Record<string, string> = {
+  ground: 'a',
+  bug: 'b',
+  normal: 'c',
+  dark: 'd',
+  fighting: 'f',
+  grass: 'g',
+  ghost: 'h',
+  ice: 'i',
+  rock: 'k',
+  electric: 'l',
+  steel: 'm',
+  dragon: 'n',
+  poison: 'o',
+  psychic: 'p',
+  fire: 'r',
+  flying: 'v',
+  water: 'w',
+  fairy: 'y',
+}
+
+const TypePill = ({
+  type,
+  size = 'default',
+  className = '',
+}: TypePillProps) => {
   const typeName = type.name.toLowerCase()
   const backgroundColor = typeColors[typeName] || typeColors.unknown
 
   const sizeClasses =
-    size === 'small'
-      ? 'text-[0.5rem] px-1 py-[1px]'
-      : 'text-[0.6rem] px-1.5 py-[1px]'
+    size === 'icon' || size === 'small'
+      ? 'text-4xs px-1 py-[1px]'
+      : 'text-3xs px-1.5 py-[1px]'
+
+  const typeLetter = typeLetters[typeName] || type.name.charAt(0).toLowerCase()
+
+  // For icon size, only show the icon
+  if (size === 'icon') {
+    return (
+      <span
+        className={cn(
+          'text-white font-bold rounded-sm inline-block line-height-[0.5rem]',
+          sizeClasses,
+          className
+        )}
+        style={{
+          backgroundColor,
+          lineHeight: '12px',
+        }}
+      >
+        <span className="pokemon-font-2 normal-case">{typeLetter}</span>
+      </span>
+    )
+  }
 
   return (
     <span
-      className={`text-white font-bold ${sizeClasses} rounded-sm uppercase inline-block`}
-      style={{ backgroundColor }}
+      className={cn(
+        'text-white font-bold rounded-sm uppercase inline-block line-height-[0.5rem]',
+        sizeClasses,
+        className
+      )}
+      style={{
+        backgroundColor,
+        lineHeight: size === 'small' ? '12px' : undefined,
+      }}
     >
-      {type.name}
+      {size !== 'small' && (
+        <span className="pokemon-font-2 normal-case">{typeLetter}</span>
+      )}
+      <span className={size !== 'small' ? 'ml-0.5' : ''}>{type.name}</span>
     </span>
   )
 }
 
 export default TypePill
-
