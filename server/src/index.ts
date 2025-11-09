@@ -12,8 +12,12 @@ const __dirname = path.dirname(__filename)
 const app = express()
 const PORT = process.env.PORT || 3001
 
-// Middleware
-app.use(cors())
+// Allow your frontend domain
+app.use(
+  cors({
+    origin: 'https://pokedex-6wpt.onrender.com',
+  })
+)
 app.use(express.json())
 
 // Initialize database if it doesn't exist
@@ -38,4 +42,3 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
 })
-
