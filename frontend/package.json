@@ -10,11 +10,11 @@
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "preview": "vite preview",
     "format": "prettier --write .",
-    "server:dev": "cd server && npm run dev",
-    "server:build": "cd server && npm run build",
-    "server:start": "cd server && npm start",
-    "server:seed": "cd server && npm run seed",
-    "server:install": "cd server && npm install"
+    "server:dev": "cd ../server && npm run dev",
+    "server:build": "cd ../server && npm run build",
+    "server:start": "cd ../server && npm start",
+    "server:seed": "cd ../server && npm run seed",
+    "server:install": "cd ../server && npm install"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
