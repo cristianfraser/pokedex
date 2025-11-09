@@ -57,19 +57,6 @@ export interface MoveDetail {
 
 const MOVES_PER_PAGE = 100
 
-// Fetch moves list with pagination
-const fetchMovesList = async (
-  pageParam: number = 0
-): Promise<MoveListResponse> => {
-  const response = await fetch(
-    `/api/moves?page=${pageParam}&limit=${MOVES_PER_PAGE}`
-  )
-  if (!response.ok) {
-    throw new Error('Failed to fetch moves list')
-  }
-  return response.json()
-}
-
 // Fetch a single move by ID or name
 export const fetchMoveById = async (
   id: string | number
@@ -87,8 +74,8 @@ export const useMoves = (pokemonId?: number, enabled: boolean = true) => {
     queryKey: ['moves', 'list', pokemonId],
     queryFn: ({ pageParam = 0 }) => {
       const url = pokemonId
-        ? `/api/moves?page=${pageParam}&limit=${100}&pokemon=${pokemonId}`
-        : `/api/moves?page=${pageParam}&limit=${100}`
+        ? `/api/moves?page=${pageParam}&limit=${MOVES_PER_PAGE}&pokemon=${pokemonId}`
+        : `/api/moves?page=${pageParam}&limit=${MOVES_PER_PAGE}`
       return fetch(url).then(res => {
         if (!res.ok) {
           throw new Error('Failed to fetch moves list')
@@ -96,7 +83,7 @@ export const useMoves = (pokemonId?: number, enabled: boolean = true) => {
         return res.json()
       })
     },
-    getNextPageParam: (lastPage, allPages) => {
+    getNextPageParam: (lastPage, _allPages) => {
       if (!lastPage.next) {
         return undefined
       }
