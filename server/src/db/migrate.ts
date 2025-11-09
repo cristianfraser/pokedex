@@ -1,15 +1,19 @@
 import { createDatabase, initializeSchema } from './schema.js'
 
-const db = createDatabase()
+const pool = createDatabase()
 
-try {
-  console.log('Initializing database schema...')
-  initializeSchema(db)
-  console.log('Database schema initialized successfully!')
-} catch (error) {
-  console.error('Error initializing database:', error)
-  process.exit(1)
-} finally {
-  db.close()
+async function main() {
+  try {
+    console.log('Initializing database schema...')
+    await initializeSchema(pool)
+    console.log('Database schema initialized successfully!')
+  } catch (error) {
+    console.error('Error initializing database:', error)
+    process.exit(1)
+  } finally {
+    await pool.end()
+  }
 }
+
+main()
 
