@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { API_URL } from '../utils/constants'
 
 export interface PokemonListItem {
   name: string
@@ -78,7 +79,7 @@ const POKEMON_PER_PAGE = 20
 export const fetchPokemonById = async (
   id: string | number
 ): Promise<PokemonDetail> => {
-  const response = await fetch(`/api/pokemon/${id}`)
+  const response = await fetch(`${API_URL}/api/pokemon/${id}`)
   if (!response.ok) {
     throw new Error(`Failed to fetch Pokémon: ${id}`)
   }
@@ -99,7 +100,7 @@ export const usePokemonList = (searchTerm: string = '', type?: string) => {
         params.set('type', type)
       }
 
-      const response = await fetch(`/api/pokemon/list?${params.toString()}`)
+      const response = await fetch(`${API_URL}/api/pokemon/list?${params.toString()}`)
       if (!response.ok) {
         throw new Error('Failed to fetch Pokémon list')
       }

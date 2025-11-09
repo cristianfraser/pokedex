@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { API_URL } from '../utils/constants'
 
 export interface MoveListItem {
   name: string
@@ -61,7 +62,7 @@ const MOVES_PER_PAGE = 100
 export const fetchMoveById = async (
   id: string | number
 ): Promise<MoveDetail> => {
-  const response = await fetch(`/api/moves/${id}`)
+  const response = await fetch(`${API_URL}/api/moves/${id}`)
   if (!response.ok) {
     throw new Error(`Failed to fetch move: ${id}`)
   }
@@ -74,8 +75,8 @@ export const useMoves = (pokemonId?: number, enabled: boolean = true) => {
     queryKey: ['moves', 'list', pokemonId],
     queryFn: ({ pageParam = 0 }) => {
       const url = pokemonId
-        ? `/api/moves?page=${pageParam}&limit=${MOVES_PER_PAGE}&pokemon=${pokemonId}`
-        : `/api/moves?page=${pageParam}&limit=${MOVES_PER_PAGE}`
+        ? `${API_URL}/api/moves?page=${pageParam}&limit=${MOVES_PER_PAGE}&pokemon=${pokemonId}`
+        : `${API_URL}/api/moves?page=${pageParam}&limit=${MOVES_PER_PAGE}`
       return fetch(url).then(res => {
         if (!res.ok) {
           throw new Error('Failed to fetch moves list')
