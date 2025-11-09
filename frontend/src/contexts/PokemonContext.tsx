@@ -3,6 +3,9 @@ import { PokemonDetail } from '../queries/pokemon'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 
 const STORAGE_KEY = 'pokedex_team_pokemon'
+const STORAGE_KEY_MOVES = 'pokedex_team_moves'
+
+type PokemonMoves = Array<{ name: string; type: string } | null>
 
 interface PokemonContextType {
   pokemonList: (PokemonDetail | null)[]
@@ -13,6 +16,8 @@ interface PokemonContextType {
   selectedPosition: number | null
   selectPokemon: (position: number) => void
   clearSelection: () => void
+  contextMoves: { [pokemonId: number]: PokemonMoves }
+  setPokemonMoves: (pokemonId: number, moves: PokemonMoves) => void
 }
 
 const PokemonContext = createContext<PokemonContextType | undefined>(undefined)
@@ -21,6 +26,10 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
   const [pokemonList, setPokemonList] = useLocalStorage<(PokemonDetail | null)[]>(
     STORAGE_KEY,
     Array(6).fill(null)
+  )
+  const [contextMoves, setContextMoves] = useLocalStorage<{ [pokemonId: number]: PokemonMoves }>(
+    STORAGE_KEY_MOVES,
+    {}
   )
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null)
 
@@ -91,6 +100,13 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
     setSelectedPosition(null)
   }
 
+  const setPokemonMoves = (pokemonId: number, moves: PokemonMoves) => {
+    setContextMoves(prev => ({
+      ...prev,
+      [pokemonId]: moves,
+    }))
+  }
+
   const selectedPokemon =
     selectedPosition !== null ? pokemonList[selectedPosition] : null
 
@@ -105,6 +121,8 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
         selectedPosition,
         selectPokemon,
         clearSelection,
+        contextMoves,
+        setPokemonMoves,
       }}
     >
       {children}

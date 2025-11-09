@@ -1,8 +1,9 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState, useMemo } from 'react'
 import { PokemonDetail } from '../queries/pokemon'
 import TypePill from './TypePill'
 import { MovesCombobox } from './MovesCombobox'
 import { cn } from '@/lib/utils'
+import { usePokemonContext } from '../contexts/PokemonContext'
 
 interface TeamPokemonProps {
   pokemon: PokemonDetail | null
@@ -19,6 +20,7 @@ const TeamPokemon = ({
   onSelect,
   onRemove,
 }: TeamPokemonProps) => {
+  const { contextMoves, setPokemonMoves } = usePokemonContext()
   const [exitingTypes, setExitingTypes] = useState<string[]>([])
   const [isAnimating, setIsAnimating] = useState(false)
   const [isAnimatingImageName, setIsAnimatingImageName] = useState(false)
@@ -26,9 +28,12 @@ const TeamPokemon = ({
   const [exitingPokemon, setExitingPokemon] = useState<PokemonDetail | null>(
     null
   )
-  const [moves, setMoves] = useState<
-    Array<{ name: string; type: string } | null>
-  >([null, null, null, null])
+
+  // Get moves from context for this pokemon, default to empty array
+  const moves = useMemo(() => {
+    if (!pokemon) return [null, null, null, null]
+    return contextMoves[pokemon.id] || [null, null, null, null]
+  }, [pokemon, contextMoves])
   const enteringRef = useRef<HTMLDivElement>(null)
   const exitingRef = useRef<HTMLDivElement>(null)
   const enteringImageNameRef = useRef<HTMLDivElement>(null)
@@ -96,11 +101,10 @@ const TeamPokemon = ({
     previousPokemonRef.current = pokemon
   }, [pokemon])
 
-  // Reset moves when Pokemon changes
+  // Update previousPokemonIdRef when Pokemon changes
   useLayoutEffect(() => {
     const currentId = pokemon?.id ?? null
     if (currentId !== previousPokemonIdRef.current) {
-      setMoves([null, null, null, null])
       previousPokemonIdRef.current = currentId
     }
   }, [pokemon])
@@ -336,6 +340,7 @@ const TeamPokemon = ({
               src={pokemon.sprites.front_default}
               alt={pokemon.name}
               className="absolute top-0 left-0 w-12 h-12 object-contain"
+              style={{ color: 'transparent' }}
             />
           ) : null}
           <div
@@ -366,6 +371,7 @@ const TeamPokemon = ({
                 src={exitingPokemon.sprites.front_default}
                 alt={exitingPokemon.name}
                 className="absolute top-0 left-0 w-12 h-12 object-contain"
+                style={{ color: 'transparent' }}
               />
             ) : null}
             <div
@@ -446,11 +452,12 @@ const TeamPokemon = ({
                 value={move?.name}
                 pokemonId={pokemon.id}
                 onValueChange={(moveName, moveType) => {
+                  if (!pokemon) return
                   const newMoves = [...moves]
                   newMoves[index] = moveName
                     ? { name: moveName, type: moveType || '' }
                     : null
-                  setMoves(newMoves)
+                  setPokemonMoves(pokemon.id, newMoves)
                 }}
                 trigger={
                   <div
@@ -482,9 +489,10 @@ const TeamPokemon = ({
                   <button
                     onClick={e => {
                       e.stopPropagation()
+                      if (!pokemon) return
                       const newMoves = [...moves]
                       newMoves[index] = null
-                      setMoves(newMoves)
+                      setPokemonMoves(pokemon.id, newMoves)
                     }}
                     className="absolute right-0.5 top-[50%] translate-y-[-50%] w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-opacity opacity-0 group-hover/move:opacity-100 z-10"
                     aria-label="Clear move"
