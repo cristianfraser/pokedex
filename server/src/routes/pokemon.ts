@@ -1,12 +1,12 @@
 import { Router } from 'express'
 import { createDatabase } from '../db/schema.js'
+import { Pool } from 'pg'
 
 const router = Router()
+const pool = createDatabase()
 
 // Get Pokemon list with pagination, search, and type filtering
-router.get('/list', (req, res) => {
-  const db = createDatabase()
-  
+router.get('/list', async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 0
     const limit = parseInt(req.query.limit as string) || 20
@@ -17,30 +17,39 @@ router.get('/list', (req, res) => {
     // Build WHERE clause based on filters
     let whereClause = 'WHERE 1=1'
     const params: any[] = []
+    let paramIndex = 1
 
     if (search) {
-      whereClause += ' AND p.name LIKE ?'
+      whereClause += ` AND p.name LIKE $${paramIndex}`
       params.push(`%${search}%`)
+      paramIndex++
     }
 
     if (type) {
       whereClause += ` AND EXISTS (
         SELECT 1 FROM pokemon_types pt
         JOIN types t ON pt.type_id = t.id
-        WHERE pt.pokemon_id = p.id AND t.name = ?
+        WHERE pt.pokemon_id = p.id AND t.name = $${paramIndex}
       )`
       params.push(type)
+      paramIndex++
     }
 
     // Get total count
-    const countResult = db.prepare(`
+    const countResult = await pool.query(`
       SELECT COUNT(DISTINCT p.id) as count
       FROM pokemon p
       ${whereClause}
-    `).get(...params) as { count: number }
+    `, params)
+    const totalCount = parseInt(countResult.rows[0].count)
+
+    // Add limit and offset to params for the main query
+    const limitOffsetParams = [...params, limit, offset]
+    const limitParamIndex = paramIndex
+    const offsetParamIndex = paramIndex + 1
 
     // Get paginated Pokemon with all details
-    const pokemonList = db.prepare(`
+    const pokemonListResult = await pool.query(`
       SELECT DISTINCT
         p.id, p.name, p.pokedex_number, p.height, p.weight, p.base_experience,
         p.sprite_front_default, p.sprite_front_shiny, p.sprite_official_artwork,
@@ -48,8 +57,10 @@ router.get('/list', (req, res) => {
       FROM pokemon p
       ${whereClause}
       ORDER BY p.pokedex_number ASC
-      LIMIT ? OFFSET ?
-    `).all(...params, limit, offset) as Array<{
+      LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}
+    `, limitOffsetParams)
+
+    const pokemonList = pokemonListResult.rows as Array<{
       id: number
       name: string
       pokedex_number: number
@@ -66,81 +77,82 @@ router.get('/list', (req, res) => {
       flavor_text: string | null
     }>
 
-    // Get types for each Pokemon
-    const getTypes = db.prepare(`
-      SELECT t.name, pt.slot
-      FROM types t
-      JOIN pokemon_types pt ON t.id = pt.type_id
-      WHERE pt.pokemon_id = ?
-      ORDER BY pt.slot ASC
-    `)
+    // Get types and stats for each Pokemon
+    const results = await Promise.all(
+      pokemonList.map(async (p) => {
+        const typesResult = await pool.query(
+          `SELECT t.name, pt.slot
+           FROM types t
+           JOIN pokemon_types pt ON t.id = pt.type_id
+           WHERE pt.pokemon_id = $1
+           ORDER BY pt.slot ASC`,
+          [p.id]
+        )
 
-    // Get stats for each Pokemon
-    const getStats = db.prepare(`
-      SELECT stat_name, base_stat, effort
-      FROM pokemon_stats
-      WHERE pokemon_id = ?
-    `)
+        const statsResult = await pool.query(
+          `SELECT stat_name, base_stat, effort
+           FROM pokemon_stats
+           WHERE pokemon_id = $1`,
+          [p.id]
+        )
 
-    // Format response
-    const results = pokemonList.map(p => {
-      const types = getTypes.all(p.id) as Array<{ name: string; slot: number }>
-      const stats = getStats.all(p.id) as Array<{ stat_name: string; base_stat: number; effort: number }>
+        const types = typesResult.rows as Array<{ name: string; slot: number }>
+        const stats = statsResult.rows as Array<{ stat_name: string; base_stat: number; effort: number }>
 
-      return {
-        id: p.id,
-        name: p.name,
-        pokedexNumber: p.pokedex_number,
-        height: p.height,
-        weight: p.weight,
-        base_experience: p.base_experience,
-        sprites: {
-          front_default: p.sprite_front_default,
-          front_shiny: p.sprite_front_shiny,
-          other: {
-            'official-artwork': {
-              front_default: p.sprite_official_artwork
-            }
-          }
-        },
-        types: types.map(t => ({
-          slot: t.slot,
-          type: {
-            name: t.name,
-            url: `/api/type/${t.name}`
-          }
-        })),
-        stats: stats.map(s => ({
-          base_stat: s.base_stat,
-          effort: s.effort,
-          stat: {
-            name: s.stat_name,
-            url: `/api/stat/${s.stat_name}`
-          }
-        })),
-        species: {
+        return {
+          id: p.id,
           name: p.name,
-          url: `/api/pokemon-species/${p.id}`
-        },
-        flavor_text_entries: p.flavor_text ? [{
-          flavor_text: p.flavor_text,
-          language: { name: 'en' },
-          version: { name: 'unknown' }
-        }] : [],
-        color: p.color ? {
-          name: p.color,
-          url: `/api/pokemon-color/${p.color}`
-        } : undefined,
-        habitat: p.habitat ? {
-          name: p.habitat,
-          url: `/api/pokemon-habitat/${p.habitat}`
-        } : undefined,
-        is_legendary: p.is_legendary === 1,
-        is_mythical: p.is_mythical === 1
-      }
-    })
+          pokedexNumber: p.pokedex_number,
+          height: p.height,
+          weight: p.weight,
+          base_experience: p.base_experience,
+          sprites: {
+            front_default: p.sprite_front_default,
+            front_shiny: p.sprite_front_shiny,
+            other: {
+              'official-artwork': {
+                front_default: p.sprite_official_artwork
+              }
+            }
+          },
+          types: types.map(t => ({
+            slot: t.slot,
+            type: {
+              name: t.name,
+              url: `/api/type/${t.name}`
+            }
+          })),
+          stats: stats.map(s => ({
+            base_stat: s.base_stat,
+            effort: s.effort,
+            stat: {
+              name: s.stat_name,
+              url: `/api/stat/${s.stat_name}`
+            }
+          })),
+          species: {
+            name: p.name,
+            url: `/api/pokemon-species/${p.id}`
+          },
+          flavor_text_entries: p.flavor_text ? [{
+            flavor_text: p.flavor_text,
+            language: { name: 'en' },
+            version: { name: 'unknown' }
+          }] : [],
+          color: p.color ? {
+            name: p.color,
+            url: `/api/pokemon-color/${p.color}`
+          } : undefined,
+          habitat: p.habitat ? {
+            name: p.habitat,
+            url: `/api/pokemon-habitat/${p.habitat}`
+          } : undefined,
+          is_legendary: p.is_legendary === 1,
+          is_mythical: p.is_mythical === 1
+        }
+      })
+    )
 
-    const totalCount = countResult.count
     const hasNext = offset + limit < totalCount
     const hasPrevious = offset > 0
 
@@ -160,19 +172,22 @@ router.get('/list', (req, res) => {
   } catch (error) {
     console.error('Error fetching Pokemon list:', error)
     res.status(500).json({ error: 'Failed to fetch Pokemon list' })
-  } finally {
-    db.close()
   }
 })
 
 // Get Pokemon by ID
-router.get('/:id', (req, res) => {
-  const db = createDatabase()
-  
+router.get('/:id', async (req, res) => {
   try {
-    const pokemon = db.prepare(`
-      SELECT * FROM pokemon WHERE id = ?
-    `).get(req.params.id) as {
+    const pokemonResult = await pool.query(
+      'SELECT * FROM pokemon WHERE id = $1',
+      [req.params.id]
+    )
+
+    if (pokemonResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Pokemon not found' })
+    }
+
+    const pokemon = pokemonResult.rows[0] as {
       id: number
       name: string
       pokedex_number: number
@@ -187,27 +202,28 @@ router.get('/:id', (req, res) => {
       color: string | null
       habitat: string | null
       flavor_text: string | null
-    } | undefined
-    
-    if (!pokemon) {
-      return res.status(404).json({ error: 'Pokemon not found' })
     }
 
     // Get types
-    const types = db.prepare(`
-      SELECT t.name, pt.slot
-      FROM types t
-      JOIN pokemon_types pt ON t.id = pt.type_id
-      WHERE pt.pokemon_id = ?
-      ORDER BY pt.slot ASC
-    `).all(req.params.id) as Array<{ name: string; slot: number }>
+    const typesResult = await pool.query(
+      `SELECT t.name, pt.slot
+       FROM types t
+       JOIN pokemon_types pt ON t.id = pt.type_id
+       WHERE pt.pokemon_id = $1
+       ORDER BY pt.slot ASC`,
+      [pokemon.id]
+    )
 
     // Get stats
-    const stats = db.prepare(`
-      SELECT stat_name, base_stat, effort
-      FROM pokemon_stats
-      WHERE pokemon_id = ?
-    `).all(req.params.id) as Array<{ stat_name: string; base_stat: number; effort: number }>
+    const statsResult = await pool.query(
+      `SELECT stat_name, base_stat, effort
+       FROM pokemon_stats
+       WHERE pokemon_id = $1`,
+      [pokemon.id]
+    )
+
+    const types = typesResult.rows as Array<{ name: string; slot: number }>
+    const stats = statsResult.rows as Array<{ stat_name: string; base_stat: number; effort: number }>
 
     // Format response to match frontend expectations
     const response = {
@@ -266,10 +282,7 @@ router.get('/:id', (req, res) => {
   } catch (error) {
     console.error('Error fetching Pokemon:', error)
     res.status(500).json({ error: 'Failed to fetch Pokemon' })
-  } finally {
-    db.close()
   }
 })
 
 export default router
-

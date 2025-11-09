@@ -21,14 +21,14 @@ app.use(
 app.use(express.json())
 
 // Initialize database if it doesn't exist
-const db = createDatabase()
-try {
-  initializeSchema(db)
-  console.log('Database initialized')
-} catch (error) {
-  console.error('Error initializing database:', error)
-}
-db.close()
+const pool = createDatabase()
+initializeSchema(pool)
+  .then(() => {
+    console.log('Database initialized')
+  })
+  .catch((error) => {
+    console.error('Error initializing database:', error)
+  })
 
 // Routes
 app.use('/api/pokemon', pokemonRoutes)

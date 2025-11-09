@@ -1,12 +1,12 @@
 import { Router } from 'express'
 import { createDatabase } from '../db/schema.js'
+import { Pool } from 'pg'
 
 const router = Router()
+const pool = createDatabase()
 
 // Get moves list with pagination
-router.get('/', (req, res) => {
-  const db = createDatabase()
-
+router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 0
     const limit = parseInt(req.query.limit as string) || 100
@@ -28,15 +28,15 @@ router.get('/', (req, res) => {
         JOIN move_types mt ON m.id = mt.move_id
         JOIN types t ON mt.type_id = t.id
         JOIN pokemon_moves pm ON m.id = pm.move_id
-        WHERE pm.pokemon_id = ?
+        WHERE pm.pokemon_id = $1
         ORDER BY m.id ASC
-        LIMIT ? OFFSET ?
+        LIMIT $2 OFFSET $3
       `
       countQuery = `
         SELECT COUNT(DISTINCT m.id) as count
         FROM moves m
         JOIN pokemon_moves pm ON m.id = pm.move_id
-        WHERE pm.pokemon_id = ?
+        WHERE pm.pokemon_id = $1
       `
       params = [pokemonId, limit, offset]
     } else {
@@ -47,23 +47,25 @@ router.get('/', (req, res) => {
         JOIN move_types mt ON m.id = mt.move_id
         JOIN types t ON mt.type_id = t.id
         ORDER BY m.id ASC
-        LIMIT ? OFFSET ?
+        LIMIT $1 OFFSET $2
       `
       countQuery = 'SELECT COUNT(*) as count FROM moves'
       params = [limit, offset]
     }
 
-    const moves = db.prepare(query).all(...params) as Array<{
+    const movesResult = await pool.query(query, params)
+    const moves = movesResult.rows as Array<{
       id: number
       name: string
       type_name: string
     }>
 
-    const totalCount = pokemonId
-      ? (db.prepare(countQuery).get(pokemonId) as { count: number })
-      : (db.prepare(countQuery).get() as { count: number })
+    const countResult = pokemonId
+      ? await pool.query(countQuery, [pokemonId])
+      : await pool.query(countQuery)
+    const totalCount = parseInt(countResult.rows[0].count)
 
-    const hasNext = offset + limit < totalCount.count
+    const hasNext = offset + limit < totalCount
     const hasPrevious = offset > 0
 
     // Build next/previous URLs with pokemon param if present
@@ -76,7 +78,7 @@ router.get('/', (req, res) => {
       : null
 
     res.json({
-      count: totalCount.count,
+      count: totalCount,
       next: nextUrl,
       previous: previousUrl,
       results: moves.map(m => [m.name, m.type_name, m.id]),
@@ -84,52 +86,44 @@ router.get('/', (req, res) => {
   } catch (error) {
     console.error('Error fetching moves list:', error)
     res.status(500).json({ error: 'Failed to fetch moves list' })
-  } finally {
-    db.close()
   }
 })
 
 // Get move by ID
-router.get('/:id', (req, res) => {
-  const db = createDatabase()
-
+router.get('/:id', async (req, res) => {
   try {
-    const move = db
-      .prepare(
-        `
-      SELECT * FROM moves WHERE id = ?
-    `
-      )
-      .get(req.params.id) as
-      | {
-          id: number
-          name: string
-          accuracy: number | null
-          effect_chance: number | null
-          pp: number | null
-          priority: number
-          power: number | null
-          damage_class: string
-          effect_text: string | null
-          short_effect_text: string | null
-        }
-      | undefined
+    const moveResult = await pool.query(
+      'SELECT * FROM moves WHERE id = $1',
+      [req.params.id]
+    )
 
-    if (!move) {
+    if (moveResult.rows.length === 0) {
       return res.status(404).json({ error: 'Move not found' })
     }
 
+    const move = moveResult.rows[0] as {
+      id: number
+      name: string
+      accuracy: number | null
+      effect_chance: number | null
+      pp: number | null
+      priority: number
+      power: number | null
+      damage_class: string
+      effect_text: string | null
+      short_effect_text: string | null
+    }
+
     // Get move type
-    const type = db
-      .prepare(
-        `
-      SELECT t.name
-      FROM types t
-      JOIN move_types mt ON t.id = mt.type_id
-      WHERE mt.move_id = ?
-    `
-      )
-      .get(req.params.id) as { name: string } | undefined
+    const typeResult = await pool.query(
+      `SELECT t.name
+       FROM types t
+       JOIN move_types mt ON t.id = mt.type_id
+       WHERE mt.move_id = $1`,
+      [req.params.id]
+    )
+
+    const type = typeResult.rows[0] as { name: string } | undefined
 
     // Format response to match frontend expectations
     const response = {
@@ -167,8 +161,6 @@ router.get('/:id', (req, res) => {
   } catch (error) {
     console.error('Error fetching move:', error)
     res.status(500).json({ error: 'Failed to fetch move' })
-  } finally {
-    db.close()
   }
 })
 
