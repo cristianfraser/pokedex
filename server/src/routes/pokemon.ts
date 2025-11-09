@@ -172,7 +172,22 @@ router.get('/:id', (req, res) => {
   try {
     const pokemon = db.prepare(`
       SELECT * FROM pokemon WHERE id = ?
-    `).get(req.params.id)
+    `).get(req.params.id) as {
+      id: number
+      name: string
+      pokedex_number: number
+      height: number
+      weight: number
+      base_experience: number
+      sprite_front_default: string | null
+      sprite_front_shiny: string | null
+      sprite_official_artwork: string | null
+      is_legendary: number
+      is_mythical: number
+      color: string | null
+      habitat: string | null
+      flavor_text: string | null
+    } | undefined
     
     if (!pokemon) {
       return res.status(404).json({ error: 'Pokemon not found' })
@@ -185,14 +200,14 @@ router.get('/:id', (req, res) => {
       JOIN pokemon_types pt ON t.id = pt.type_id
       WHERE pt.pokemon_id = ?
       ORDER BY pt.slot ASC
-    `).all(req.params.id)
+    `).all(req.params.id) as Array<{ name: string; slot: number }>
 
     // Get stats
     const stats = db.prepare(`
       SELECT stat_name, base_stat, effort
       FROM pokemon_stats
       WHERE pokemon_id = ?
-    `).all(req.params.id)
+    `).all(req.params.id) as Array<{ stat_name: string; base_stat: number; effort: number }>
 
     // Format response to match frontend expectations
     const response = {

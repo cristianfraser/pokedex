@@ -99,10 +99,24 @@ async function fetchWithRetry(url: string, retries = 3): Promise<Response> {
   throw new Error(`Failed to fetch after ${retries} retries: ${url}`)
 }
 
+interface PokeAPIListResponse {
+  results: PokeAPIType[]
+  next: string | null
+  previous: string | null
+}
+
+interface PokeAPIPokedex {
+  pokemon_entries: Array<{
+    pokemon_species: {
+      name: string
+    }
+  }>
+}
+
 async function seedTypes(db: Database.Database) {
   console.log('Seeding types...')
   const response = await fetchWithRetry(`${POKEAPI_BASE}/type?limit=100`)
-  const data = await response.json()
+  const data = (await response.json()) as PokeAPIListResponse
 
   const insertType = db.prepare('INSERT OR IGNORE INTO types (name) VALUES (?)')
   const insertMany = db.transaction((types: string[]) => {
@@ -125,7 +139,7 @@ async function seedPokemon(db: Database.Database, limit?: number) {
   const pokedexResponse = await fetchWithRetry(
     `${POKEAPI_BASE}/pokedex/national/`
   )
-  const pokedexData = await pokedexResponse.json()
+  const pokedexData = (await pokedexResponse.json()) as PokeAPIPokedex
 
   const entries = pokedexData.pokemon_entries.slice(0, limit)
   console.log(`Fetching ${entries.length} Pokemon in batches of ${pageSize}...`)
@@ -200,13 +214,13 @@ async function seedPokemon(db: Database.Database, limit?: number) {
         const speciesResponse = await fetchWithRetry(
           `${POKEAPI_BASE}/pokemon-species/${speciesName}`
         )
-        const speciesData: PokeAPISpecies = await speciesResponse.json()
+        const speciesData = (await speciesResponse.json()) as PokeAPISpecies
 
         // Fetch Pokemon data
         const pokemonResponse = await fetchWithRetry(
           `${POKEAPI_BASE}/pokemon/${speciesData.id}`
         )
-        const pokemonData: PokeAPIPokemon = await pokemonResponse.json()
+        const pokemonData = (await pokemonResponse.json()) as PokeAPIPokemon
 
         // Get English name
         const englishName =
@@ -293,7 +307,7 @@ async function seedMoves(db: Database.Database, limit?: number) {
     const response = await fetchWithRetry(
       `${POKEAPI_BASE}/move?offset=${offset}&limit=${pageSize}`
     )
-    const data = await response.json()
+    const data = (await response.json()) as PokeAPIListResponse
 
     const movesToProcess = limit
       ? data.results.slice(0, limit - totalProcessed)
@@ -302,7 +316,7 @@ async function seedMoves(db: Database.Database, limit?: number) {
     for (const moveListItem of movesToProcess) {
       try {
         const moveResponse = await fetchWithRetry(moveListItem.url)
-        const moveData: PokeAPIMove = await moveResponse.json()
+        const moveData = (await moveResponse.json()) as PokeAPIMove
 
         // Get English effect text
         const effectEntry = moveData.effect_entries.find(
