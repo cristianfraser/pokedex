@@ -73,7 +73,7 @@ export interface PokemonDetail {
   is_mythical?: boolean
 }
 
-const POKEMON_PER_PAGE = 20
+const POKEMON_PER_PAGE = 100
 
 // Fetch a single Pokemon by ID
 export const fetchPokemonById = async (
@@ -100,7 +100,9 @@ export const usePokemonList = (searchTerm: string = '', type?: string) => {
         params.set('type', type)
       }
 
-      const response = await fetch(`${API_URL}/api/pokemon/list?${params.toString()}`)
+      const response = await fetch(
+        `${API_URL}/api/pokemon/list?${params.toString()}`
+      )
       if (!response.ok) {
         throw new Error('Failed to fetch Pokémon list')
       }

@@ -20,7 +20,7 @@ router.get('/list', async (req, res) => {
     let paramIndex = 1
 
     if (search) {
-      whereClause += ` AND p.name LIKE $${paramIndex}`
+      whereClause += ` AND p.name ILIKE $${paramIndex}`
       params.push(`%${search}%`)
       paramIndex++
     }
@@ -29,7 +29,7 @@ router.get('/list', async (req, res) => {
       whereClause += ` AND EXISTS (
         SELECT 1 FROM pokemon_types pt
         JOIN types t ON pt.type_id = t.id
-        WHERE pt.pokemon_id = p.id AND t.name = $${paramIndex}
+        WHERE pt.pokemon_id = p.id AND LOWER(t.name) = LOWER($${paramIndex})
       )`
       params.push(type)
       paramIndex++

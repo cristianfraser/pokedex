@@ -347,7 +347,7 @@ const TeamPokemon = ({
               />
             ) : null}
             <div
-              className="text-3xs font-medium text-gray-900 capitalize text-center absolute bottom-0 left-0 right-0"
+              className="text-3xs font-medium text-gray-900 capitalize text-center absolute bottom-0 left-0 right-0 whitespace-nowrap"
               style={{
                 boxShadow: '0 0 8px 4px rgb(243 244 246)',
                 backgroundColor: 'rgba(243, 244, 246, 0.9)',
@@ -375,7 +375,7 @@ const TeamPokemon = ({
                 />
               ) : null}
               <div
-                className="text-3xs font-medium text-gray-900 capitalize text-center absolute bottom-0 left-0 right-0"
+                className="text-3xs font-medium text-gray-900 capitalize text-center absolute bottom-0 left-0 right-0 whitespace-nowrap"
                 style={{
                   boxShadow: '0 0 8px 4px rgb(243 244 246)',
                   backgroundColor: 'rgba(243, 244, 246, 0.9)',

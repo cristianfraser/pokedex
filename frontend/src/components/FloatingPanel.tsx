@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { usePokemonContext } from '../contexts/PokemonContext'
 import TeamPokemon from './TeamPokemon'
 
@@ -7,9 +6,15 @@ interface FloatingPanelProps {
 }
 
 const FloatingPanel = ({ top }: FloatingPanelProps) => {
-  const { pokemonTeam, selectPokemon, selectedPosition, removeInPosition } =
-    usePokemonContext()
-  const [isExpanded, setIsExpanded] = useState(true)
+  const {
+    pokemonTeam,
+    selectPokemon,
+    selectedPosition,
+    removeInPosition,
+    isPanelExpanded,
+    setIsPanelExpanded,
+  } = usePokemonContext()
+  const isExpanded = isPanelExpanded
 
   const panelWidth = isExpanded ? '300px' : '136px'
 
@@ -20,13 +25,14 @@ const FloatingPanel = ({ top }: FloatingPanelProps) => {
         top: `${top}px`,
         transition: 'top 0.1s, width 0.2s ease-in-out',
         width: panelWidth,
+        willChange: 'width, top',
       }}
     >
       <div className="bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative">
         <button
-          onClick={() => setIsExpanded(prevIsExpanded => !prevIsExpanded)}
-          className="absolute top-2 left-0 w-6 h-6 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors z-10"
-          style={{ transform: 'translateX(-100%)' }}
+          onClick={() => setIsPanelExpanded(!isExpanded)}
+          className="absolute top-2 -left-2 w-6 h-6 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors z-10"
+          style={{ transform: 'translateX(calc(-100%))' }}
           aria-label={isExpanded ? 'Collapse panel' : 'Expand panel'}
         >
           <svg
