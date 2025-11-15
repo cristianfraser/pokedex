@@ -11,6 +11,7 @@ interface TeamPokemonProps {
   isSelected: boolean
   onSelect: () => void
   onRemove: () => void
+  isExpanded?: boolean
 }
 
 const TeamPokemon = ({
@@ -19,6 +20,7 @@ const TeamPokemon = ({
   isSelected,
   onSelect,
   onRemove,
+  isExpanded = true,
 }: TeamPokemonProps) => {
   const { contextMoves, setPokemonMoves } = usePokemonContext()
   const [exitingTypes, setExitingTypes] = useState<string[]>([])
@@ -260,16 +262,15 @@ const TeamPokemon = ({
     return (
       <div
         onClick={onSelect}
-        className={`text-2xs bg-gray-100 rounded-lg border-2 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden ${
+        className={`text-2xs bg-gray-100 rounded-lg border px-1 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden ${
           isSelected
             ? 'border-primary-600 bg-primary-50'
             : 'border-gray-200 hover:border-gray-300'
         }`}
         style={{
-          width: '125px',
-          height: '150px',
-          minHeight: '150px',
-          maxHeight: '150px',
+          height: '90px',
+          minHeight: '90px',
+          maxHeight: '90px',
         }}
       >
         <div
@@ -289,16 +290,15 @@ const TeamPokemon = ({
   return (
     <div
       onClick={onSelect}
-      className={`group/container bg-gray-100 rounded-lg border-2 flex flex-col relative cursor-pointer transition-colors overflow-hidden ${
+      className={`group/container px-1 bg-gray-100 rounded-lg border flex flex-row gap-[5px] relative cursor-pointer transition-colors overflow-hidden ${
         isSelected
           ? 'border-primary-600 bg-primary-50'
           : 'border-gray-200 hover:border-gray-300'
       }`}
       style={{
-        width: '125px',
-        height: '150px',
-        minHeight: '150px',
-        maxHeight: '150px',
+        height: '90px',
+        minHeight: '90px',
+        maxHeight: '90px',
       }}
     >
       {/* Delete button - top right */}
@@ -325,78 +325,74 @@ const TeamPokemon = ({
         </svg>
       </button>
 
-      {/* Image and Name container - top left */}
-      <div>
-        {/* Entering image/name */}
-        <div
-          ref={enteringImageNameRef}
-          style={{
-            opacity: isAnimatingImageName ? 0 : undefined,
-            transition: isAnimatingImageName ? 'none' : undefined,
-          }}
-        >
-          {pokemon.sprites.front_default ? (
-            <img
-              src={pokemon.sprites.front_default}
-              alt={pokemon.name}
-              className="absolute top-0 left-0 w-12 h-12 object-contain"
-              style={{ color: 'transparent' }}
-            />
-          ) : null}
+      {/* Left side: Image, Name, and Types */}
+      <div className="flex flex-col items-center justify-center flex-shrink-0 w-[110px]">
+        {/* Image and Name container */}
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          {/* Entering image/name */}
           <div
-            className="text-3xs font-medium text-gray-900 capitalize text-center absolute"
+            ref={enteringImageNameRef}
+            className="relative w-full h-full"
             style={{
-              boxShadow: '0 0 8px 4px rgb(243 244 246)',
-              top: '20px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              backgroundColor: 'rgba(243, 244, 246, 0.9)',
-            }}
-          >
-            {pokemon.name}
-          </div>
-        </div>
-        {/* Exiting image/name */}
-        {exitingPokemon && (
-          <div
-            ref={exitingImageNameRef}
-            className="absolute top-0 left-0 relative"
-            style={{
-              opacity: isAnimatingImageName ? 1 : undefined,
+              opacity: isAnimatingImageName ? 0 : undefined,
               transition: isAnimatingImageName ? 'none' : undefined,
             }}
           >
-            {exitingPokemon.sprites.front_default ? (
+            {pokemon.sprites.front_default ? (
               <img
-                src={exitingPokemon.sprites.front_default}
-                alt={exitingPokemon.name}
-                className="absolute top-0 left-0 w-12 h-12 object-contain"
+                src={pokemon.sprites.front_default}
+                alt={pokemon.name}
+                className="w-full h-full object-contain"
                 style={{ color: 'transparent' }}
               />
             ) : null}
             <div
-              className="text-3xs font-medium text-gray-900 capitalize text-center absolute"
+              className="text-3xs font-medium text-gray-900 capitalize text-center absolute bottom-0 left-0 right-0"
               style={{
                 boxShadow: '0 0 8px 4px rgb(243 244 246)',
-                top: '20px',
-                left: '50%',
-                transform: 'translateX(-50%)',
                 backgroundColor: 'rgba(243, 244, 246, 0.9)',
               }}
             >
-              {exitingPokemon.name}
+              {pokemon.name}
             </div>
           </div>
-        )}
-      </div>
+          {/* Exiting image/name */}
+          {exitingPokemon && (
+            <div
+              ref={exitingImageNameRef}
+              className="absolute top-0 left-0 w-full h-full"
+              style={{
+                opacity: isAnimatingImageName ? 1 : undefined,
+                transition: isAnimatingImageName ? 'none' : undefined,
+              }}
+            >
+              {exitingPokemon.sprites.front_default ? (
+                <img
+                  src={exitingPokemon.sprites.front_default}
+                  alt={exitingPokemon.name}
+                  className="w-full h-full object-contain"
+                  style={{ color: 'transparent' }}
+                />
+              ) : null}
+              <div
+                className="text-3xs font-medium text-gray-900 capitalize text-center absolute bottom-0 left-0 right-0"
+                style={{
+                  boxShadow: '0 0 8px 4px rgb(243 244 246)',
+                  backgroundColor: 'rgba(243, 244, 246, 0.9)',
+                }}
+              >
+                {exitingPokemon.name}
+              </div>
+            </div>
+          )}
+        </div>
 
-      {/* 5 segments below name */}
-      <div className="flex flex-col gap-1 mt-auto w-full">
-        <div className="h-[18px] overflow-hidden relative">
+        {/* Types */}
+        <div className="h-[18px] overflow-hidden relative mt-1">
           {/* Entering types (current) */}
           <div
             ref={enteringRef}
-            className="flex gap-[5px] justify-center items-center h-[14px]"
+            className="flex gap-[2px] justify-center items-center h-[14px]"
             style={{
               // Apply initial transform immediately in render to prevent flash
               transform: isAnimating
@@ -441,9 +437,20 @@ const TeamPokemon = ({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Right side: Moves */}
+      <div
+        className="flex flex-col gap-1 justify-center flex-1"
+        style={{
+          opacity: isExpanded ? 1 : 0,
+          transition: 'opacity 0.4s ease-in',
+        }}
+      >
         {pokemon &&
           moves.map((move, index) => (
             <div
+              key={index}
               className="relative group/move"
               onClick={e => e.stopPropagation()}
             >

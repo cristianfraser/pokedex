@@ -60,10 +60,11 @@ const TypePill = ({
   const typeName = type.name.toLowerCase()
   const backgroundColor = typeColors[typeName] || typeColors.unknown
 
-  const sizeClasses =
-    size === 'icon' || size === 'small'
-      ? 'text-4xs px-1 py-[1px]'
-      : 'text-3xs px-1.5 py-[1px]'
+  const sizeClasses = {
+    default: 'text-3xs px-1.5 py-[1px]',
+    small: 'text-5xs px-1 py-[1px]',
+    icon: 'text-4xs px-1 py-[1px]',
+  }[size]
 
   const typeLetter = typeLetters[typeName] || type.name.charAt(0).toLowerCase()
 

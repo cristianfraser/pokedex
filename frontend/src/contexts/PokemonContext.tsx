@@ -8,7 +8,7 @@ const STORAGE_KEY_MOVES = 'pokedex_team_moves'
 type PokemonMoves = Array<{ name: string; type: string } | null>
 
 interface PokemonContextType {
-  pokemonList: (PokemonDetail | null)[]
+  pokemonTeam: (PokemonDetail | null)[]
   addNext: (pokemon: PokemonDetail) => void
   addInPosition: (pokemon: PokemonDetail, position: number) => void
   removeInPosition: (position: number) => void
@@ -23,7 +23,7 @@ interface PokemonContextType {
 const PokemonContext = createContext<PokemonContextType | undefined>(undefined)
 
 export const PokemonProvider = ({ children }: { children: ReactNode }) => {
-  const [pokemonList, setPokemonList] = useLocalStorage<(PokemonDetail | null)[]>(
+  const [pokemonTeam, setPokemonTeam] = useLocalStorage<(PokemonDetail | null)[]>(
     STORAGE_KEY,
     Array(6).fill(null)
   )
@@ -34,7 +34,7 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null)
 
   const addNext = (pokemon: PokemonDetail) => {
-    setPokemonList(prev => {
+    setPokemonTeam(prev => {
       // Check if pokemon is already in the list
       const exists = prev.some(p => p !== null && p.id === pokemon.id)
       if (exists) {
@@ -56,7 +56,7 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
       console.warn(`Position ${position} is out of range. Must be between 0 and 5.`)
       return
     }
-    setPokemonList(prev => {
+    setPokemonTeam(prev => {
       const newList = [...prev]
       // Remove pokemon from previous position if it exists
       const previousIndex = newList.findIndex(
@@ -76,7 +76,7 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
       console.warn(`Position ${position} is out of range. Must be between 0 and 5.`)
       return
     }
-    setPokemonList(prev => {
+    setPokemonTeam(prev => {
       const newList = [...prev]
       newList[position] = null
       return newList
@@ -108,12 +108,12 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const selectedPokemon =
-    selectedPosition !== null ? pokemonList[selectedPosition] : null
+    selectedPosition !== null ? pokemonTeam[selectedPosition] : null
 
   return (
     <PokemonContext.Provider
       value={{
-        pokemonList,
+        pokemonTeam,
         addNext,
         addInPosition,
         removeInPosition,

@@ -46,6 +46,11 @@
     }
   }
 
+  /* TeamPokemon vertical grid: 1 column for right-side panel */
+  .team-pokemon-grid-vertical {
+    grid-template-columns: 1fr;
+  }
+
   .scrollable {
     overflow: auto; /* or overflow-y: auto */
     scrollbar-width: thin; /* Firefox - thin scrollbar */
@@ -170,11 +175,11 @@
   }
 
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:hover:bg-primary-600;
   }
 
   .btn-secondary {
-    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:hover:bg-gray-200;
   }
 
   /* Custom Modal Styles */

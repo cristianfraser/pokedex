@@ -8,6 +8,11 @@ import MythicalTag from '../components/MythicalTag'
 import { usePokemonList, PokemonDetail } from '../queries/pokemon'
 import { useDebounce } from '../hooks/useDebounce'
 import { usePokemonContext } from '../contexts/PokemonContext'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 type ViewMode = 'grid' | 'table'
 
@@ -15,8 +20,52 @@ const Pokemon = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const navigate = useNavigate()
-  const { addNext, addInPosition, selectedPosition, clearSelection } =
-    usePokemonContext()
+  const {
+    addNext,
+    addInPosition,
+    selectedPosition,
+    clearSelection,
+    pokemonTeam,
+  } = usePokemonContext()
+
+  // Check if a pokemon is already in the team
+  const isPokemonInTeam = (pokemonId: number) => {
+    return pokemonTeam.some(p => p !== null && p.id === pokemonId)
+  }
+
+  // Check if a pokemon is at the selected position
+  const isPokemonAtSelectedPosition = (pokemonId: number) => {
+    if (selectedPosition === null) return false
+    const pokemonAtPosition = pokemonTeam[selectedPosition]
+    return pokemonAtPosition !== null && pokemonAtPosition.id === pokemonId
+  }
+
+  // Check if the team is full (all 6 slots occupied)
+  const isTeamFull = pokemonTeam.every(p => p !== null)
+
+  // Check if button should be disabled
+  const isButtonDisabled = (pokemonId: number) => {
+    if (selectedPosition !== null) {
+      // When a position is selected, only disable if pokemon is at that position
+      return isPokemonAtSelectedPosition(pokemonId)
+    } else {
+      // When no position is selected, disable if pokemon is in team or team is full
+      return isPokemonInTeam(pokemonId) || isTeamFull
+    }
+  }
+
+  // Get button text
+  const getButtonText = (pokemonId: number) => {
+    if (selectedPosition !== null) {
+      // When a position is selected, show "Added" only if pokemon is at that position
+      return isPokemonAtSelectedPosition(pokemonId) ? 'Added' : 'Add to Team'
+    } else {
+      // When no position is selected, show "Added" if in team, "Team Full" if team is full
+      if (isPokemonInTeam(pokemonId)) return 'Added'
+      if (isTeamFull) return 'Team Full'
+      return 'Add to Team'
+    }
+  }
 
   const handleAddToTeam = (pokemon: PokemonDetail) => {
     if (selectedPosition !== null) {
@@ -203,6 +252,7 @@ const Pokemon = () => {
                         src={pokemon.sprites.front_default}
                         alt={pokemon.name}
                         className="w-32 h-32 mx-auto mb-4 object-contain"
+                        style={{ color: 'transparent' }}
                       />
                     ) : (
                       <div className="text-6xl mb-4">
@@ -227,13 +277,52 @@ const Pokemon = () => {
                       ))}
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleAddToTeam(pokemon)}
-                      >
-                        Add to Team
-                      </Button>
+                      {isButtonDisabled(pokemon.id) ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex-1">
+                              <Button
+                                size="sm"
+                                className="w-full"
+                                onClick={() => handleAddToTeam(pokemon)}
+                                disabled={true}
+                              >
+                                {getButtonText(pokemon.id)}
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {isPokemonAtSelectedPosition(pokemon.id) && (
+                            <TooltipContent>
+                              <p>Select a pokemon slot before adding</p>
+                            </TooltipContent>
+                          )}
+                          {isPokemonInTeam(pokemon.id) &&
+                            selectedPosition === null && (
+                              <TooltipContent>
+                                <p>Select a pokemon slot first before adding</p>
+                              </TooltipContent>
+                            )}
+                          {isTeamFull &&
+                            selectedPosition === null &&
+                            !isPokemonInTeam(pokemon.id) && (
+                              <TooltipContent>
+                                <p>
+                                  Select or remove a pokemon from the team
+                                  before adding
+                                </p>
+                              </TooltipContent>
+                            )}
+                        </Tooltip>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="w-full flex-1"
+                          onClick={() => handleAddToTeam(pokemon)}
+                          disabled={false}
+                        >
+                          {getButtonText(pokemon.id)}
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="secondary"
@@ -275,7 +364,7 @@ const Pokemon = () => {
                           key={pokemon.id}
                           className="hover:bg-gray-50 transition-colors"
                         >
-                          <td className="px-4 py-1.5 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-4 py-1.5 whitespace-nowrap text-2xs text-gray-500">
                             #{pokemon.pokedexNumber}
                           </td>
                           <td className="px-4 py-1.5 whitespace-nowrap">
@@ -284,6 +373,7 @@ const Pokemon = () => {
                                 src={pokemon.sprites.front_default}
                                 alt={pokemon.name}
                                 className="w-10 h-10 object-contain"
+                                style={{ color: 'transparent' }}
                               />
                             ) : (
                               <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-400 text-xs">
@@ -311,17 +401,63 @@ const Pokemon = () => {
                           </td>
                           <td className="px-4 py-1.5 whitespace-nowrap text-sm">
                             <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={(
-                                  e?: React.MouseEvent<HTMLButtonElement>
-                                ) => {
-                                  e?.stopPropagation()
-                                  handleAddToTeam(pokemon)
-                                }}
-                              >
-                                Add to Team
-                              </Button>
+                              {isButtonDisabled(pokemon.id) ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span>
+                                      <Button
+                                        size="sm"
+                                        onClick={(
+                                          e?: React.MouseEvent<HTMLButtonElement>
+                                        ) => {
+                                          e?.stopPropagation()
+                                          handleAddToTeam(pokemon)
+                                        }}
+                                        disabled={true}
+                                      >
+                                        {getButtonText(pokemon.id)}
+                                      </Button>
+                                    </span>
+                                  </TooltipTrigger>
+                                  {isPokemonAtSelectedPosition(pokemon.id) && (
+                                    <TooltipContent>
+                                      <p>Select a pokemon slot before adding</p>
+                                    </TooltipContent>
+                                  )}
+                                  {isPokemonInTeam(pokemon.id) &&
+                                    selectedPosition === null && (
+                                      <TooltipContent>
+                                        <p>
+                                          Select a pokemon slot first before
+                                          adding
+                                        </p>
+                                      </TooltipContent>
+                                    )}
+                                  {isTeamFull &&
+                                    selectedPosition === null &&
+                                    !isPokemonInTeam(pokemon.id) && (
+                                      <TooltipContent>
+                                        <p>
+                                          Select or remove a pokemon from the
+                                          team before adding
+                                        </p>
+                                      </TooltipContent>
+                                    )}
+                                </Tooltip>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  onClick={(
+                                    e?: React.MouseEvent<HTMLButtonElement>
+                                  ) => {
+                                    e?.stopPropagation()
+                                    handleAddToTeam(pokemon)
+                                  }}
+                                  disabled={false}
+                                >
+                                  {getButtonText(pokemon.id)}
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 variant="secondary"
