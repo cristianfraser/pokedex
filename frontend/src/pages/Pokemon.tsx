@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import Button from '../components/Button'
 import TypePill from '../components/TypePill'
 import { usePokemonList, PokemonDetail } from '../queries/pokemon'
@@ -92,6 +93,15 @@ const Pokemon = () => {
 
   // Get total count from first page
   const totalCount = data?.pages[0]?.count ?? 0
+
+  // Window virtualizer for table rows
+  const parentRef = useRef<HTMLTableSectionElement>(null)
+
+  const rowVirtualizer = useWindowVirtualizer({
+    count: filteredPokemon.length,
+    estimateSize: () => 53, // Estimated height of each table row
+    overscan: 10, // Render 10 extra items outside viewport
+  })
 
   const loadingIndicatorRef = useRef<HTMLDivElement>(null)
 
@@ -192,10 +202,17 @@ const Pokemon = () => {
             }`}
           >
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
-              <table
-                className="min-w-full divide-y divide-gray-200"
-                style={{ tableLayout: 'fixed', width: '100%' }}
+              <div
+                style={{
+                  height: `${rowVirtualizer.getTotalSize() + 40}px`, // Add header height
+                  width: '100%',
+                  position: 'relative',
+                }}
               >
+                <table
+                  className="min-w-full divide-y divide-gray-200"
+                  style={{ tableLayout: 'fixed', width: '100%' }}
+                >
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
                     <th
@@ -221,12 +238,29 @@ const Pokemon = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredPokemon.map(pokemon => (
-                    <tr
-                      key={pokemon.id}
-                      className="hover:bg-gray-50 transition-colors items-center"
-                    >
+                <tbody
+                  ref={parentRef}
+                  className="bg-white divide-y divide-gray-200"
+                >
+                  {rowVirtualizer.getVirtualItems().map(virtualRow => {
+                    const pokemon = filteredPokemon[virtualRow.index]
+                    if (!pokemon) return null
+
+                    return (
+                      <tr
+                        key={pokemon.id}
+                        ref={rowVirtualizer.measureElement}
+                        data-index={virtualRow.index}
+                        className="hover:bg-gray-50 transition-colors items-center"
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${virtualRow.start + 40}px)`, // Add header height offset
+                        }}
+                      >
                       <td
                         className="px-4 py-1.5 whitespace-nowrap text-2xs text-gray-500"
                         style={{ width: '60px' }}
@@ -342,9 +376,11 @@ const Pokemon = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         </div>

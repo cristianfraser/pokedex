@@ -4,6 +4,7 @@ import TypePill from './TypePill'
 import { MovesCombobox } from './MovesCombobox'
 import { cn } from '@/lib/utils'
 import { usePokemonContext } from '../contexts/PokemonContext'
+import { useMoves } from '../queries/moves'
 
 interface TeamPokemonProps {
   pokemon: PokemonDetail | null
@@ -30,6 +31,10 @@ const TeamPokemon = ({
   const [exitingPokemon, setExitingPokemon] = useState<PokemonDetail | null>(
     null
   )
+  const [isHovered, setIsHovered] = useState(false)
+
+  // Load moves query on hover
+  useMoves(pokemon?.id, isHovered)
 
   // Get moves from context for this pokemon, default to empty array
   const moves = useMemo(() => {
@@ -290,6 +295,8 @@ const TeamPokemon = ({
   return (
     <div
       onClick={onSelect}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={`group/container px-1 bg-gray-100 rounded-lg border flex flex-row gap-[5px] relative cursor-pointer transition-colors overflow-hidden ${
         isSelected
           ? 'border-primary-600 bg-primary-50'
