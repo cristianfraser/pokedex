@@ -232,7 +232,7 @@ const Pokemon = () => {
                       </th>
                       <th
                         className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        style={{ width: '200px' }}
+                        // style={{ width: '200px' }}
                       >
                         Actions
                       </th>
@@ -302,7 +302,7 @@ const Pokemon = () => {
                           </td>
                           <td
                             className="px-4 py-1.5 whitespace-nowrap text-sm"
-                            style={{ width: '200px' }}
+                            // style={{ width: '200px' }}
                           >
                             <div className="flex gap-2">
                               {isButtonDisabled(pokemon.id) ? (

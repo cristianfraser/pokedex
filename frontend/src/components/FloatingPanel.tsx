@@ -1,21 +1,18 @@
-import { usePokemonContext } from '../contexts/PokemonContext'
-import TeamPokemon from './TeamPokemon'
+import { ReactNode } from 'react'
 
 interface FloatingPanelProps {
   top: number
+  isExpanded: boolean
+  onToggle: () => void
+  children: ReactNode
 }
 
-const FloatingPanel = ({ top }: FloatingPanelProps) => {
-  const {
-    pokemonTeam,
-    selectPokemon,
-    selectedPosition,
-    removeInPosition,
-    isPanelExpanded,
-    setIsPanelExpanded,
-  } = usePokemonContext()
-  const isExpanded = isPanelExpanded
-
+const FloatingPanel = ({
+  top,
+  isExpanded,
+  onToggle,
+  children,
+}: FloatingPanelProps) => {
   const panelWidth = isExpanded ? '300px' : '136px'
 
   return (
@@ -30,7 +27,7 @@ const FloatingPanel = ({ top }: FloatingPanelProps) => {
     >
       <div className="bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative">
         <button
-          onClick={() => setIsPanelExpanded(!isExpanded)}
+          onClick={onToggle}
           className="absolute top-2 -left-2 w-6 h-6 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors z-10"
           style={{ transform: 'translateX(calc(-100%))' }}
           aria-label={isExpanded ? 'Collapse panel' : 'Expand panel'}
@@ -53,22 +50,7 @@ const FloatingPanel = ({ top }: FloatingPanelProps) => {
             />
           </svg>
         </button>
-        <div className="flex justify-center">
-          <div className="grid gap-2 team-pokemon-grid-vertical w-full">
-            {/* 6 slots: 1 column vertical stack */}
-            {pokemonTeam.map((pokemon, index) => (
-              <TeamPokemon
-                key={index}
-                pokemon={pokemon}
-                position={index}
-                isSelected={selectedPosition === index}
-                onSelect={() => selectPokemon(index)}
-                onRemove={() => removeInPosition(index)}
-                isExpanded={isExpanded}
-              />
-            ))}
-          </div>
-        </div>
+        {children}
       </div>
     </div>
   )

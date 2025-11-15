@@ -1,0 +1,8 @@
+{
+  "name": "pokedex",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "server"
+  ]
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import FloatingPanel from './FloatingPanel'
+import PokemonTeam from './PokemonTeam'
 
 const Header = () => {
   const [scrollY, setScrollY] = useState(0)
@@ -107,7 +107,7 @@ const Header = () => {
           </div>
         </div>
       </header>
-      <FloatingPanel top={panelTop} />
+      <PokemonTeam top={panelTop} />
     </>
   )
 }
