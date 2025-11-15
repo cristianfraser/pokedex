@@ -4,6 +4,7 @@
   "type": "module",
   "packageManager": "yarn@4.0.2",
   "scripts": {
+    "preinstall": "corepack enable",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",

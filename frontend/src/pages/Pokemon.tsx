@@ -204,7 +204,7 @@ const Pokemon = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
               <div
                 style={{
-                  height: `${rowVirtualizer.getTotalSize() + 40}px`, // Add header height
+                  height: `${rowVirtualizer.getTotalSize() + 29}px`, // Add header height
                   width: '100%',
                   position: 'relative',
                 }}
@@ -213,173 +213,174 @@ const Pokemon = () => {
                   className="min-w-full divide-y divide-gray-200"
                   style={{ tableLayout: 'fixed', width: '100%' }}
                 >
-                <thead className="bg-gray-50 sticky top-0 z-10">
-                  <tr>
-                    <th
-                      className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      style={{ width: '60px' }}
-                    >
-                      #
-                    </th>
-                    <th
-                      className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      style={{ width: '80px' }}
-                    >
-                      Sprite
-                    </th>
-                    <th className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Info
-                    </th>
-                    <th
-                      className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      style={{ width: '200px' }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody
-                  ref={parentRef}
-                  className="bg-white divide-y divide-gray-200"
-                >
-                  {rowVirtualizer.getVirtualItems().map(virtualRow => {
-                    const pokemon = filteredPokemon[virtualRow.index]
-                    if (!pokemon) return null
-
-                    return (
-                      <tr
-                        key={pokemon.id}
-                        ref={rowVirtualizer.measureElement}
-                        data-index={virtualRow.index}
-                        className="hover:bg-gray-50 transition-colors items-center"
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          height: `${virtualRow.size}px`,
-                          transform: `translateY(${virtualRow.start + 40}px)`, // Add header height offset
-                        }}
-                      >
-                      <td
-                        className="px-4 py-1.5 whitespace-nowrap text-2xs text-gray-500"
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                      <th
+                        className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         style={{ width: '60px' }}
                       >
-                        #{pokemon.pokedexNumber}
-                      </td>
-                      <td
-                        className="px-4 py-1.5 whitespace-nowrap flex-shrink-0"
+                        #
+                      </th>
+                      <th
+                        className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         style={{ width: '80px' }}
                       >
-                        {pokemon.sprites.front_default ? (
-                          <img
-                            src={pokemon.sprites.front_default}
-                            alt={pokemon.name}
-                            className="w-10 h-10 object-contain"
-                            style={{ color: 'transparent' }}
-                          />
-                        ) : (
-                          <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-400 text-xs">
-                            {pokemon.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-1.5 flex-grow">
-                        <div className="flex flex-col">
-                          <div className="flex flex-wrap gap-[5px]">
-                            {pokemon.types.map(type => (
-                              <TypePill key={type.slot} type={type.type} />
-                            ))}
-                          </div>
-                          {/* <div className="flex gap-1">
+                        Sprite
+                      </th>
+                      <th className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Info
+                      </th>
+                      <th
+                        className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        style={{ width: '200px' }}
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    ref={parentRef}
+                    className="bg-white divide-y divide-gray-200"
+                  >
+                    {rowVirtualizer.getVirtualItems().map(virtualRow => {
+                      const pokemon = filteredPokemon[virtualRow.index]
+                      if (!pokemon) return null
+
+                      return (
+                        <tr
+                          key={pokemon.id}
+                          ref={rowVirtualizer.measureElement}
+                          data-index={virtualRow.index}
+                          className="hover:bg-gray-50 transition-colors flex items-center"
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: `${virtualRow.size}px`,
+                            transform: `translateY(${virtualRow.start + 29}px)`, // Add header height offset
+                          }}
+                        >
+                          <td
+                            className="px-4 py-1.5 whitespace-nowrap text-2xs text-gray-500"
+                            style={{ width: '60px' }}
+                          >
+                            #{pokemon.pokedexNumber}
+                          </td>
+                          <td
+                            className="px-4 py-1.5 whitespace-nowrap flex-shrink-0"
+                            style={{ width: '80px' }}
+                          >
+                            {pokemon.sprites.front_default ? (
+                              <img
+                                src={pokemon.sprites.front_default}
+                                alt={pokemon.name}
+                                className="w-10 h-10 object-contain"
+                                style={{ color: 'transparent' }}
+                              />
+                            ) : (
+                              <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-400 text-xs">
+                                {pokemon.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-1.5 flex-grow">
+                            <div className="flex flex-col">
+                              <div className="flex flex-wrap gap-[5px]">
+                                {pokemon.types.map(type => (
+                                  <TypePill key={type.slot} type={type.type} />
+                                ))}
+                              </div>
+                              {/* <div className="flex gap-1">
                                 {pokemon.is_legendary && <LegendaryTag />}
                                 {pokemon.is_mythical && <MythicalTag />}
                               </div> */}
-                          <div className="text-sm font-medium text-gray-900 capitalize">
-                            {pokemon.name}
-                          </div>
-                        </div>
-                      </td>
-                      <td
-                        className="px-4 py-1.5 whitespace-nowrap text-sm"
-                        style={{ width: '200px' }}
-                      >
-                        <div className="flex gap-2">
-                          {isButtonDisabled(pokemon.id) ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span>
-                                  <Button
-                                    size="sm"
-                                    onClick={(
-                                      e?: React.MouseEvent<HTMLButtonElement>
-                                    ) => {
-                                      e?.stopPropagation()
-                                      handleAddToTeam(pokemon)
-                                    }}
-                                    disabled={true}
-                                  >
-                                    {getButtonText(pokemon.id)}
-                                  </Button>
-                                </span>
-                              </TooltipTrigger>
-                              {isPokemonAtSelectedPosition(pokemon.id) && (
-                                <TooltipContent>
-                                  <p>Select a pokemon slot before adding</p>
-                                </TooltipContent>
-                              )}
-                              {isPokemonInTeam(pokemon.id) &&
-                                selectedPosition === null && (
-                                  <TooltipContent>
-                                    <p>
-                                      Select a pokemon slot first before adding
-                                    </p>
-                                  </TooltipContent>
-                                )}
-                              {isTeamFull &&
-                                selectedPosition === null &&
-                                !isPokemonInTeam(pokemon.id) && (
-                                  <TooltipContent>
-                                    <p>
-                                      Select or remove a pokemon from the team
-                                      before adding
-                                    </p>
-                                  </TooltipContent>
-                                )}
-                            </Tooltip>
-                          ) : (
-                            <Button
-                              size="sm"
-                              onClick={(
-                                e?: React.MouseEvent<HTMLButtonElement>
-                              ) => {
-                                e?.stopPropagation()
-                                handleAddToTeam(pokemon)
-                              }}
-                              disabled={false}
-                            >
-                              {getButtonText(pokemon.id)}
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={(
-                              e?: React.MouseEvent<HTMLButtonElement>
-                            ) => {
-                              e?.stopPropagation()
-                              navigate(`/pokemon/${pokemon.id}`)
-                            }}
+                              <div className="text-sm font-medium text-gray-900 capitalize">
+                                {pokemon.name}
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            className="px-4 py-1.5 whitespace-nowrap text-sm"
+                            style={{ width: '200px' }}
                           >
-                            Battle Info
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+                            <div className="flex gap-2">
+                              {isButtonDisabled(pokemon.id) ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span>
+                                      <Button
+                                        size="sm"
+                                        onClick={(
+                                          e?: React.MouseEvent<HTMLButtonElement>
+                                        ) => {
+                                          e?.stopPropagation()
+                                          handleAddToTeam(pokemon)
+                                        }}
+                                        disabled={true}
+                                      >
+                                        {getButtonText(pokemon.id)}
+                                      </Button>
+                                    </span>
+                                  </TooltipTrigger>
+                                  {isPokemonAtSelectedPosition(pokemon.id) && (
+                                    <TooltipContent>
+                                      <p>Select a pokemon slot before adding</p>
+                                    </TooltipContent>
+                                  )}
+                                  {isPokemonInTeam(pokemon.id) &&
+                                    selectedPosition === null && (
+                                      <TooltipContent>
+                                        <p>
+                                          Select a pokemon slot first before
+                                          adding
+                                        </p>
+                                      </TooltipContent>
+                                    )}
+                                  {isTeamFull &&
+                                    selectedPosition === null &&
+                                    !isPokemonInTeam(pokemon.id) && (
+                                      <TooltipContent>
+                                        <p>
+                                          Select or remove a pokemon from the
+                                          team before adding
+                                        </p>
+                                      </TooltipContent>
+                                    )}
+                                </Tooltip>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  onClick={(
+                                    e?: React.MouseEvent<HTMLButtonElement>
+                                  ) => {
+                                    e?.stopPropagation()
+                                    handleAddToTeam(pokemon)
+                                  }}
+                                  disabled={false}
+                                >
+                                  {getButtonText(pokemon.id)}
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={(
+                                  e?: React.MouseEvent<HTMLButtonElement>
+                                ) => {
+                                  e?.stopPropagation()
+                                  navigate(`/pokemon/${pokemon.id}`)
+                                }}
+                              >
+                                Battle Info
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
