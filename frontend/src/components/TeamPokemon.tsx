@@ -307,7 +307,7 @@ const TeamPokemon = ({
           e.stopPropagation()
           onRemove()
         }}
-        className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center hover:bg-red-100 rounded-bl-lg transition-opacity opacity-0 group-hover/container:opacity-100 z-10"
+        className="absolute top-0.5 left-0.5 w-6 h-6 flex items-center justify-center hover:bg-red-100 rounded-lg transition-opacity opacity-0 group-hover/container:opacity-100 z-10"
         aria-label="Remove Pokemon"
       >
         <svg
