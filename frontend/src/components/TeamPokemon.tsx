@@ -193,6 +193,14 @@ const TeamPokemon = ({
     }
   }, [isAnimatingEmpty])
 
+  // Check if this pokemon has the hovered offensive type
+  const hasHoveredOffensiveType = useMemo(() => {
+    if (!hoveredOffensiveType || !pokemon) return false
+    return (
+      pokemon.types?.some(t => t.type.name === hoveredOffensiveType) || false
+    )
+  }, [pokemon, hoveredOffensiveType])
+
   if (!pokemon) {
     return (
       <div
@@ -221,14 +229,6 @@ const TeamPokemon = ({
       </div>
     )
   }
-
-  // Check if this pokemon has the hovered offensive type
-  const hasHoveredOffensiveType = useMemo(() => {
-    if (!hoveredOffensiveType || !pokemon) return false
-    return (
-      pokemon.types?.some(t => t.type.name === hoveredOffensiveType) || false
-    )
-  }, [pokemon, hoveredOffensiveType])
 
   return (
     <div
