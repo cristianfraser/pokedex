@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, useMemo } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { PokemonDetail } from '../queries/pokemon'
 import AnimatedTypePills from './AnimatedTypePills'
 import TypePill from './TypePill'
@@ -444,11 +445,22 @@ const TeamPokemon = ({
                       )
                     }
 
-                    return icon ? (
-                      <span className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 flex items-center">
-                        {icon}
-                      </span>
-                    ) : null
+                    return (
+                      <AnimatePresence>
+                        {icon && (
+                          <motion.span
+                            key={`${move.type}-${effectiveness}`}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 flex items-center"
+                          >
+                            {icon}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    )
                   })()}
                 <MovesCombobox
                   key={index}
