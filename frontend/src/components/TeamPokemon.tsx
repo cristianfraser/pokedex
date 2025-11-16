@@ -25,8 +25,12 @@ const TeamPokemon = ({
   onRemove,
   isExpanded = true,
 }: TeamPokemonProps) => {
-  const { contextMoves, setPokemonMoves, battleInfoPokemon } =
-    usePokemonContext()
+  const {
+    contextMoves,
+    setPokemonMoves,
+    battleInfoPokemon,
+    hoveredDefensiveType,
+  } = usePokemonContext()
   const [isAnimatingImageName, setIsAnimatingImageName] = useState(false)
   const [isAnimatingEmpty, setIsAnimatingEmpty] = useState(false)
   const [exitingPokemon, setExitingPokemon] = useState<PokemonDetail | null>(
@@ -42,6 +46,12 @@ const TeamPokemon = ({
     if (!pokemon) return [null, null, null, null]
     return contextMoves[pokemon.id] || [null, null, null, null]
   }, [pokemon, contextMoves])
+
+  // Check if there are any highlighted moves when a defensive type is hovered
+  const hasHighlightedMoves = useMemo(() => {
+    if (!hoveredDefensiveType) return false
+    return moves.some(move => move?.type === hoveredDefensiveType)
+  }, [moves, hoveredDefensiveType])
   const enteringImageNameRef = useRef<HTMLDivElement>(null)
   const exitingImageNameRef = useRef<HTMLDivElement>(null)
   const emptyTextRef = useRef<HTMLDivElement>(null)
@@ -247,7 +257,12 @@ const TeamPokemon = ({
       </button>
 
       {/* Left side: Image, Name, and Types */}
-      <div className="flex flex-col items-center justify-center flex-shrink-0 w-[110px]">
+      <div
+        className={cn(
+          'flex flex-col items-center justify-center flex-shrink-0 w-[110px] transition-opacity',
+          hoveredDefensiveType && !hasHighlightedMoves && 'opacity-40'
+        )}
+      >
         {/* Image and Name container */}
         <div className="relative w-16 h-16 flex items-center justify-center">
           {/* Entering image/name */}
@@ -321,151 +336,167 @@ const TeamPokemon = ({
         }}
       >
         {pokemon &&
-          moves.map((move, index) => (
-            <div
-              key={index}
-              className="relative group/move"
-              onClick={e => e.stopPropagation()}
-            >
-              {/* Effectiveness icon */}
-              {move?.type &&
-                battleInfoPokemon &&
-                (() => {
-                  const battleTypes = battleInfoPokemon.types.map(
-                    t => t.type.name
-                  )
-                  const effectiveness = calculateTypeEffectiveness(
-                    move.type,
-                    battleTypes
-                  )
+          moves.map((move, index) => {
+            const isHighlighted =
+              hoveredDefensiveType && move?.type === hoveredDefensiveType
+            const shouldDarken =
+              hoveredDefensiveType &&
+              move?.type &&
+              move.type !== hoveredDefensiveType
 
-                  let icon = null
-                  if (effectiveness === 0) {
-                    // Immune - cross
-                    icon = (
+            return (
+              <div
+                key={index}
+                className={cn(
+                  'relative group/move transition-opacity',
+                  isHighlighted && 'opacity-100',
+                  shouldDarken && 'opacity-40'
+                )}
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Effectiveness icon */}
+                {move?.type &&
+                  battleInfoPokemon &&
+                  (() => {
+                    const battleTypes = battleInfoPokemon.types.map(
+                      t => t.type.name
+                    )
+                    const effectiveness = calculateTypeEffectiveness(
+                      move.type,
+                      battleTypes
+                    )
+
+                    let icon = null
+                    if (effectiveness === 0) {
+                      // Immune - cross
+                      icon = (
+                        <svg
+                          className="w-3 h-3 text-gray-700"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        >
+                          <path d="M2 2 L10 10 M10 2 L2 10" />
+                        </svg>
+                      )
+                    } else if (effectiveness < 1) {
+                      // Resistant - triangle
+                      icon = (
+                        <svg
+                          className="w-3 h-3 text-gray-600"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                        >
+                          <path
+                            d="M6 5.2 L7.5 8 L4.5 8 Z"
+                            fill="currentColor"
+                          />
+                          <path
+                            d="M6 1.5 L10.5 10 L1.5 10 Z"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            fill="none"
+                          />
+                        </svg>
+                      )
+                    } else if (effectiveness > 1) {
+                      // Weak - circle
+                      icon = (
+                        <svg
+                          className="w-3 h-3 text-gray-600"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                        >
+                          <circle cx="6" cy="6" r="2" fill="currentColor" />
+                          <circle
+                            cx="6"
+                            cy="6"
+                            r="4.5"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            fill="none"
+                          />
+                        </svg>
+                      )
+                    }
+
+                    return icon ? (
+                      <span className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 flex items-center">
+                        {icon}
+                      </span>
+                    ) : null
+                  })()}
+                <MovesCombobox
+                  key={index}
+                  value={move?.name}
+                  pokemonId={pokemon.id}
+                  onValueChange={(moveName, moveType) => {
+                    if (!pokemon) return
+                    const newMoves = [...moves]
+                    newMoves[index] = moveName
+                      ? { name: moveName, type: moveType || '' }
+                      : null
+                    setPokemonMoves(pokemon.id, newMoves)
+                  }}
+                  trigger={
+                    <div
+                      className={cn(
+                        'text-2xs h-4 rounded cursor-pointer transition-colors flex items-center px-1 relative',
+                        !move && 'bg-gray-200 hover:bg-gray-300',
+                        !!move && 'hover:bg-gray-200'
+                      )}
+                      onClick={e => e.stopPropagation()}
+                    >
+                      {move ? (
+                        <>
+                          <span className="text-2xs text-gray-700 capitalize truncate pr-4">
+                            {move.name.replace(/-/g, ' ')}
+                          </span>
+                        </>
+                      ) : null}
+                    </div>
+                  }
+                />
+
+                {move && move.type && (
+                  <>
+                    <TypePill
+                      type={{ name: move.type }}
+                      size="icon"
+                      className="absolute right-0.5 top-0.5 group-hover/move:hidden"
+                    />
+                    <button
+                      onClick={e => {
+                        e.stopPropagation()
+                        if (!pokemon) return
+                        const newMoves = [...moves]
+                        newMoves[index] = null
+                        setPokemonMoves(pokemon.id, newMoves)
+                      }}
+                      className="absolute right-0.5 top-[50%] translate-y-[-50%] w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-opacity opacity-0 group-hover/move:opacity-100 z-10"
+                      aria-label="Clear move"
+                    >
                       <svg
-                        className="w-3 h-3 text-gray-700"
-                        viewBox="0 0 12 12"
+                        className="w-4 h-4"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
+                        viewBox="0 0 24 24"
                       >
-                        <path d="M2 2 L10 10 M10 2 L2 10" />
-                      </svg>
-                    )
-                  } else if (effectiveness < 1) {
-                    // Resistant - triangle
-                    icon = (
-                      <svg
-                        className="w-3 h-3 text-gray-600"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                      >
-                        <path d="M6 5.2 L7.5 8 L4.5 8 Z" fill="currentColor" />
                         <path
-                          d="M6 1.5 L10.5 10 L1.5 10 Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
                         />
                       </svg>
-                    )
-                  } else if (effectiveness > 1) {
-                    // Weak - circle
-                    icon = (
-                      <svg
-                        className="w-3 h-3 text-gray-600"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                      >
-                        <circle cx="6" cy="6" r="2" fill="currentColor" />
-                        <circle
-                          cx="6"
-                          cy="6"
-                          r="4.5"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          fill="none"
-                        />
-                      </svg>
-                    )
-                  }
-
-                  return icon ? (
-                    <span className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 flex items-center">
-                      {icon}
-                    </span>
-                  ) : null
-                })()}
-              <MovesCombobox
-                key={index}
-                value={move?.name}
-                pokemonId={pokemon.id}
-                onValueChange={(moveName, moveType) => {
-                  if (!pokemon) return
-                  const newMoves = [...moves]
-                  newMoves[index] = moveName
-                    ? { name: moveName, type: moveType || '' }
-                    : null
-                  setPokemonMoves(pokemon.id, newMoves)
-                }}
-                trigger={
-                  <div
-                    className={cn(
-                      'text-2xs h-4 rounded cursor-pointer transition-colors flex items-center px-1 relative',
-                      !move && 'bg-gray-200 hover:bg-gray-300',
-                      !!move && 'hover:bg-gray-200'
-                    )}
-                    onClick={e => e.stopPropagation()}
-                  >
-                    {move ? (
-                      <>
-                        <span className="text-2xs text-gray-700 capitalize truncate pr-4">
-                          {move.name.replace(/-/g, ' ')}
-                        </span>
-                      </>
-                    ) : null}
-                  </div>
-                }
-              />
-
-              {move && move.type && (
-                <>
-                  <TypePill
-                    type={{ name: move.type }}
-                    size="icon"
-                    className="absolute right-0.5 top-0.5 group-hover/move:hidden"
-                  />
-                  <button
-                    onClick={e => {
-                      e.stopPropagation()
-                      if (!pokemon) return
-                      const newMoves = [...moves]
-                      newMoves[index] = null
-                      setPokemonMoves(pokemon.id, newMoves)
-                    }}
-                    className="absolute right-0.5 top-[50%] translate-y-[-50%] w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-opacity opacity-0 group-hover/move:opacity-100 z-10"
-                    aria-label="Clear move"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </>
-              )}
-            </div>
-          ))}
+                    </button>
+                  </>
+                )}
+              </div>
+            )
+          })}
       </div>
     </div>
   )
