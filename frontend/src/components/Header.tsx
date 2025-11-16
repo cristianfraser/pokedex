@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import PokemonTeam from './PokemonTeam'
+import BattleInfoPokemon from './BattleInfoPokemon'
 
 const Header = () => {
   const [scrollY, setScrollY] = useState(0)
@@ -108,6 +109,7 @@ const Header = () => {
         </div>
       </header>
       <PokemonTeam top={panelTop} />
+      <BattleInfoPokemon top={panelTop} />
     </>
   )
 }

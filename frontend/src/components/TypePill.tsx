@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { typeColors, typeLetters } from '@/constants/types'
 
 interface TypePillProps {
   type: {
@@ -6,50 +7,6 @@ interface TypePillProps {
   }
   size?: 'default' | 'small' | 'icon'
   className?: string
-}
-
-const typeColors: Record<string, string> = {
-  normal: '#a8a878',
-  fighting: '#c03028',
-  flying: '#a890f0',
-  poison: '#a040a0',
-  ground: '#e0c068',
-  rock: '#b8a038',
-  bug: '#a8b820',
-  ghost: '#705898',
-  steel: '#b8b8d0',
-  fire: '#f08030',
-  water: '#6890f0',
-  grass: '#78c850',
-  electric: '#f8d030',
-  psychic: '#f85888',
-  ice: '#98d8d8',
-  dragon: '#7038f8',
-  dark: '#705848',
-  fairy: '#ee99ac',
-  unknown: '#68a090',
-  shadow: '#604e82',
-}
-
-const typeLetters: Record<string, string> = {
-  ground: 'a',
-  bug: 'b',
-  normal: 'c',
-  dark: 'd',
-  fighting: 'f',
-  grass: 'g',
-  ghost: 'h',
-  ice: 'i',
-  rock: 'k',
-  electric: 'l',
-  steel: 'm',
-  dragon: 'n',
-  poison: 'o',
-  psychic: 'p',
-  fire: 'r',
-  flying: 'v',
-  water: 'w',
-  fairy: 'y',
 }
 
 const TypePill = ({

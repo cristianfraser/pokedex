@@ -20,6 +20,8 @@ interface PokemonContextType {
   setPokemonMoves: (pokemonId: number, moves: PokemonMoves) => void
   isPanelExpanded: boolean
   setIsPanelExpanded: (expanded: boolean) => void
+  battleInfoPokemon: PokemonDetail | null
+  setBattleInfoPokemon: (pokemon: PokemonDetail | null) => void
 }
 
 const PokemonContext = createContext<PokemonContextType | undefined>(undefined)
@@ -35,6 +37,7 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
   )
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null)
   const [isPanelExpanded, setIsPanelExpanded] = useState(true)
+  const [battleInfoPokemon, setBattleInfoPokemon] = useState<PokemonDetail | null>(null)
 
   const addNext = (pokemon: PokemonDetail) => {
     setPokemonTeam(prev => {
@@ -128,6 +131,8 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
         setPokemonMoves,
         isPanelExpanded,
         setIsPanelExpanded,
+        battleInfoPokemon,
+        setBattleInfoPokemon,
       }}
     >
       {children}

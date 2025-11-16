@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Routes, Route, Outlet } from 'react-router-dom'
 import { PokemonProvider, usePokemonContext } from './contexts/PokemonContext'
 import { TooltipProvider } from './components/ui/tooltip'
@@ -8,14 +9,37 @@ import PokemonDetail from './pages/PokemonDetail'
 import About from './pages/About'
 
 function AppContent() {
-  const { isPanelExpanded } = usePokemonContext()
+  const { isPanelExpanded, battleInfoPokemon } = usePokemonContext()
+  const [paddingRight, setPaddingRight] = useState('0px')
 
-  // Calculate padding based on panel state
-  // Expanded: 300px + right margin (16px on mobile, 24px on sm, 32px on lg) = 316px/324px/332px
-  // Collapsed: 136px + right margin = 152px/160px/168px
-  const paddingRight = isPanelExpanded
-    ? 'pr-[316px] sm:pr-[324px] lg:pr-[332px]'
-    : 'pr-[152px] sm:pr-[160px] lg:pr-[168px]'
+  // Calculate padding based on panel states
+  // PokemonTeam panel: expanded=300px, collapsed=136px
+  // BattleInfoPokemon panel: 300px (always expanded when visible)
+  // Gap between panels: 8px
+  // Right margins: mobile=16px, sm=24px, lg=32px
+  
+  useEffect(() => {
+    const updatePadding = () => {
+      const battleInfoWidth = battleInfoPokemon ? 300 : 0
+      const gap = battleInfoPokemon ? 8 : 0
+      const pokemonTeamWidth = isPanelExpanded ? 300 : 136
+      
+      // Determine base margin based on window width
+      let baseMargin = 16 // mobile
+      if (window.innerWidth >= 1024) {
+        baseMargin = 32 // lg
+      } else if (window.innerWidth >= 640) {
+        baseMargin = 24 // sm
+      }
+      
+      const totalWidth = pokemonTeamWidth + gap + battleInfoWidth + baseMargin
+      setPaddingRight(totalWidth > 0 ? `${totalWidth}px` : '0px')
+    }
+
+    updatePadding()
+    window.addEventListener('resize', updatePadding)
+    return () => window.removeEventListener('resize', updatePadding)
+  }, [isPanelExpanded, battleInfoPokemon])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -23,8 +47,11 @@ function AppContent() {
         <Header />
       </div>
       <main
-        className={`pt-16 ${paddingRight} transition-all duration-200 ease-in-out`}
-        style={{ willChange: 'padding-right' }}
+        className="pt-16 transition-all duration-200 ease-in-out"
+        style={{
+          paddingRight,
+          willChange: 'padding-right',
+        }}
       >
         <Routes>
           <Route path="/" element={<Home />} />

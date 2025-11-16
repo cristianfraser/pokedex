@@ -1,10 +1,12 @@
 import { useLayoutEffect, useRef, useState, useMemo } from 'react'
 import { PokemonDetail } from '../queries/pokemon'
+import AnimatedTypePills from './AnimatedTypePills'
 import TypePill from './TypePill'
 import { MovesCombobox } from './MovesCombobox'
 import { cn } from '@/lib/utils'
 import { usePokemonContext } from '../contexts/PokemonContext'
 import { useMoves } from '../queries/moves'
+import { calculateTypeEffectiveness } from '@/constants/types'
 
 interface TeamPokemonProps {
   pokemon: PokemonDetail | null
@@ -23,9 +25,8 @@ const TeamPokemon = ({
   onRemove,
   isExpanded = true,
 }: TeamPokemonProps) => {
-  const { contextMoves, setPokemonMoves } = usePokemonContext()
-  const [exitingTypes, setExitingTypes] = useState<string[]>([])
-  const [isAnimating, setIsAnimating] = useState(false)
+  const { contextMoves, setPokemonMoves, battleInfoPokemon } =
+    usePokemonContext()
   const [isAnimatingImageName, setIsAnimatingImageName] = useState(false)
   const [isAnimatingEmpty, setIsAnimatingEmpty] = useState(false)
   const [exitingPokemon, setExitingPokemon] = useState<PokemonDetail | null>(
@@ -41,56 +42,28 @@ const TeamPokemon = ({
     if (!pokemon) return [null, null, null, null]
     return contextMoves[pokemon.id] || [null, null, null, null]
   }, [pokemon, contextMoves])
-  const enteringRef = useRef<HTMLDivElement>(null)
-  const exitingRef = useRef<HTMLDivElement>(null)
   const enteringImageNameRef = useRef<HTMLDivElement>(null)
   const exitingImageNameRef = useRef<HTMLDivElement>(null)
   const emptyTextRef = useRef<HTMLDivElement>(null)
   const previousPokemonRef = useRef<PokemonDetail | null>(null)
   const previousPokemonIdRef = useRef<number | null>(null)
 
-  // Use useLayoutEffect to set exiting types synchronously before paint
+  // Use useLayoutEffect to handle image/name animations
   useLayoutEffect(() => {
     if (pokemon) {
-      const enteringTypes = pokemon.types.map(t => t.type.name)
-
       if (previousPokemonRef.current) {
         // Had a previous Pokemon
-        const previousTypesArray = previousPokemonRef.current.types.map(
-          t => t.type.name
-        )
-
         // Check if Pokemon changed (not just types)
         const pokemonChanged = previousPokemonRef.current.id !== pokemon.id
-
-        // Check if types changed
-        const typesChanged =
-          previousTypesArray.length !== enteringTypes.length ||
-          !previousTypesArray.every(
-            (type, index) => type === enteringTypes[index]
-          )
 
         if (pokemonChanged) {
           // Pokemon changed: animate image/name fade
           setExitingPokemon(previousPokemonRef.current)
           setIsAnimatingImageName(true)
         }
-
-        if (typesChanged && previousTypesArray.length > 0) {
-          // Types changed: set previous types as exiting synchronously
-          setExitingTypes([...previousTypesArray])
-          setIsAnimating(true)
-        } else if (!typesChanged) {
-          // Types are the same, clear exiting
-          setExitingTypes([])
-          setIsAnimating(false)
-        }
       } else {
         // Transitioning from empty to Pokemon: animate image/name fade-in
         setIsAnimatingImageName(true)
-        // No exiting types since there was no previous Pokemon
-        setExitingTypes([])
-        setIsAnimating(false)
       }
     } else {
       // No pokemon
@@ -98,8 +71,6 @@ const TeamPokemon = ({
         // Transitioning from Pokemon to empty: animate empty fade-in
         setIsAnimatingEmpty(true)
       }
-      setExitingTypes([])
-      setIsAnimating(false)
       setExitingPokemon(null)
       setIsAnimatingImageName(false)
     }
@@ -115,63 +86,6 @@ const TeamPokemon = ({
       previousPokemonIdRef.current = currentId
     }
   }, [pokemon])
-
-  useLayoutEffect(() => {
-    if (isAnimating && exitingTypes.length > 0) {
-      // Apply initial transforms immediately (no transition) before paint
-      if (enteringRef.current) {
-        enteringRef.current.style.transition = 'none'
-        enteringRef.current.style.transform = 'translateY(calc(-100% - 2px))'
-      }
-      if (exitingRef.current) {
-        exitingRef.current.style.transition = 'none'
-        exitingRef.current.style.transform = 'translateY(0)'
-      }
-
-      // After paint, enable transitions and animate
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (enteringRef.current) {
-            enteringRef.current.style.transition = 'transform 0.3s ease-out'
-            enteringRef.current.style.transform = 'translateY(0)'
-          }
-          if (exitingRef.current) {
-            exitingRef.current.style.transition =
-              'transform 0.3s ease-out, opacity 0.3s'
-            exitingRef.current.style.transform = 'translateY(120%)'
-            exitingRef.current.style.opacity = '0.3'
-          }
-
-          // After animation completes, clear exiting types
-          setTimeout(() => {
-            setExitingTypes([])
-            setIsAnimating(false)
-            if (enteringRef.current) {
-              enteringRef.current.style.transition = ''
-              enteringRef.current.style.transform = ''
-            }
-            if (exitingRef.current) {
-              exitingRef.current.style.display = 'none'
-              exitingRef.current.style.transition = ''
-              exitingRef.current.style.transform = ''
-              exitingRef.current.style.opacity = ''
-            }
-          }, 300)
-        })
-      })
-    } else if (!isAnimating) {
-      // No animation needed, reset transforms
-      if (enteringRef.current) {
-        enteringRef.current.style.transition = ''
-        enteringRef.current.style.transform = ''
-      }
-      if (exitingRef.current) {
-        exitingRef.current.style.transition = ''
-        exitingRef.current.style.transform = ''
-        exitingRef.current.style.opacity = ''
-      }
-    }
-  }, [isAnimating, exitingTypes])
 
   // Handle image/name fade animation
   useLayoutEffect(() => {
@@ -395,55 +309,7 @@ const TeamPokemon = ({
         </div>
 
         {/* Types */}
-        <div className="h-[18px] overflow-hidden relative mt-1">
-          {/* Entering types (current) */}
-          <div
-            ref={enteringRef}
-            className="flex gap-[2px] justify-center items-center h-[14px]"
-            style={{
-              // Apply initial transform immediately in render to prevent flash
-              transform: isAnimating
-                ? 'translateY(calc(-100% - 2px))'
-                : undefined,
-              transition: isAnimating ? 'none' : undefined,
-            }}
-          >
-            {pokemon.types && pokemon.types.length > 0
-              ? pokemon.types.map(type => {
-                  const typeKey = `${type.type.name}-${type.slot}`
-                  return (
-                    <div
-                      key={typeKey}
-                      className="inline-block h-full flex items-center"
-                    >
-                      <TypePill type={type.type} size="small" />
-                    </div>
-                  )
-                })
-              : null}
-          </div>
-          {/* Exiting types (previous) */}
-          {exitingTypes.length > 0 && (
-            <div
-              ref={exitingRef}
-              className="absolute top-0 left-0 right-0 flex gap-[5px] justify-center items-center h-[14px]"
-              style={{
-                // Apply initial transform immediately in render to prevent flash
-                transform: isAnimating ? 'translateY(0)' : undefined,
-                transition: isAnimating ? 'none' : undefined,
-              }}
-            >
-              {exitingTypes.map(typeName => (
-                <div
-                  key={`exit-${typeName}`}
-                  className="inline-block h-full flex items-center"
-                >
-                  <TypePill type={{ name: typeName }} size="small" />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <AnimatedTypePills types={pokemon.types || null} size="small" />
       </div>
 
       {/* Right side: Moves */}
@@ -461,6 +327,77 @@ const TeamPokemon = ({
               className="relative group/move"
               onClick={e => e.stopPropagation()}
             >
+              {/* Effectiveness icon */}
+              {move?.type &&
+                battleInfoPokemon &&
+                (() => {
+                  const battleTypes = battleInfoPokemon.types.map(
+                    t => t.type.name
+                  )
+                  const effectiveness = calculateTypeEffectiveness(
+                    move.type,
+                    battleTypes
+                  )
+
+                  let icon = null
+                  if (effectiveness === 0) {
+                    // Immune - cross
+                    icon = (
+                      <svg
+                        className="w-3 h-3 text-gray-700"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      >
+                        <path d="M2 2 L10 10 M10 2 L2 10" />
+                      </svg>
+                    )
+                  } else if (effectiveness < 1) {
+                    // Resistant - triangle
+                    icon = (
+                      <svg
+                        className="w-3 h-3 text-gray-600"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                      >
+                        <path d="M6 5.2 L7.5 8 L4.5 8 Z" fill="currentColor" />
+                        <path
+                          d="M6 1.5 L10.5 10 L1.5 10 Z"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          fill="none"
+                        />
+                      </svg>
+                    )
+                  } else if (effectiveness > 1) {
+                    // Weak - circle
+                    icon = (
+                      <svg
+                        className="w-3 h-3 text-gray-600"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                      >
+                        <circle cx="6" cy="6" r="2" fill="currentColor" />
+                        <circle
+                          cx="6"
+                          cy="6"
+                          r="4.5"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          fill="none"
+                        />
+                      </svg>
+                    )
+                  }
+
+                  return icon ? (
+                    <span className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 flex items-center">
+                      {icon}
+                    </span>
+                  ) : null
+                })()}
               <MovesCombobox
                 key={index}
                 value={move?.name}

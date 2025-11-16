@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import Button from '../components/Button'
 import TypePill from '../components/TypePill'
@@ -14,13 +13,13 @@ import {
 
 const Pokemon = () => {
   const [searchTerm, setSearchTerm] = useState('')
-  const navigate = useNavigate()
   const {
     addNext,
     addInPosition,
     selectedPosition,
     clearSelection,
     pokemonTeam,
+    setBattleInfoPokemon,
   } = usePokemonContext()
 
   // Check if a pokemon is already in the team
@@ -369,7 +368,7 @@ const Pokemon = () => {
                                   e?: React.MouseEvent<HTMLButtonElement>
                                 ) => {
                                   e?.stopPropagation()
-                                  navigate(`/pokemon/${pokemon.id}`)
+                                  setBattleInfoPokemon(pokemon)
                                 }}
                               >
                                 Battle Info
