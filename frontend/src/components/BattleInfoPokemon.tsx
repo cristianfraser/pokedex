@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { usePokemonContext } from '../contexts/PokemonContext'
 import AnimatedTypePills from './AnimatedTypePills'
@@ -33,29 +33,6 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
     setHoveredDefensiveTypes,
     setHoveredOffensiveTypes,
   } = usePokemonContext()
-  const [rightOffset, setRightOffset] = useState<number | undefined>(undefined)
-
-  // Calculate position to the left of PokemonTeam panel
-  // Base right margins: mobile=16px, sm=24px, lg=32px
-  const baseRight = { mobile: 16, sm: 24, lg: 32 }
-
-  useEffect(() => {
-    const updatePosition = () => {
-      const width = window.innerWidth
-      let baseMargin = baseRight.mobile
-      if (width >= 1024) {
-        baseMargin = baseRight.lg
-      } else if (width >= 640) {
-        baseMargin = baseRight.sm
-      }
-      // Position between PokemonTeam and right edge: just use base margin (closest to right edge)
-      setRightOffset(baseMargin)
-    }
-
-    updatePosition()
-    window.addEventListener('resize', updatePosition)
-    return () => window.removeEventListener('resize', updatePosition)
-  }, [])
 
   // Format height and weight
   const heightInMeters = battleInfoPokemon ? battleInfoPokemon.height / 10 : 0

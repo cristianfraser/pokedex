@@ -14,16 +14,17 @@ const FloatingPanel = ({
 }: FloatingPanelProps) => {
   return (
     <div
-      className={`fixed z-40 right-4`}
+      className={`fixed z-40 right-4 ml-4`}
       style={{
         top: `${top}px`,
         transform: isVisible ? 'translateX(0)' : 'translateX(110%)',
         transition:
           'top 0.1s, width 0.2s ease-in-out, right 0.2s ease-in-out, transform 0.3s ease-in-out',
         willChange: 'width, top, right, transform',
+        maxWidth: 'calc(100% - 2rem)',
       }}
     >
-      <div className="flex bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative">
+      <div className="overflow-x-auto flex gap-2 bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative">
         {children}
       </div>
     </div>
