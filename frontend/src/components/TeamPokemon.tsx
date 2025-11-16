@@ -30,8 +30,8 @@ const TeamPokemon = ({
     contextMoves,
     setPokemonMoves,
     battleInfoPokemon,
-    hoveredDefensiveType,
-    hoveredOffensiveType,
+    hoveredDefensiveTypes,
+    hoveredOffensiveTypes,
   } = usePokemonContext()
   const [isAnimatingImageName, setIsAnimatingImageName] = useState(false)
   const [isAnimatingEmpty, setIsAnimatingEmpty] = useState(false)
@@ -51,14 +51,18 @@ const TeamPokemon = ({
 
   // Check if there are any highlighted moves or if pokemon has the hovered defensive type
   const hasHighlightedMoves = useMemo(() => {
-    if (!hoveredDefensiveType) return false
-    // Check if pokemon has the hovered type
-    const hasType =
-      pokemon?.types?.some(t => t.type.name === hoveredDefensiveType) || false
-    // Check if any moves have the hovered type
-    const hasMoveType = moves.some(move => move?.type === hoveredDefensiveType)
-    return hasType || hasMoveType
-  }, [moves, hoveredDefensiveType, pokemon])
+    if (hoveredDefensiveTypes.length > 0) {
+      const hasType =
+        pokemon?.types?.some(t =>
+          hoveredDefensiveTypes.includes(t.type.name)
+        ) || false
+      const hasMoveType = moves.some(
+        move => move?.type && hoveredDefensiveTypes.includes(move.type)
+      )
+      if (hasType || hasMoveType) return true
+    }
+    return false
+  }, [moves, hoveredDefensiveTypes, pokemon])
   const enteringImageNameRef = useRef<HTMLDivElement>(null)
   const exitingImageNameRef = useRef<HTMLDivElement>(null)
   const emptyTextRef = useRef<HTMLDivElement>(null)
@@ -196,21 +200,26 @@ const TeamPokemon = ({
 
   // Check if this pokemon has the hovered offensive type
   const hasHoveredOffensiveType = useMemo(() => {
-    if (!hoveredOffensiveType || !pokemon) return false
-    return (
-      pokemon.types?.some(t => t.type.name === hoveredOffensiveType) || false
-    )
-  }, [pokemon, hoveredOffensiveType])
+    if (!pokemon) return false
+    if (hoveredOffensiveTypes.length > 0) {
+      return (
+        pokemon.types?.some(t => hoveredOffensiveTypes.includes(t.type.name)) ||
+        false
+      )
+    }
+    return false
+  }, [pokemon, hoveredOffensiveTypes])
 
   if (!pokemon) {
     return (
       <div
         onClick={onSelect}
-        className={`text-2xs bg-gray-100 rounded-lg border px-1 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden ${
+        className={cn(
+          'text-2xs bg-gray-100 rounded-lg border px-1 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden',
           isSelected
             ? 'border-primary-600 bg-primary-50'
             : 'border-gray-200 hover:border-gray-300'
-        }`}
+        )}
         style={{
           height: '90px',
           minHeight: '90px',
@@ -241,11 +250,13 @@ const TeamPokemon = ({
         isSelected
           ? 'border-primary-600 bg-primary-50'
           : 'border-gray-200 hover:border-gray-300',
-        hoveredOffensiveType &&
+        hoveredOffensiveTypes.length > 0 &&
           hasHoveredOffensiveType &&
           'opacity-100 ring-2 ring-primary-400',
-        hoveredOffensiveType && !hasHoveredOffensiveType && 'opacity-40',
-        hoveredDefensiveType &&
+        hoveredOffensiveTypes.length > 0 &&
+          !hasHoveredOffensiveType &&
+          'opacity-40',
+        hoveredDefensiveTypes.length > 0 &&
           hasHighlightedMoves &&
           'opacity-100 ring-2 ring-primary-400'
       )}
@@ -283,7 +294,9 @@ const TeamPokemon = ({
       <div
         className={cn(
           'flex flex-col items-center justify-center flex-shrink-0 w-[110px] transition-opacity',
-          hoveredDefensiveType && !hasHighlightedMoves && 'opacity-40'
+          hoveredDefensiveTypes.length > 0 &&
+            !hasHighlightedMoves &&
+            'opacity-40'
         )}
       >
         {/* Image and Name container */}
@@ -361,11 +374,11 @@ const TeamPokemon = ({
         {pokemon &&
           moves.map((move, index) => {
             const isHighlighted =
-              hoveredDefensiveType && move?.type === hoveredDefensiveType
-            const shouldDarken =
-              hoveredDefensiveType &&
+              hoveredDefensiveTypes.length > 0 &&
               move?.type &&
-              move.type !== hoveredDefensiveType
+              hoveredDefensiveTypes.includes(move.type)
+            const shouldDarken =
+              hoveredDefensiveTypes.length > 0 && move?.type && !isHighlighted
 
             return (
               <div
@@ -378,7 +391,8 @@ const TeamPokemon = ({
                 onClick={e => e.stopPropagation()}
               >
                 {/* Effectiveness icon */}
-                {move?.type &&
+                {move &&
+                  move.damage_class !== 'status' &&
                   battleInfoPokemon &&
                   (() => {
                     const battleTypes = battleInfoPokemon.types.map(
@@ -466,11 +480,15 @@ const TeamPokemon = ({
                   key={index}
                   value={move?.name}
                   pokemonId={pokemon.id}
-                  onValueChange={(moveName, moveType) => {
+                  onValueChange={(moveName, moveType, damageClass) => {
                     if (!pokemon) return
                     const newMoves = [...moves]
                     newMoves[index] = moveName
-                      ? { name: moveName, type: moveType || '' }
+                      ? {
+                          name: moveName,
+                          type: moveType || '',
+                          damage_class: damageClass,
+                        }
                       : null
                     setPokemonMoves(pokemon.id, newMoves)
                   }}

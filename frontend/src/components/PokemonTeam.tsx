@@ -3,9 +3,7 @@ import FloatingPanel from './FloatingPanel'
 import TeamPokemon from './TeamPokemon'
 import { usePokemonContext } from '../contexts/PokemonContext'
 
-interface PokemonTeamProps {
-  top: number
-}
+interface PokemonTeamProps {}
 
 const PokemonTeam = ({ top }: PokemonTeamProps) => {
   const {
@@ -13,11 +11,9 @@ const PokemonTeam = ({ top }: PokemonTeamProps) => {
     selectPokemon,
     selectedPosition,
     removeInPosition,
-    isPanelExpanded,
-    setIsPanelExpanded,
     battleInfoPokemon,
   } = usePokemonContext()
-  const isExpanded = isPanelExpanded
+  const [isExpanded, setIsExpanded] = useState(true)
   const [rightOffset, setRightOffset] = useState<number | undefined>(undefined)
 
   // Calculate position based on BattleInfoPokemon visibility
@@ -50,29 +46,22 @@ const PokemonTeam = ({ top }: PokemonTeamProps) => {
   }, [battleInfoPokemon])
 
   return (
-    <FloatingPanel
-      top={top}
-      isExpanded={isExpanded}
-      onToggle={() => setIsPanelExpanded(!isExpanded)}
-      offsetRight={rightOffset}
-    >
-      <div className="flex justify-center">
-        <div className="grid gap-2 team-pokemon-grid-vertical w-full">
-          {/* 6 slots: 1 column vertical stack */}
-          {pokemonTeam.map((pokemon, index) => (
-            <TeamPokemon
-              key={index}
-              pokemon={pokemon}
-              position={index}
-              isSelected={selectedPosition === index}
-              onSelect={() => selectPokemon(index)}
-              onRemove={() => removeInPosition(index)}
-              isExpanded={isExpanded}
-            />
-          ))}
-        </div>
+    <div className="flex justify-center">
+      <div className="grid gap-2 team-pokemon-grid-vertical w-full">
+        {/* 6 slots: 1 column vertical stack */}
+        {pokemonTeam.map((pokemon, index) => (
+          <TeamPokemon
+            key={index}
+            pokemon={pokemon}
+            position={index}
+            isSelected={selectedPosition === index}
+            onSelect={() => selectPokemon(index)}
+            onRemove={() => removeInPosition(index)}
+            isExpanded={isExpanded}
+          />
+        ))}
       </div>
-    </FloatingPanel>
+    </div>
   )
 }
 

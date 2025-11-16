@@ -21,7 +21,7 @@ import { useMoves } from '@/queries/moves'
 import TypePill from './TypePill'
 
 interface MovesOptionProps {
-  move: [string, string, number] // [name, type, id]
+  move: { name: string; type: string; id: number }
   value?: string
   onSelect: (currentValue: string) => void
   containerRef: React.RefObject<HTMLElement | null>
@@ -33,7 +33,7 @@ function MovesOption({
   onSelect,
   containerRef: _containerRef,
 }: MovesOptionProps) {
-  const [moveName, moveType] = move // move is [name, type, id]
+  const { name: moveName, type: moveType } = move
 
   return (
     <CommandItem
@@ -58,7 +58,11 @@ function MovesOption({
 
 interface MovesComboboxProps {
   value?: string
-  onValueChange?: (moveName: string, moveType: string) => void
+  onValueChange?: (
+    moveName: string,
+    moveType: string,
+    damageClass?: 'status' | 'physical' | 'special'
+  ) => void
   trigger?: React.ReactNode
   pokemonId?: number
 }
@@ -94,9 +98,7 @@ export function MovesCombobox({
     if (!searchValue.trim()) return allMoves
     const searchLower = searchValue.toLowerCase()
     return allMoves.filter(move => {
-      // move is now [name, type, id]
-      const [moveName, type] = move
-      return `${moveName}--${type}`.toLowerCase().includes(searchLower)
+      return `${move.name}--${move.type}`.toLowerCase().includes(searchLower)
     })
   }, [allMoves, searchValue])
 
@@ -196,7 +198,7 @@ export function MovesCombobox({
     }
   }, [open, checkLoadMore])
 
-  const selectedMove = allMoves.find(move => move[0] === value) // move is [name, type, id]
+  const selectedMove = allMoves.find(move => move.name === value)
 
   const defaultTrigger = (
     <Button
@@ -206,7 +208,7 @@ export function MovesCombobox({
       className="w-full justify-between h-4 p-0 text-xs"
     >
       {selectedMove ? (
-        <span className="truncate capitalize">{selectedMove[0]}</span>
+        <span className="truncate capitalize">{selectedMove.name}</span>
       ) : (
         <span className="text-gray-400">Select move...</span>
       )}
@@ -266,10 +268,13 @@ export function MovesCombobox({
                             containerRef={commandListRef}
                             onSelect={currentValue => {
                               if (currentValue === value) {
-                                onValueChange?.('', '')
+                                onValueChange?.('', '', undefined)
                               } else {
-                                const [moveName, moveType] = move
-                                onValueChange?.(moveName, moveType)
+                                onValueChange?.(
+                                  move.name,
+                                  move.type,
+                                  move.damage_class
+                                )
                               }
                               setOpen(false)
                             }}

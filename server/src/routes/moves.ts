@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
     if (pokemonId) {
       // Filter moves that can be learned by the specified Pokemon
       query = `
-        SELECT DISTINCT m.id, m.name, t.name as type_name
+        SELECT DISTINCT m.id, m.name, t.name as type_name, m.damage_class
         FROM moves m
         JOIN move_types mt ON m.id = mt.move_id
         JOIN types t ON mt.type_id = t.id
@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
     } else {
       // Get all moves
       query = `
-        SELECT m.id, m.name, t.name as type_name
+        SELECT m.id, m.name, t.name as type_name, m.damage_class
         FROM moves m
         JOIN move_types mt ON m.id = mt.move_id
         JOIN types t ON mt.type_id = t.id
@@ -58,6 +58,7 @@ router.get('/', async (req, res) => {
       id: number
       name: string
       type_name: string
+      damage_class: string
     }>
 
     const countResult = pokemonId
@@ -81,7 +82,12 @@ router.get('/', async (req, res) => {
       count: totalCount,
       next: nextUrl,
       previous: previousUrl,
-      results: moves.map(m => [m.name, m.type_name, m.id]),
+      results: moves.map(m => ({ 
+        name: m.name, 
+        type: m.type_name, 
+        id: m.id,
+        damage_class: m.damage_class as 'status' | 'physical' | 'special'
+      })),
     })
   } catch (error) {
     console.error('Error fetching moves list:', error)

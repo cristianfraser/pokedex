@@ -5,7 +5,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage'
 const STORAGE_KEY = 'pokedex_team_pokemon'
 const STORAGE_KEY_MOVES = 'pokedex_team_moves'
 
-type PokemonMoves = Array<{ name: string; type: string } | null>
+type PokemonMoves = Array<{ name: string; type: string; damage_class?: 'status' | 'physical' | 'special' } | null>
 
 interface PokemonContextType {
   pokemonTeam: (PokemonDetail | null)[]
@@ -22,10 +22,10 @@ interface PokemonContextType {
   setIsPanelExpanded: (expanded: boolean) => void
   battleInfoPokemon: PokemonDetail | null
   setBattleInfoPokemon: (pokemon: PokemonDetail | null) => void
-  hoveredDefensiveType: string | null
-  setHoveredDefensiveType: (type: string | null) => void
-  hoveredOffensiveType: string | null
-  setHoveredOffensiveType: (type: string | null) => void
+  hoveredDefensiveTypes: string[]
+  setHoveredDefensiveTypes: (types: string[]) => void
+  hoveredOffensiveTypes: string[]
+  setHoveredOffensiveTypes: (types: string[]) => void
 }
 
 const PokemonContext = createContext<PokemonContextType | undefined>(undefined)
@@ -42,8 +42,8 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null)
   const [isPanelExpanded, setIsPanelExpanded] = useState(true)
   const [battleInfoPokemon, setBattleInfoPokemon] = useState<PokemonDetail | null>(null)
-  const [hoveredDefensiveType, setHoveredDefensiveType] = useState<string | null>(null)
-  const [hoveredOffensiveType, setHoveredOffensiveType] = useState<string | null>(null)
+  const [hoveredDefensiveTypes, setHoveredDefensiveTypes] = useState<string[]>([])
+  const [hoveredOffensiveTypes, setHoveredOffensiveTypes] = useState<string[]>([])
 
   const addNext = (pokemon: PokemonDetail) => {
     setPokemonTeam(prev => {
@@ -139,10 +139,10 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
         setIsPanelExpanded,
         battleInfoPokemon,
         setBattleInfoPokemon,
-        hoveredDefensiveType,
-        setHoveredDefensiveType,
-        hoveredOffensiveType,
-        setHoveredOffensiveType,
+        hoveredDefensiveTypes,
+        setHoveredDefensiveTypes,
+        hoveredOffensiveTypes,
+        setHoveredOffensiveTypes,
       }}
     >
       {children}

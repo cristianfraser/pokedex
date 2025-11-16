@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { typeColors, typeLetters } from '@/constants/types'
+import { typeColors, typeColorsDark, typeLetters } from '@/constants/types'
 
 interface TypePillProps {
   type: {
@@ -7,15 +7,19 @@ interface TypePillProps {
   }
   size?: 'default' | 'small' | 'icon'
   className?: string
+  hoverable?: boolean
 }
 
 const TypePill = ({
   type,
   size = 'default',
   className = '',
+  hoverable = false,
 }: TypePillProps) => {
   const typeName = type.name.toLowerCase()
   const backgroundColor = typeColors[typeName] || typeColors.unknown
+  const hoverBackgroundColor =
+    typeColorsDark[typeName] || typeColorsDark.unknown
 
   const sizeClasses = {
     default: 'text-3xs px-1.5 py-[1px]',
@@ -25,41 +29,34 @@ const TypePill = ({
 
   const typeLetter = typeLetters[typeName] || type.name.charAt(0).toLowerCase()
 
-  // For icon size, only show the icon
-  if (size === 'icon') {
-    return (
-      <span
-        className={cn(
-          'text-white font-bold rounded-sm inline-block line-height-[0.5rem]',
-          sizeClasses,
-          className
-        )}
-        style={{
-          backgroundColor,
-          lineHeight: '12px',
-        }}
-      >
-        <span className="pokemon-font-2 normal-case">{typeLetter}</span>
-      </span>
-    )
-  }
-
   return (
     <span
       className={cn(
-        'text-white font-bold rounded-sm uppercase inline-block line-height-[0.5rem]',
+        'text-white font-bold rounded-sm inline-block line-height-[0.5rem] cursor-default',
+        size !== 'icon' && 'uppercase',
         sizeClasses,
+        hoverable && 'transition-all duration-200',
         className
       )}
       style={{
         backgroundColor,
-        lineHeight: size === 'small' ? '12px' : undefined,
+        lineHeight: size === 'icon' || size === 'small' ? '12px' : undefined,
       }}
+      {...(hoverable && {
+        onMouseEnter: (e: React.MouseEvent<HTMLSpanElement>) => {
+          e.currentTarget.style.backgroundColor = hoverBackgroundColor
+        },
+        onMouseLeave: (e: React.MouseEvent<HTMLSpanElement>) => {
+          e.currentTarget.style.backgroundColor = backgroundColor
+        },
+      })}
     >
       {size !== 'small' && (
         <span className="pokemon-font-2 normal-case">{typeLetter}</span>
       )}
-      <span className={size !== 'small' ? 'ml-0.5' : ''}>{type.name}</span>
+      {size !== 'icon' && (
+        <span className={cn(size !== 'small' && 'ml-0.5')}>{type.name}</span>
+      )}
     </span>
   )
 }

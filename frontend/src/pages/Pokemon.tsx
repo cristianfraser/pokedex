@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import Button from '../components/Button'
 import TypePill from '../components/TypePill'
@@ -87,8 +87,35 @@ const Pokemon = () => {
     pokemonList,
   } = usePokemonList(debouncedSearchTerm)
 
-  // Use the flattened pokemonList from the query
-  const filteredPokemon = pokemonList || []
+  // Keep previous pokemon list while fetching new data to prevent empty state
+  const previousPokemonListRef = useRef<PokemonDetail[]>([])
+
+  // Update the ref when we have new data and we're not fetching
+  useEffect(() => {
+    if (pokemonList && pokemonList.length > 0 && !isFetching) {
+      previousPokemonListRef.current = pokemonList
+    }
+  }, [pokemonList, isFetching])
+
+  // Use previous data while fetching, otherwise use current data
+  const filteredPokemon = useMemo(() => {
+    // On initial load (no previous data), use current data (even if empty)
+    if (isLoading && previousPokemonListRef.current.length === 0) {
+      return pokemonList || []
+    }
+    // If we're fetching and have previous data, keep showing it (prevents empty state)
+    if (
+      isFetching &&
+      !isFetchingNextPage &&
+      previousPokemonListRef.current.length > 0
+    ) {
+      return previousPokemonListRef.current
+    }
+    // Otherwise use current data (or previous if current is empty)
+    return pokemonList && pokemonList.length > 0
+      ? pokemonList
+      : previousPokemonListRef.current || []
+  }, [pokemonList, isFetching, isLoading, isFetchingNextPage])
 
   // Get total count from first page
   const totalCount = data?.pages[0]?.count ?? 0
@@ -196,7 +223,7 @@ const Pokemon = () => {
           <div
             className={`transition-opacity duration-200 ${
               isFetching && !isFetchingNextPage && filteredPokemon.length > 0
-                ? 'opacity-80'
+                ? 'opacity-50'
                 : 'opacity-100'
             }`}
           >

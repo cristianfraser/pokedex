@@ -4,15 +4,16 @@ import { API_URL } from '../utils/constants'
 
 export interface MoveListItem {
   name: string
-  url: string
-  type?: string // Type is now available directly
+  type: string
+  id: number
+  damage_class: 'status' | 'physical' | 'special'
 }
 
 export interface MoveListResponse {
   count: number
   next: string | null
   previous: string | null
-  results: Array<[string, string, number]> // [moveName, moveType, moveId]
+  results: MoveListItem[]
 }
 
 export interface MoveDetail {
@@ -112,24 +113,14 @@ export const useMove = (id: string | number | null) => {
 }
 
 // Hook to fetch a single move from a MoveListItem
-// move can be either the old format (MoveListItem) or new format (tuple [name, type, id])
 export const useMoveFromListItem = (
-  move: MoveListItem | [string, string, number] | null,
+  move: MoveListItem | null,
   enabled: boolean = true
 ) => {
-  // Extract ID from move - handle both old and new formats
+  // Extract ID from move
   const moveId = React.useMemo(() => {
     if (!move) return null
-    if (Array.isArray(move)) {
-      // New format: [name, type, id]
-      return move[2]
-    } else {
-      // Old format: { name, url }
-      if (!move.url) return null
-      const urlParts = move.url.split('/').filter(Boolean)
-      const id = urlParts[urlParts.length - 1] // Last part is the ID
-      return id ? (isNaN(Number(id)) ? id : Number(id)) : null
-    }
+    return move.id
   }, [move])
 
   return useQuery({
