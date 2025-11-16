@@ -24,6 +24,8 @@ interface PokemonContextType {
   setBattleInfoPokemon: (pokemon: PokemonDetail | null) => void
   hoveredDefensiveType: string | null
   setHoveredDefensiveType: (type: string | null) => void
+  hoveredOffensiveType: string | null
+  setHoveredOffensiveType: (type: string | null) => void
 }
 
 const PokemonContext = createContext<PokemonContextType | undefined>(undefined)
@@ -41,6 +43,7 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
   const [isPanelExpanded, setIsPanelExpanded] = useState(true)
   const [battleInfoPokemon, setBattleInfoPokemon] = useState<PokemonDetail | null>(null)
   const [hoveredDefensiveType, setHoveredDefensiveType] = useState<string | null>(null)
+  const [hoveredOffensiveType, setHoveredOffensiveType] = useState<string | null>(null)
 
   const addNext = (pokemon: PokemonDetail) => {
     setPokemonTeam(prev => {
@@ -138,6 +141,8 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
         setBattleInfoPokemon,
         hoveredDefensiveType,
         setHoveredDefensiveType,
+        hoveredOffensiveType,
+        setHoveredOffensiveType,
       }}
     >
       {children}

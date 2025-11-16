@@ -30,6 +30,7 @@ const TeamPokemon = ({
     setPokemonMoves,
     battleInfoPokemon,
     hoveredDefensiveType,
+    hoveredOffensiveType,
   } = usePokemonContext()
   const [isAnimatingImageName, setIsAnimatingImageName] = useState(false)
   const [isAnimatingEmpty, setIsAnimatingEmpty] = useState(false)
@@ -47,11 +48,16 @@ const TeamPokemon = ({
     return contextMoves[pokemon.id] || [null, null, null, null]
   }, [pokemon, contextMoves])
 
-  // Check if there are any highlighted moves when a defensive type is hovered
+  // Check if there are any highlighted moves or if pokemon has the hovered defensive type
   const hasHighlightedMoves = useMemo(() => {
     if (!hoveredDefensiveType) return false
-    return moves.some(move => move?.type === hoveredDefensiveType)
-  }, [moves, hoveredDefensiveType])
+    // Check if pokemon has the hovered type
+    const hasType =
+      pokemon?.types?.some(t => t.type.name === hoveredDefensiveType) || false
+    // Check if any moves have the hovered type
+    const hasMoveType = moves.some(move => move?.type === hoveredDefensiveType)
+    return hasType || hasMoveType
+  }, [moves, hoveredDefensiveType, pokemon])
   const enteringImageNameRef = useRef<HTMLDivElement>(null)
   const exitingImageNameRef = useRef<HTMLDivElement>(null)
   const emptyTextRef = useRef<HTMLDivElement>(null)
@@ -216,16 +222,32 @@ const TeamPokemon = ({
     )
   }
 
+  // Check if this pokemon has the hovered offensive type
+  const hasHoveredOffensiveType = useMemo(() => {
+    if (!hoveredOffensiveType || !pokemon) return false
+    return (
+      pokemon.types?.some(t => t.type.name === hoveredOffensiveType) || false
+    )
+  }, [pokemon, hoveredOffensiveType])
+
   return (
     <div
       onClick={onSelect}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`group/container px-1 bg-gray-100 rounded-lg border flex flex-row gap-[5px] relative cursor-pointer transition-colors overflow-hidden ${
+      className={cn(
+        'group/container px-1 bg-gray-100 rounded-lg border flex flex-row gap-[5px] relative cursor-pointer transition-all overflow-hidden',
         isSelected
           ? 'border-primary-600 bg-primary-50'
-          : 'border-gray-200 hover:border-gray-300'
-      }`}
+          : 'border-gray-200 hover:border-gray-300',
+        hoveredOffensiveType &&
+          hasHoveredOffensiveType &&
+          'opacity-100 ring-2 ring-primary-400',
+        hoveredOffensiveType && !hasHoveredOffensiveType && 'opacity-40',
+        hoveredDefensiveType &&
+          hasHighlightedMoves &&
+          'opacity-100 ring-2 ring-primary-400'
+      )}
       style={{
         height: '90px',
         minHeight: '90px',

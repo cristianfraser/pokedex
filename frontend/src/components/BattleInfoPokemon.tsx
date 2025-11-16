@@ -13,8 +13,12 @@ interface BattleInfoPokemonProps {
 }
 
 const BattleInfoPokemon = ({ top }: BattleInfoPokemonProps) => {
-  const { battleInfoPokemon, setBattleInfoPokemon, setHoveredDefensiveType } =
-    usePokemonContext()
+  const {
+    battleInfoPokemon,
+    setBattleInfoPokemon,
+    setHoveredDefensiveType,
+    setHoveredOffensiveType,
+  } = usePokemonContext()
   const [rightOffset, setRightOffset] = useState<number | undefined>(undefined)
 
   // Calculate position to the left of PokemonTeam panel
@@ -237,11 +241,15 @@ const BattleInfoPokemon = ({ top }: BattleInfoPokemonProps) => {
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {superEffective.map(typeName => (
-                          <TypePill
+                          <div
                             key={typeName}
-                            type={{ name: typeName }}
-                            size="small"
-                          />
+                            onMouseEnter={() =>
+                              setHoveredOffensiveType(typeName)
+                            }
+                            onMouseLeave={() => setHoveredOffensiveType(null)}
+                          >
+                            <TypePill type={{ name: typeName }} size="small" />
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -271,11 +279,15 @@ const BattleInfoPokemon = ({ top }: BattleInfoPokemonProps) => {
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {notVeryEffective.map(typeName => (
-                          <TypePill
+                          <div
                             key={typeName}
-                            type={{ name: typeName }}
-                            size="small"
-                          />
+                            onMouseEnter={() =>
+                              setHoveredOffensiveType(typeName)
+                            }
+                            onMouseLeave={() => setHoveredOffensiveType(null)}
+                          >
+                            <TypePill type={{ name: typeName }} size="small" />
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -299,11 +311,15 @@ const BattleInfoPokemon = ({ top }: BattleInfoPokemonProps) => {
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {noEffect.map(typeName => (
-                          <TypePill
+                          <div
                             key={typeName}
-                            type={{ name: typeName }}
-                            size="small"
-                          />
+                            onMouseEnter={() =>
+                              setHoveredOffensiveType(typeName)
+                            }
+                            onMouseLeave={() => setHoveredOffensiveType(null)}
+                          >
+                            <TypePill type={{ name: typeName }} size="small" />
+                          </div>
                         ))}
                       </div>
                     </div>
