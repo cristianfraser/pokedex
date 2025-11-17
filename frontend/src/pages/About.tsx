@@ -60,11 +60,41 @@ const About = () => {
               </li>
               <li className="flex items-center">
                 <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
+                Soon: Better UX for all pages
+              </li>
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
                 Modern component architecture
               </li>
               <li className="flex items-center">
                 <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
                 TypeScript for type safety
+              </li>
+            </ul>
+          </Card>
+
+          <Card>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              Backend
+            </h2>
+            <ul className="space-y-3 text-gray-600">
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
+                Simple Express.js server
+              </li>
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
+                <span>
+                  Seeded data thanks to{' '}
+                  <a
+                    href="https://pokeapi.co/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary-600 hover:text-primary-700"
+                  >
+                    PokeAPI
+                  </a>
+                </span>
               </li>
             </ul>
           </Card>
