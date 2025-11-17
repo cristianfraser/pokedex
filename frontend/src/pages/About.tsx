@@ -12,6 +12,12 @@ const About = () => {
             A modern React application built with TypeScript, Vite, and Tailwind
             CSS to explore the wonderful world of Pokémon.
           </p>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <b className="bg-gray-200 rounded-md p-1">
+              This is a work in progress.
+            </b>{' '}
+            More features will be added soon.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -38,7 +44,7 @@ const About = () => {
               </li>
               <li className="flex items-center">
                 <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
-                ESLint + Prettier for code quality
+                Framer Motion for animations
               </li>
             </ul>
           </Card>
@@ -50,7 +56,7 @@ const About = () => {
             <ul className="space-y-3 text-gray-600">
               <li className="flex items-center">
                 <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
-                Responsive design for all devices
+                Soon: Responsive design for all devices
               </li>
               <li className="flex items-center">
                 <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
@@ -60,39 +66,7 @@ const About = () => {
                 <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
                 TypeScript for type safety
               </li>
-              <li className="flex items-center">
-                <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
-                Custom hooks and utilities
-              </li>
-              <li className="flex items-center">
-                <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
-                Clean, maintainable code structure
-              </li>
             </ul>
-          </Card>
-        </div>
-
-        <div className="mt-12">
-          <Card>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              Getting Started
-            </h2>
-            <div className="prose prose-gray max-w-none">
-              <p className="text-gray-600 mb-4">
-                This project demonstrates modern React development practices
-                with a focus on:
-              </p>
-              <ul className="list-disc list-inside text-gray-600 space-y-2">
-                <li>
-                  Component-based architecture with reusable UI components
-                </li>
-                <li>TypeScript integration for better developer experience</li>
-                <li>Modern build tools with Vite for fast development</li>
-                <li>Tailwind CSS for utility-first styling</li>
-                <li>React Router for client-side routing</li>
-                <li>ESLint and Prettier for consistent code formatting</li>
-              </ul>
-            </div>
           </Card>
         </div>
       </div>

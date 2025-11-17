@@ -8,18 +8,19 @@ const Home = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl">
-            Welcome to <span className="text-primary-600">Pokédex</span>
+            Welcome to <span className="text-primary-600">Pokéteam</span>
           </h1>
           <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
             Discover and explore the amazing world of Pokémon. Find your
-            favorite creatures, learn about their abilities, and build your
-            ultimate team.
+            favorite creatures, and build your team, and see how they perform in
+            battles.
+            {/* learn about their abilities,  */}
           </p>
           <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
             <div className="rounded-md shadow">
               <Link to="/pokemon">
                 <Button size="lg" className="w-full sm:w-auto">
-                  Explore Pokémon
+                  Build Your Team
                 </Button>
               </Link>
             </div>
@@ -30,7 +31,7 @@ const Home = () => {
                   size="lg"
                   className="w-full sm:w-auto"
                 >
-                  Learn More
+                  About Pokéteam
                 </Button>
               </Link>
             </div>
@@ -45,11 +46,11 @@ const Home = () => {
                   <span className="text-primary-600 text-xl">🔍</span>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Search Pokémon
+                  Team Builder
                 </h3>
                 <p className="text-gray-500">
-                  Find any Pokémon by name, type, or ability. Our comprehensive
-                  database has information on all known Pokémon species.
+                  Find any Pokémon by name, type. Choose your favourite Pokémon
+                  and moves.
                 </p>
               </div>
             </Card>
