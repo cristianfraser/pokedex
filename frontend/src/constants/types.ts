@@ -20,29 +20,30 @@ export const typeColors: Record<string, string> = {
   fairy: '#ee99ac',
   unknown: '#68a090',
   shadow: '#604e82',
+  none: '#6b7280', // Neutral dark gray
 }
 
 // Helper function to darken a hex color
 function darkenColor(hex: string, factor: number = 0.75): string {
   // Remove # if present
   hex = hex.replace('#', '')
-  
+
   // Parse RGB
   const r = parseInt(hex.substring(0, 2), 16)
   const g = parseInt(hex.substring(2, 4), 16)
   const b = parseInt(hex.substring(4, 6), 16)
-  
+
   // Darken by factor
   const darkenedR = Math.round(r * factor)
   const darkenedG = Math.round(g * factor)
   const darkenedB = Math.round(b * factor)
-  
+
   // Convert back to hex
   const toHex = (n: number) => {
     const hex = n.toString(16)
     return hex.length === 1 ? '0' + hex : hex
   }
-  
+
   return `#${toHex(darkenedR)}${toHex(darkenedG)}${toHex(darkenedB)}`
 }
 
@@ -71,6 +72,7 @@ export const typeLetters: Record<string, string> = {
   flying: 'v',
   water: 'w',
   fairy: 'y',
+  none: 'x',
 }
 
 // Type effectiveness matrix

@@ -121,7 +121,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
         >
           <div
             style={{ width: 250 }}
-            className="h-full overflow-y-auto bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative"
+            className="h-full overflow-y-auto bg-white/80 border border-gray-200 rounded-md p-2 relative"
           >
             {/* Close button - top right */}
             <button
@@ -325,9 +325,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                 )}
 
               {/* Defensive Effectiveness */}
-              {(weakTo.length > 0 ||
-                resists.length > 0 ||
-                immune.length > 0) && (
+              {(weakTo.length > 0 || resists.length > 0 || true) && (
                 <div>
                   {/* Weak To */}
                   {weakTo.length > 0 && (
@@ -386,19 +384,23 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                   )}
 
                   {/* Immune */}
-                  {immune.length > 0 && (
-                    <div className="mb-2">
-                      <div
-                        className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
-                        onMouseEnter={() => setHoveredDefensiveTypes(immune)}
-                        onMouseLeave={() => setHoveredDefensiveTypes([])}
-                      >
-                        <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
-                          Immune
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {immune.map(typeName => (
+                  <div className="mb-2">
+                    <div
+                      className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
+                      onMouseEnter={() =>
+                        setHoveredDefensiveTypes(
+                          immune.length > 0 ? immune : []
+                        )
+                      }
+                      onMouseLeave={() => setHoveredDefensiveTypes([])}
+                    >
+                      <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
+                        Immune
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {immune.length > 0 ? (
+                        immune.map(typeName => (
                           <TypePill
                             key={typeName}
                             type={{ name: typeName }}
@@ -408,10 +410,17 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                             }
                             onMouseLeave={() => setHoveredDefensiveTypes([])}
                           />
-                        ))}
-                      </div>
+                        ))
+                      ) : (
+                        <TypePill
+                          type={{ name: 'none' }}
+                          size="small"
+                          onMouseEnter={() => setHoveredDefensiveTypes([])}
+                          onMouseLeave={() => setHoveredDefensiveTypes([])}
+                        />
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
 
@@ -452,6 +461,8 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                           className="bg-primary-600 h-1.5 rounded-full"
                           style={{
                             width: `${Math.min((stat.base_stat / 255) * 100, 100)}%`,
+                            transition: 'width 200ms ease-in-out',
+                            willChange: 'width',
                           }}
                         />
                       </div>

@@ -270,7 +270,6 @@ const TeamPokemon = ({
         maxHeight: '90px',
         minWidth: 'fit-content',
         gap: isExpanded ? 5 : 0,
-        transition: 'gap 0.2s ease-in',
       }}
     >
       {/* Delete button - top right */}
@@ -523,7 +522,6 @@ const TeamPokemon = ({
                         !move && 'team-pokemon-move-trigger-empty',
                         !!move && 'team-pokemon-move-trigger-filled'
                       )}
-                      onClick={e => e.stopPropagation()}
                     >
                       {move ? (
                         <>

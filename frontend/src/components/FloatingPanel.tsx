@@ -16,7 +16,7 @@ const FloatingPanel = ({
   const { isTeamExpanded, setIsTeamExpanded } = usePokemonContext()
   return (
     <div
-      className={`fixed z-40 right-4 ml-4`}
+      className={`fixed z-40 right-2 ml-4`}
       style={{
         top: `${top}px`,
         transform: isVisible ? 'translateX(0)' : 'translateX(110%)',

@@ -18,7 +18,10 @@
 
 /* Main container */
 .team-pokemon-container {
-  @apply px-1 bg-gray-100 rounded-lg border flex flex-row gap-[5px] relative cursor-pointer transition-all overflow-hidden;
+  @apply px-1 bg-gray-100 rounded-lg border flex flex-row gap-[5px] relative cursor-pointer overflow-hidden;
+  transition:
+    all 200ms ease-in-out,
+    box-shadow 200ms ease-in-out;
 }
 
 .team-pokemon-container-selected {
