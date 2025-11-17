@@ -9,21 +9,21 @@ import PokemonDetail from './pages/PokemonDetail'
 import About from './pages/About'
 
 function AppContent() {
-  const { isPanelExpanded, battleInfoPokemon } = usePokemonContext()
+  const { isTeamExpanded, battleInfoPokemon } = usePokemonContext()
   const [paddingRight, setPaddingRight] = useState('0px')
 
   // Calculate padding based on panel states
   // PokemonTeam panel: expanded=300px, collapsed=136px
-  // BattleInfoPokemon panel: 300px (always expanded when visible)
+  // BattleInfoPokemon panel: 250px (always expanded when visible)
   // Gap between panels: 8px
   // Right margins: mobile=16px, sm=24px, lg=32px
-  
+
   useEffect(() => {
     const updatePadding = () => {
-      const battleInfoWidth = battleInfoPokemon ? 300 : 0
+      const battleInfoWidth = battleInfoPokemon ? 250 : 0
       const gap = battleInfoPokemon ? 8 : 0
-      const pokemonTeamWidth = isPanelExpanded ? 300 : 136
-      
+      const pokemonTeamWidth = isTeamExpanded ? 255 : 136
+
       // Determine base margin based on window width
       let baseMargin = 16 // mobile
       if (window.innerWidth >= 1024) {
@@ -31,7 +31,7 @@ function AppContent() {
       } else if (window.innerWidth >= 640) {
         baseMargin = 24 // sm
       }
-      
+
       const totalWidth = pokemonTeamWidth + gap + battleInfoWidth + baseMargin
       setPaddingRight(totalWidth > 0 ? `${totalWidth}px` : '0px')
     }
@@ -39,7 +39,7 @@ function AppContent() {
     updatePadding()
     window.addEventListener('resize', updatePadding)
     return () => window.removeEventListener('resize', updatePadding)
-  }, [isPanelExpanded, battleInfoPokemon])
+  }, [isTeamExpanded, battleInfoPokemon])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -47,7 +47,7 @@ function AppContent() {
         <Header />
       </div>
       <main
-        className="pt-16 transition-all duration-200 ease-in-out"
+        className="pt-16 transition-all duration-150 ease-in"
         style={{
           paddingRight,
           willChange: 'padding-right',
