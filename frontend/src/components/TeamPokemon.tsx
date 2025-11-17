@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { usePokemonContext } from '../contexts/PokemonContext'
 import { useMoves } from '../queries/moves'
 import { calculateTypeEffectiveness } from '@/constants/types'
+import './TeamPokemon.css'
 
 interface TeamPokemonProps {
   pokemon: PokemonDetail | null
@@ -57,7 +58,10 @@ const TeamPokemon = ({
           hoveredDefensiveTypes.includes(t.type.name)
         ) || false
       const hasMoveType = moves.some(
-        move => move?.type && hoveredDefensiveTypes.includes(move.type)
+        move =>
+          move?.type &&
+          move?.damage_class !== 'status' &&
+          hoveredDefensiveTypes.includes(move.type)
       )
       if (hasType || hasMoveType) return true
     }
@@ -215,10 +219,10 @@ const TeamPokemon = ({
       <div
         onClick={onSelect}
         className={cn(
-          'text-2xs bg-gray-100 rounded-lg border px-1 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden',
+          'team-pokemon-empty',
           isSelected
-            ? 'border-primary-600 bg-primary-50'
-            : 'border-gray-200 hover:border-gray-300'
+            ? 'team-pokemon-empty-selected'
+            : 'team-pokemon-empty-unselected'
         )}
         style={{
           height: '90px',
@@ -228,7 +232,7 @@ const TeamPokemon = ({
       >
         <div
           ref={emptyTextRef}
-          className="text-gray-400 text-xs"
+          className="team-pokemon-empty-text"
           style={{
             opacity: isAnimatingEmpty ? 0 : undefined,
             transition: isAnimatingEmpty ? 'none' : undefined,
@@ -246,24 +250,27 @@ const TeamPokemon = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
-        'group/container px-1 bg-gray-100 rounded-lg border flex flex-row gap-[5px] relative cursor-pointer transition-all overflow-hidden',
+        'team-pokemon-container group/container',
         isSelected
-          ? 'border-primary-600 bg-primary-50'
-          : 'border-gray-200 hover:border-gray-300',
+          ? 'team-pokemon-container-selected'
+          : 'team-pokemon-container-unselected',
         hoveredOffensiveTypes.length > 0 &&
           hasHoveredOffensiveType &&
-          'opacity-100 ring-2 ring-primary-400',
+          'team-pokemon-container-highlighted',
         hoveredOffensiveTypes.length > 0 &&
           !hasHoveredOffensiveType &&
-          'opacity-40',
+          'team-pokemon-container-dimmed',
         hoveredDefensiveTypes.length > 0 &&
           hasHighlightedMoves &&
-          'opacity-100 ring-2 ring-primary-400'
+          'team-pokemon-container-highlighted'
       )}
       style={{
         height: '90px',
         minHeight: '90px',
         maxHeight: '90px',
+        minWidth: 'fit-content',
+        gap: isExpanded ? 5 : 0,
+        transition: 'gap 0.2s ease-in',
       }}
     >
       {/* Delete button - top right */}
@@ -272,11 +279,11 @@ const TeamPokemon = ({
           e.stopPropagation()
           onRemove()
         }}
-        className="absolute top-0.5 left-0.5 w-6 h-6 flex items-center justify-center hover:bg-red-100 rounded-lg transition-opacity opacity-0 group-hover/container:opacity-100 z-10"
+        className="team-pokemon-delete-button"
         aria-label="Remove Pokemon"
       >
         <svg
-          className="w-4 h-4 text-red-600"
+          className="team-pokemon-delete-icon"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -293,18 +300,18 @@ const TeamPokemon = ({
       {/* Left side: Image, Name, and Types */}
       <div
         className={cn(
-          'flex flex-col items-center justify-center flex-shrink-0 w-[110px] transition-opacity',
+          'team-pokemon-left',
           hoveredDefensiveTypes.length > 0 &&
             !hasHighlightedMoves &&
-            'opacity-40'
+            'team-pokemon-left-dimmed'
         )}
       >
         {/* Image and Name container */}
-        <div className="relative w-16 h-16 flex items-center justify-center">
+        <div className="team-pokemon-image-container">
           {/* Entering image/name */}
           <div
             ref={enteringImageNameRef}
-            className="relative w-full h-full"
+            className="team-pokemon-image-wrapper"
             style={{
               opacity: isAnimatingImageName ? 0 : undefined,
               transition: isAnimatingImageName ? 'none' : undefined,
@@ -314,12 +321,12 @@ const TeamPokemon = ({
               <img
                 src={pokemon.sprites.front_default}
                 alt={pokemon.name}
-                className="w-full h-full object-contain"
+                className="team-pokemon-image"
                 style={{ color: 'transparent' }}
               />
             ) : null}
             <div
-              className="text-3xs font-medium text-gray-900 capitalize text-center absolute bottom-0 left-0 right-0 whitespace-nowrap"
+              className="team-pokemon-name"
               style={{
                 boxShadow: '0 0 8px 4px rgb(243 244 246)',
                 backgroundColor: 'rgba(243, 244, 246, 0.9)',
@@ -332,7 +339,7 @@ const TeamPokemon = ({
           {exitingPokemon && (
             <div
               ref={exitingImageNameRef}
-              className="absolute top-0 left-0 w-full h-full"
+              className="team-pokemon-exiting-wrapper"
               style={{
                 opacity: isAnimatingImageName ? 1 : undefined,
                 transition: isAnimatingImageName ? 'none' : undefined,
@@ -342,12 +349,12 @@ const TeamPokemon = ({
                 <img
                   src={exitingPokemon.sprites.front_default}
                   alt={exitingPokemon.name}
-                  className="w-full h-full object-contain"
+                  className="team-pokemon-image"
                   style={{ color: 'transparent' }}
                 />
               ) : null}
               <div
-                className="text-3xs font-medium text-gray-900 capitalize text-center absolute bottom-0 left-0 right-0 whitespace-nowrap"
+                className="team-pokemon-name"
                 style={{
                   boxShadow: '0 0 8px 4px rgb(243 244 246)',
                   backgroundColor: 'rgba(243, 244, 246, 0.9)',
@@ -365,10 +372,11 @@ const TeamPokemon = ({
 
       {/* Right side: Moves */}
       <div
-        className="flex flex-col gap-1 justify-center flex-1"
+        className="team-pokemon-moves"
         style={{
           opacity: isExpanded ? 1 : 0,
-          transition: 'opacity 0.4s ease-in',
+          width: isExpanded ? 130 : 0,
+          transition: 'opacity 0.2s ease-in, width 0.2s ease-in',
         }}
       >
         {pokemon &&
@@ -376,18 +384,24 @@ const TeamPokemon = ({
             const isHighlighted =
               hoveredDefensiveTypes.length > 0 &&
               move?.type &&
+              move?.damage_class !== 'status' &&
               hoveredDefensiveTypes.includes(move.type)
-            const shouldDarken =
-              hoveredDefensiveTypes.length > 0 && move?.type && !isHighlighted
+            const shouldDarken = !isHighlighted
 
             return (
               <div
                 key={index}
                 className={cn(
-                  'relative group/move transition-opacity',
-                  isHighlighted && 'opacity-100',
-                  shouldDarken && 'opacity-40'
+                  'team-pokemon-move-item group/move',
+                  isHighlighted && 'team-pokemon-move-item-highlighted',
+                  shouldDarken && 'team-pokemon-move-item-dimmed'
                 )}
+                style={{
+                  transition: 'transform 0.1s ease-in',
+                  transform: isHighlighted
+                    ? 'translateY(0)'
+                    : 'translateY(2px)',
+                }}
                 onClick={e => e.stopPropagation()}
               >
                 {/* Effectiveness icon */}
@@ -408,13 +422,16 @@ const TeamPokemon = ({
                       // Immune - cross
                       icon = (
                         <svg
-                          className="w-3 h-3 text-gray-700"
+                          className="team-pokemon-effectiveness-icon-svg"
                           viewBox="0 0 12 12"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
                           strokeLinecap="round"
+                          role="img"
+                          aria-label="No effect"
                         >
+                          <title>No effect</title>
                           <path d="M2 2 L10 10 M10 2 L2 10" />
                         </svg>
                       )
@@ -422,10 +439,13 @@ const TeamPokemon = ({
                       // Resistant - triangle
                       icon = (
                         <svg
-                          className="w-3 h-3 text-gray-600"
+                          className="team-pokemon-effectiveness-icon-svg-gray"
                           viewBox="0 0 12 12"
                           fill="none"
+                          role="img"
+                          aria-label="Not very effective"
                         >
+                          <title>Not very effective</title>
                           <path
                             d="M6 5.2 L7.5 8 L4.5 8 Z"
                             fill="currentColor"
@@ -442,10 +462,13 @@ const TeamPokemon = ({
                       // Weak - circle
                       icon = (
                         <svg
-                          className="w-3 h-3 text-gray-600"
+                          className="team-pokemon-effectiveness-icon-svg-gray"
                           viewBox="0 0 12 12"
                           fill="none"
+                          role="img"
+                          aria-label="Super effective"
                         >
+                          <title>Super effective</title>
                           <circle cx="6" cy="6" r="2" fill="currentColor" />
                           <circle
                             cx="6"
@@ -468,7 +491,7 @@ const TeamPokemon = ({
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 flex items-center"
+                            className="team-pokemon-effectiveness-icon"
                           >
                             {icon}
                           </motion.span>
@@ -495,15 +518,15 @@ const TeamPokemon = ({
                   trigger={
                     <div
                       className={cn(
-                        'text-2xs h-4 rounded cursor-pointer transition-colors flex items-center px-1 relative',
-                        !move && 'bg-gray-200 hover:bg-gray-300',
-                        !!move && 'hover:bg-gray-200'
+                        'team-pokemon-move-trigger',
+                        !move && 'team-pokemon-move-trigger-empty',
+                        !!move && 'team-pokemon-move-trigger-filled'
                       )}
                       onClick={e => e.stopPropagation()}
                     >
                       {move ? (
                         <>
-                          <span className="text-2xs text-gray-700 capitalize truncate pr-4">
+                          <span className="team-pokemon-move-name">
                             {move.name.replace(/-/g, ' ')}
                           </span>
                         </>
@@ -527,11 +550,11 @@ const TeamPokemon = ({
                         newMoves[index] = null
                         setPokemonMoves(pokemon.id, newMoves)
                       }}
-                      className="absolute right-0.5 top-[50%] translate-y-[-50%] w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-opacity opacity-0 group-hover/move:opacity-100 z-10"
+                      className="team-pokemon-clear-move-button"
                       aria-label="Clear move"
                     >
                       <svg
-                        className="w-4 h-4"
+                        className="team-pokemon-clear-move-icon"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"

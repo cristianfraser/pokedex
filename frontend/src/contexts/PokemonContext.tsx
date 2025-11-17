@@ -1,11 +1,25 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useCallback,
+  ReactNode,
+  Dispatch,
+  SetStateAction,
+} from 'react'
 import { PokemonDetail } from '../queries/pokemon'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { debounce } from '../utils/helpers'
 
 const STORAGE_KEY = 'pokedex_team_pokemon'
 const STORAGE_KEY_MOVES = 'pokedex_team_moves'
 
-type PokemonMoves = Array<{ name: string; type: string; damage_class?: 'status' | 'physical' | 'special' } | null>
+type PokemonMoves = Array<{
+  name: string
+  type: string
+  damage_class?: 'status' | 'physical' | 'special'
+} | null>
 
 interface PokemonContextType {
   pokemonTeam: (PokemonDetail | null)[]
@@ -20,6 +34,8 @@ interface PokemonContextType {
   setPokemonMoves: (pokemonId: number, moves: PokemonMoves) => void
   isPanelExpanded: boolean
   setIsPanelExpanded: (expanded: boolean) => void
+  isTeamExpanded: boolean
+  setIsTeamExpanded: Dispatch<SetStateAction<boolean>>
   battleInfoPokemon: PokemonDetail | null
   setBattleInfoPokemon: (pokemon: PokemonDetail | null) => void
   hoveredDefensiveTypes: string[]
@@ -31,19 +47,34 @@ interface PokemonContextType {
 const PokemonContext = createContext<PokemonContextType | undefined>(undefined)
 
 export const PokemonProvider = ({ children }: { children: ReactNode }) => {
-  const [pokemonTeam, setPokemonTeam] = useLocalStorage<(PokemonDetail | null)[]>(
-    STORAGE_KEY,
-    Array(6).fill(null)
-  )
-  const [contextMoves, setContextMoves] = useLocalStorage<{ [pokemonId: number]: PokemonMoves }>(
-    STORAGE_KEY_MOVES,
-    {}
-  )
+  const [pokemonTeam, setPokemonTeam] = useLocalStorage<
+    (PokemonDetail | null)[]
+  >(STORAGE_KEY, Array(6).fill(null))
+  const [contextMoves, setContextMoves] = useLocalStorage<{
+    [pokemonId: number]: PokemonMoves
+  }>(STORAGE_KEY_MOVES, {})
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null)
   const [isPanelExpanded, setIsPanelExpanded] = useState(true)
-  const [battleInfoPokemon, setBattleInfoPokemon] = useState<PokemonDetail | null>(null)
-  const [hoveredDefensiveTypes, setHoveredDefensiveTypes] = useState<string[]>([])
-  const [hoveredOffensiveTypes, setHoveredOffensiveTypes] = useState<string[]>([])
+  const [isTeamExpanded, setIsTeamExpanded] = useState(true)
+  const [battleInfoPokemon, setBattleInfoPokemon] =
+    useState<PokemonDetail | null>(null)
+  const [hoveredDefensiveTypes, setHoveredDefensiveTypes] = useState<string[]>(
+    []
+  )
+  const [hoveredOffensiveTypes, setHoveredOffensiveTypes] = useState<string[]>(
+    []
+  )
+
+  // Create debounced version of setHoveredDefensiveTypes
+  const debouncedSetHoveredDefensiveTypesRef = useRef(
+    debounce((types: string[]) => {
+      setHoveredDefensiveTypes(types)
+    }, 100)
+  )
+
+  const debouncedSetHoveredDefensiveTypes = useCallback((types: string[]) => {
+    debouncedSetHoveredDefensiveTypesRef.current(types)
+  }, [])
 
   const addNext = (pokemon: PokemonDetail) => {
     setPokemonTeam(prev => {
@@ -65,7 +96,9 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
 
   const addInPosition = (pokemon: PokemonDetail, position: number) => {
     if (position < 0 || position > 5) {
-      console.warn(`Position ${position} is out of range. Must be between 0 and 5.`)
+      console.warn(
+        `Position ${position} is out of range. Must be between 0 and 5.`
+      )
       return
     }
     setPokemonTeam(prev => {
@@ -85,7 +118,9 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
 
   const removeInPosition = (position: number) => {
     if (position < 0 || position > 5) {
-      console.warn(`Position ${position} is out of range. Must be between 0 and 5.`)
+      console.warn(
+        `Position ${position} is out of range. Must be between 0 and 5.`
+      )
       return
     }
     setPokemonTeam(prev => {
@@ -101,7 +136,9 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
 
   const selectPokemon = (position: number) => {
     if (position < 0 || position > 5) {
-      console.warn(`Position ${position} is out of range. Must be between 0 and 5.`)
+      console.warn(
+        `Position ${position} is out of range. Must be between 0 and 5.`
+      )
       return
     }
     // Allow selecting any position, even if empty
@@ -137,10 +174,12 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
         setPokemonMoves,
         isPanelExpanded,
         setIsPanelExpanded,
+        isTeamExpanded,
+        setIsTeamExpanded,
         battleInfoPokemon,
         setBattleInfoPokemon,
         hoveredDefensiveTypes,
-        setHoveredDefensiveTypes,
+        setHoveredDefensiveTypes: debouncedSetHoveredDefensiveTypes,
         hoveredOffensiveTypes,
         setHoveredOffensiveTypes,
       }}
@@ -157,4 +196,3 @@ export const usePokemonContext = () => {
   }
   return context
 }
-

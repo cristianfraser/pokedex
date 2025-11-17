@@ -1,11 +1,14 @@
-import { useState } from 'react'
 import TeamPokemon from './TeamPokemon'
 import { usePokemonContext } from '../contexts/PokemonContext'
 
 const PokemonTeam = () => {
-  const { pokemonTeam, selectPokemon, selectedPosition, removeInPosition } =
-    usePokemonContext()
-  const [isExpanded] = useState(true)
+  const {
+    pokemonTeam,
+    selectPokemon,
+    selectedPosition,
+    removeInPosition,
+    isTeamExpanded,
+  } = usePokemonContext()
 
   return (
     <div className="flex justify-center">
@@ -19,7 +22,7 @@ const PokemonTeam = () => {
             isSelected={selectedPosition === index}
             onSelect={() => selectPokemon(index)}
             onRemove={() => removeInPosition(index)}
-            isExpanded={isExpanded}
+            isExpanded={isTeamExpanded}
           />
         ))}
       </div>

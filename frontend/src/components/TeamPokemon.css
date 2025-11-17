@@ -1,0 +1,144 @@
+/* Empty state container */
+.team-pokemon-empty {
+  @apply text-2xs bg-gray-100 rounded-lg border px-1 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden;
+}
+
+.team-pokemon-empty-selected {
+  @apply border-primary-600 bg-primary-50;
+}
+
+.team-pokemon-empty-unselected {
+  @apply border-gray-200 hover:border-gray-300;
+}
+
+/* Empty text */
+.team-pokemon-empty-text {
+  @apply text-gray-400 text-xs;
+}
+
+/* Main container */
+.team-pokemon-container {
+  @apply px-1 bg-gray-100 rounded-lg border flex flex-row gap-[5px] relative cursor-pointer transition-all overflow-hidden;
+}
+
+.team-pokemon-container-selected {
+  @apply border-primary-600 bg-primary-50;
+}
+
+.team-pokemon-container-unselected {
+  @apply border-gray-200 hover:border-gray-300;
+}
+
+.team-pokemon-container-highlighted {
+  @apply opacity-100 ring-2 ring-primary-400;
+}
+
+.team-pokemon-container-dimmed {
+  @apply opacity-40;
+}
+
+/* Delete button */
+.team-pokemon-delete-button {
+  @apply absolute top-0.5 left-0.5 w-6 h-6 flex items-center justify-center hover:bg-red-100 rounded-lg transition-opacity opacity-0 z-10;
+}
+
+/* Show delete button on container hover */
+.team-pokemon-container:hover .team-pokemon-delete-button {
+  opacity: 1;
+}
+
+.team-pokemon-delete-icon {
+  @apply w-4 h-4 text-red-600;
+}
+
+/* Left side: Image, Name, and Types */
+.team-pokemon-left {
+  @apply flex flex-col items-center justify-center flex-shrink-0 w-[110px] transition-opacity;
+}
+
+.team-pokemon-left-dimmed {
+  @apply opacity-40;
+}
+
+/* Image and Name container */
+.team-pokemon-image-container {
+  @apply relative w-16 h-16 flex items-center justify-center;
+}
+
+.team-pokemon-image-wrapper {
+  @apply relative w-full h-full;
+}
+
+.team-pokemon-image {
+  @apply w-full h-full object-contain;
+}
+
+.team-pokemon-name {
+  @apply text-3xs font-medium text-gray-900 capitalize text-center absolute bottom-0 left-0 right-0 whitespace-nowrap;
+}
+
+.team-pokemon-exiting-wrapper {
+  @apply absolute top-0 left-0 w-full h-full;
+}
+
+/* Right side: Moves */
+.team-pokemon-moves {
+  @apply flex flex-col gap-1 justify-center flex-1;
+}
+
+/* Move item */
+.team-pokemon-move-item {
+  @apply relative transition-opacity;
+}
+
+.team-pokemon-move-item-highlighted {
+  @apply opacity-100;
+}
+
+.team-pokemon-move-item-dimmed {
+  @apply opacity-40;
+}
+
+/* Effectiveness icon container */
+.team-pokemon-effectiveness-icon {
+  @apply absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 flex items-center;
+}
+
+.team-pokemon-effectiveness-icon-svg {
+  @apply w-3 h-3 text-gray-700;
+}
+
+.team-pokemon-effectiveness-icon-svg-gray {
+  @apply w-3 h-3 text-gray-600;
+}
+
+/* Move combobox trigger */
+.team-pokemon-move-trigger {
+  @apply text-2xs h-4 rounded cursor-pointer transition-colors flex items-center px-1 relative;
+}
+
+.team-pokemon-move-trigger-empty {
+  @apply bg-gray-200 hover:bg-gray-300;
+}
+
+.team-pokemon-move-trigger-filled {
+  @apply hover:bg-gray-200;
+}
+
+.team-pokemon-move-name {
+  @apply text-2xs text-gray-700 capitalize truncate pr-4;
+}
+
+/* Clear move button */
+.team-pokemon-clear-move-button {
+  @apply absolute right-0.5 top-[50%] translate-y-[-50%] w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-opacity opacity-0 z-10;
+}
+
+/* Show clear button on move item hover */
+.team-pokemon-move-item:hover .team-pokemon-clear-move-button {
+  opacity: 1;
+}
+
+.team-pokemon-clear-move-icon {
+  @apply w-4 h-4;
+}

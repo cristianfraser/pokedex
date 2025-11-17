@@ -6,9 +6,16 @@ import TypePill from './TypePill'
 interface AnimatedTypePillsProps {
   types: Array<{ type: { name: string }; slot: number }> | null
   size?: 'default' | 'small' | 'icon'
+  containerClassName?: string
+  containerStyle?: React.CSSProperties
 }
 
-const AnimatedTypePills = ({ types, size }: AnimatedTypePillsProps) => {
+const AnimatedTypePills = ({
+  types,
+  size,
+  containerStyle,
+  containerClassName,
+}: AnimatedTypePillsProps) => {
   const [exitingTypes, setExitingTypes] = useState<string[]>([])
   const previousTypesRef = useRef<string[]>([])
 
@@ -44,7 +51,7 @@ const AnimatedTypePills = ({ types, size }: AnimatedTypePillsProps) => {
   const animationOffset = size === 'small' ? -18 : -24
 
   return (
-    <div className={cn(containerHeight, 'overflow-hidden relative mt-1 w-full')}>
+    <div className={cn(containerHeight, 'overflow-hidden relative w-full')}>
       {/* Entering types (current) */}
       <AnimatePresence>
         {types && types.length > 0 && (
@@ -54,7 +61,12 @@ const AnimatedTypePills = ({ types, size }: AnimatedTypePillsProps) => {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: animationOffset, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className={cn('flex gap-[2px] justify-center items-center', contentHeight, 'absolute top-0 left-0 right-0')}
+            className={cn(
+              'flex gap-[2px] justify-center items-center fit-content absolute top-0 left-0 right-0',
+              contentHeight,
+              containerClassName
+            )}
+            style={containerStyle}
           >
             {types.map(type => {
               const typeKey = `${type.type.name}-${type.slot}`
@@ -80,7 +92,11 @@ const AnimatedTypePills = ({ types, size }: AnimatedTypePillsProps) => {
             animate={{ y: -animationOffset, opacity: 0.3 }}
             exit={{ y: -animationOffset, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className={cn('flex gap-[5px] justify-center items-center', contentHeight, 'absolute top-0 left-0 right-0')}
+            className={cn(
+              'flex gap-[5px] justify-center items-center',
+              contentHeight,
+              'absolute top-0 left-0 right-0'
+            )}
           >
             {exitingTypes.map(typeName => (
               <div

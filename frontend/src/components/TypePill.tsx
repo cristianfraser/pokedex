@@ -7,15 +7,18 @@ interface TypePillProps {
   }
   size?: 'default' | 'small' | 'icon'
   className?: string
-  hoverable?: boolean
+  onMouseEnter?: (e: React.MouseEvent<HTMLSpanElement>) => void
+  onMouseLeave?: (e: React.MouseEvent<HTMLSpanElement>) => void
 }
 
 const TypePill = ({
   type,
   size = 'default',
   className = '',
-  hoverable = false,
+  onMouseEnter,
+  onMouseLeave,
 }: TypePillProps) => {
+  const hoverable = !!onMouseEnter
   const typeName = type.name.toLowerCase()
   const backgroundColor = typeColors[typeName] || typeColors.unknown
   const hoverBackgroundColor =
@@ -42,14 +45,18 @@ const TypePill = ({
         backgroundColor,
         lineHeight: size === 'icon' || size === 'small' ? '12px' : undefined,
       }}
-      {...(hoverable && {
-        onMouseEnter: (e: React.MouseEvent<HTMLSpanElement>) => {
+      onMouseEnter={(e: React.MouseEvent<HTMLSpanElement>) => {
+        if (hoverable) {
           e.currentTarget.style.backgroundColor = hoverBackgroundColor
-        },
-        onMouseLeave: (e: React.MouseEvent<HTMLSpanElement>) => {
+        }
+        onMouseEnter?.(e)
+      }}
+      onMouseLeave={(e: React.MouseEvent<HTMLSpanElement>) => {
+        if (hoverable) {
           e.currentTarget.style.backgroundColor = backgroundColor
-        },
-      })}
+        }
+        onMouseLeave?.(e)
+      }}
     >
       {size !== 'small' && (
         <span className="pokemon-font-2 normal-case">{typeLetter}</span>
