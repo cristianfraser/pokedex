@@ -118,6 +118,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
           animate={{ width: 250, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
+          style={{ minWidth: 250 }}
         >
           <div className="h-full overflow-y-auto bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative">
             {/* Close button - top right */}
