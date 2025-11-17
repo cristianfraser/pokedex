@@ -386,7 +386,8 @@ const TeamPokemon = ({
               move?.type &&
               move?.damage_class !== 'status' &&
               hoveredDefensiveTypes.includes(move.type)
-            const shouldDarken = !isHighlighted
+            const shouldDarken =
+              hoveredDefensiveTypes.length > 0 && !isHighlighted
 
             return (
               <div

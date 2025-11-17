@@ -119,7 +119,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
           exit={{ width: 0, opacity: 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
-          <div className="overflow-y-auto bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative">
+          <div className="h-full overflow-y-auto bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative">
             {/* Close button - top right */}
             <button
               onClick={() => setBattleInfoPokemon(null)}
@@ -140,9 +140,16 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                 />
               </svg>
             </button>
-            <div className="max-h-[calc(100vh-200px)]">
+            <div>
               {/* Pokemon Image */}
-              <div className="flex items-center">
+              <motion.div
+                key={`pokemon-info-${battleInfoPokemon.id}`}
+                className="flex items-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
                 <div className="flex-shrink-0">
                   {battleInfoPokemon.sprites.front_default ? (
                     <img
@@ -169,7 +176,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                   </h3>
                   {/* </div> */}
                 </div>
-              </div>
+              </motion.div>
               {/* Types */}
               <div className="width-full -mt-1">
                 <AnimatedTypePills types={battleInfoPokemon.types} />
