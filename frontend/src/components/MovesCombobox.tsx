@@ -79,11 +79,71 @@ export function MovesCombobox({
     useMoves(pokemonId, open) // Only fetch when combobox is open
   const commandListRef = React.useRef<HTMLDivElement | null>(null)
   const parentRef = React.useRef<HTMLDivElement>(null)
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const isScrollingRef = React.useRef(false)
 
   // Reset search when popover closes
   React.useEffect(() => {
     if (!open) {
       setSearchValue('')
+    }
+  }, [open])
+
+  // Detect scrolling on mobile to prevent accidental combobox opens
+  React.useEffect(() => {
+    let scrollTimeout: ReturnType<typeof setTimeout>
+
+    const handleScroll = () => {
+      isScrollingRef.current = true
+      clearTimeout(scrollTimeout)
+      scrollTimeout = setTimeout(() => {
+        isScrollingRef.current = false
+      }, 150) // Reset scrolling flag 150ms after scroll ends
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('touchmove', handleScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('touchmove', handleScroll)
+      clearTimeout(scrollTimeout)
+    }
+  }, [])
+
+  // Handle clicks outside the combobox to close it
+  React.useEffect(() => {
+    if (!open) return
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node
+
+      // Check if click is outside the container and popover content
+      const container = containerRef.current
+      const popoverContent = document.querySelector(
+        '[data-radix-portal][role="dialog"]'
+      )
+
+      if (
+        container &&
+        !container.contains(target) &&
+        popoverContent &&
+        !popoverContent.contains(target)
+      ) {
+        setOpen(false)
+      }
+    }
+
+    // Use capture phase to catch events before they reach TeamPokemon handlers
+    // This ensures we close the popover before hover states are triggered
+    document.addEventListener('mousedown', handleClickOutside, true)
+    document.addEventListener('touchstart', handleClickOutside, true)
+    document.addEventListener('click', handleClickOutside, true)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside, true)
+      document.removeEventListener('touchstart', handleClickOutside, true)
+      document.removeEventListener('click', handleClickOutside, true)
     }
   }, [open])
 
@@ -216,12 +276,21 @@ export function MovesCombobox({
     </Button>
   )
 
+  // Handle popover open change - prevent opening if scrolling
+  const handleOpenChange = React.useCallback((newOpen: boolean) => {
+    // Prevent opening if currently scrolling
+    if (newOpen && isScrollingRef.current) {
+      return
+    }
+    setOpen(newOpen)
+  }, [])
+
   return (
-    <div className="relative group">
-      <Popover open={open} onOpenChange={setOpen}>
+    <div ref={containerRef} className="relative group">
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>{trigger || defaultTrigger}</PopoverTrigger>
         <PopoverContent
-          className="w-[137.5px] p-0"
+          className="w-[137.5px] p-0 overflow-hidden"
           align="start"
           onClick={e => e.stopPropagation()}
         >
@@ -232,7 +301,10 @@ export function MovesCombobox({
               value={searchValue}
               onValueChange={setSearchValue}
             />
-            <CommandList ref={commandListRef}>
+            <CommandList
+              className="max-h-[30vh] sm:max-h-[300px] overflow-auto"
+              ref={commandListRef}
+            >
               {isLoading ? (
                 <CommandEmpty>Loading moves...</CommandEmpty>
               ) : filteredMoves.length === 0 ? (

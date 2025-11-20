@@ -42,12 +42,26 @@
 
 /* Delete button */
 .team-pokemon-delete-button {
-  @apply absolute top-0.5 left-0.5 w-6 h-6 flex items-center justify-center hover:bg-red-100 rounded-lg transition-opacity opacity-0 z-10;
+  @apply absolute top-0.5 left-0.5 w-6 h-6 flex items-center justify-center rounded-lg transition-opacity z-10;
 }
 
-/* Show delete button on container hover */
-.team-pokemon-container:hover .team-pokemon-delete-button {
-  opacity: 1;
+/* On mobile, always show delete button */
+@media (max-width: 768px) {
+  .team-pokemon-delete-button {
+    opacity: 1;
+  }
+}
+
+/* On hover-capable devices, show on hover and add hover background */
+@media (hover: hover) and (pointer: fine) {
+  .team-pokemon-delete-button {
+    opacity: 0;
+    @apply hover:bg-red-100;
+  }
+
+  .team-pokemon-container:hover .team-pokemon-delete-button {
+    opacity: 1;
+  }
 }
 
 .team-pokemon-delete-icon {
@@ -57,6 +71,12 @@
 /* Left side: Image, Name, and Types */
 .team-pokemon-left {
   @apply flex flex-col items-center justify-center flex-shrink-0 w-[110px] transition-opacity;
+}
+
+@media (max-width: 768px) {
+  .team-pokemon-left {
+    width: unset;
+  }
 }
 
 .team-pokemon-left-dimmed {
@@ -118,14 +138,30 @@
 /* Move combobox trigger */
 .team-pokemon-move-trigger {
   @apply text-2xs h-4 rounded cursor-pointer transition-colors flex items-center px-1 relative;
+  touch-action: manipulation; /* Prevent double-tap zoom and improve touch responsiveness */
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
 }
 
 .team-pokemon-move-trigger-empty {
-  @apply bg-gray-200 hover:bg-gray-300;
+  @apply bg-gray-200 active:bg-gray-300;
+}
+
+/* Hover state for hover-capable devices only */
+@media (hover: hover) and (pointer: fine) {
+  .team-pokemon-move-trigger-empty:hover {
+    @apply bg-gray-300;
+  }
 }
 
 .team-pokemon-move-trigger-filled {
-  @apply hover:bg-gray-200;
+  @apply active:bg-gray-200;
+}
+
+/* Hover state for hover-capable devices only */
+@media (hover: hover) and (pointer: fine) {
+  .team-pokemon-move-trigger-filled:hover {
+    @apply bg-gray-200;
+  }
 }
 
 .team-pokemon-move-name {

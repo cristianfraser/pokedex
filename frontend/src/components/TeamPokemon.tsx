@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, useMemo } from 'react'
+import { useLayoutEffect, useRef, useState, useMemo, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { PokemonDetail } from '../queries/pokemon'
 import AnimatedTypePills from './AnimatedTypePills'
@@ -40,6 +40,87 @@ const TeamPokemon = ({
     null
   )
   const [isHovered, setIsHovered] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile devices
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Handle touch events on mobile to prevent double-tap issue
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isMobile) return
+
+    const target = e.target as HTMLElement
+
+    // Check if there's an open popover FIRST - if so, let the click event bubble to close it
+    const openPopover = document.querySelector(
+      '[data-state="open"][role="dialog"]'
+    )
+    if (openPopover) {
+      // Don't prevent default or stop propagation - let the click event fire
+      // so MovesCombobox can detect it as an outside click and close the popover
+      // Also don't call onSelect() - the popover closing is the priority
+      return
+    }
+
+    // Don't select if touching interactive elements
+    const movesArea = target.closest('.team-pokemon-moves')
+    const moveItem = target.closest('.team-pokemon-move-item')
+    const moveTrigger = target.closest('.team-pokemon-move-trigger')
+    const isButton = target.tagName === 'BUTTON' || target.closest('button')
+    const isInteractive =
+      target.tagName === 'INPUT' ||
+      target.tagName === 'SELECT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.getAttribute('role') === 'button' ||
+      target.closest(
+        'button, input, select, textarea, [role="button"], [data-radix-popover-trigger]'
+      )
+
+    // If touching interactive elements, let the click event handle it
+    if (movesArea || moveItem || moveTrigger || isButton || isInteractive) {
+      return
+    }
+
+    // Prevent default to avoid hover state, then trigger selection
+    e.preventDefault()
+    e.stopPropagation()
+    onSelect()
+  }
+
+  const handleClick = (e: React.MouseEvent) => {
+    // On mobile, ignore click events if we already handled it via touch
+    // This prevents double-firing
+    if (isMobile) {
+      const target = e.target as HTMLElement
+      const movesArea = target.closest('.team-pokemon-moves')
+      const moveItem = target.closest('.team-pokemon-move-item')
+      const moveTrigger = target.closest('.team-pokemon-move-trigger')
+      const isButton = target.tagName === 'BUTTON' || target.closest('button')
+      const isInteractive =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'SELECT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.getAttribute('role') === 'button' ||
+        target.closest(
+          'button, input, select, textarea, [role="button"], [data-radix-popover-trigger]'
+        )
+
+      // If clicking on interactive elements, let it through
+      if (movesArea || moveItem || moveTrigger || isButton || isInteractive) {
+        return
+      }
+      // Otherwise, ignore the click (touch event already handled it)
+      return
+    }
+    onSelect()
+  }
 
   // Load moves query on hover
   useMoves(pokemon?.id, isHovered)
@@ -246,7 +327,8 @@ const TeamPokemon = ({
 
   return (
     <div
-      onClick={onSelect}
+      onClick={handleClick}
+      onTouchEnd={handleTouchEnd}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
@@ -366,7 +448,10 @@ const TeamPokemon = ({
         </div>
 
         {/* Types */}
-        <AnimatedTypePills types={pokemon.types || null} size="small" />
+        <AnimatedTypePills
+          types={pokemon.types || null}
+          size={isMobile ? 'icon' : 'small'}
+        />
       </div>
 
       {/* Right side: Moves */}
@@ -377,6 +462,7 @@ const TeamPokemon = ({
           width: isExpanded ? 130 : 0,
           transition: 'opacity 0.2s ease-in, width 0.2s ease-in',
         }}
+        onTouchEnd={e => e.stopPropagation()}
       >
         {pokemon &&
           moves.map((move, index) => {
@@ -403,6 +489,7 @@ const TeamPokemon = ({
                     : 'translateY(2px)',
                 }}
                 onClick={e => e.stopPropagation()}
+                onTouchEnd={e => e.stopPropagation()}
               >
                 {/* Effectiveness icon */}
                 {move &&
@@ -522,6 +609,79 @@ const TeamPokemon = ({
                         !move && 'team-pokemon-move-trigger-empty',
                         !!move && 'team-pokemon-move-trigger-filled'
                       )}
+                      onTouchStart={e => {
+                        // Store touch start to detect scroll gestures
+                        if (isMobile) {
+                          const touch = e.touches[0]
+                          if (touch) {
+                            ;(e.currentTarget as any).__touchStart = {
+                              x: touch.clientX,
+                              y: touch.clientY,
+                              time: Date.now(),
+                            }
+                          }
+                        }
+                      }}
+                      onTouchMove={e => {
+                        // Detect if this is a scroll gesture
+                        if (isMobile) {
+                          const touchStart = (e.currentTarget as any)
+                            .__touchStart
+                          if (touchStart) {
+                            const touch = e.touches[0]
+                            if (touch) {
+                              const deltaX = Math.abs(
+                                touch.clientX - touchStart.x
+                              )
+                              const deltaY = Math.abs(
+                                touch.clientY - touchStart.y
+                              )
+                              // If moved more than 10px, consider it a scroll
+                              if (deltaX > 10 || deltaY > 10) {
+                                ;(e.currentTarget as any).__isScrollGesture =
+                                  true
+                              }
+                            }
+                          }
+                        }
+                      }}
+                      onTouchEnd={e => {
+                        // On mobile, trigger click immediately to open combobox
+                        // This prevents the double-tap issue
+                        if (isMobile) {
+                          // Check if this was a scroll gesture
+                          const isScrollGesture = (e.currentTarget as any)
+                            .__isScrollGesture
+                          if (isScrollGesture) {
+                            // Don't open if it was a scroll gesture
+                            e.preventDefault()
+                            e.stopPropagation()
+                            // Clean up
+                            delete (e.currentTarget as any).__touchStart
+                            delete (e.currentTarget as any).__isScrollGesture
+                            return
+                          }
+
+                          // Clean up
+                          delete (e.currentTarget as any).__touchStart
+                          delete (e.currentTarget as any).__isScrollGesture
+
+                          e.preventDefault()
+                          e.stopPropagation()
+                          // Programmatically trigger click to open the popover
+                          const target = e.currentTarget
+                          const clickEvent = new MouseEvent('click', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window,
+                          })
+                          target.dispatchEvent(clickEvent)
+                        }
+                      }}
+                      onClick={e => {
+                        // Stop propagation to prevent container selection
+                        e.stopPropagation()
+                      }}
                     >
                       {move ? (
                         <>

@@ -46,6 +46,14 @@ const About = () => {
                 <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
                 Framer Motion for animations
               </li>
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
+                List virtualization with react-virtualized
+              </li>
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-primary-600 rounded-full mr-3"></span>
+                React Query for data fetching
+              </li>
             </ul>
           </Card>
 
