@@ -1,10 +1,16 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { API_URL } from '../utils/constants'
 
 export interface PokemonListItem {
   name: string
   url: string
+}
+
+export interface PokemonBasic {
+  id: number
+  name: string
+  pokedex_number: number
 }
 
 export interface PokemonListResponse {
@@ -142,4 +148,32 @@ export const usePokemonList = (searchTerm: string = '', type?: string) => {
     ...query,
     pokemonList,
   }
+}
+
+// Fetch all pokemon basic info (for combobox)
+export const fetchAllPokemonBasic = async (): Promise<PokemonBasic[]> => {
+  const response = await fetch(`${API_URL}/api/pokemon/all/basic`)
+  if (!response.ok) {
+    throw new Error('Failed to fetch Pokémon basic list')
+  }
+  return response.json()
+}
+
+// Hook to get all pokemon basic info (name, id)
+export const useAllPokemonBasic = () => {
+  return useQuery({
+    queryKey: ['pokemon', 'all', 'basic'],
+    queryFn: fetchAllPokemonBasic,
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours - this data rarely changes
+  })
+}
+
+// Hook to fetch pokemon by ID
+export const usePokemonById = (id: number | null | undefined) => {
+  return useQuery({
+    queryKey: ['pokemon', 'byId', id],
+    queryFn: () => fetchPokemonById(id!),
+    enabled: id !== null && id !== undefined,
+    staleTime: 1000 * 60 * 60, // 1 hour
+  })
 }

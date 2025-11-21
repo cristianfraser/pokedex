@@ -10,6 +10,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import FloatingPanel from '../components/FloatingPanel'
+import PokemonTeam from '../components/PokemonTeam'
+import BattleInfoPokemon from '../components/BattleInfoPokemon'
 
 const Pokemon = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -20,18 +23,94 @@ const Pokemon = () => {
     clearSelection,
     pokemonTeam,
     setBattleInfoPokemon,
+    isTeamExpanded,
+    battleInfoPokemon,
   } = usePokemonContext()
+  // Calculate initial padding based on initial state
+  // PokemonTeam panel: 136px (collapsed) or 266px (expanded = 136px base + 130px moves)
+  // BattleInfoPokemon panel: 250px (always this width when visible)
+  // Gap between panels: 8px (gap-2)
+  // FloatingPanel padding: p-2 = 8px left + 8px right = 16px total
+  // FloatingPanel right margin: right-2 = 8px
+  const calculatePadding = useCallback(() => {
+    const panelPadding = 16 // FloatingPanel p-2 = 8px * 2
+    const rightMargin = 8 // FloatingPanel right-2 = 8px
+    const gap = 8 // gap-2 between panels
+
+    // Current state widths
+    const pokemonTeamWidth = isTeamExpanded ? 266 : 136 // 136px base + 130px moves when expanded
+    const battleInfoWidth = battleInfoPokemon ? 250 : 0
+
+    // Calculate content width based on current state
+    const contentWidth = battleInfoPokemon
+      ? pokemonTeamWidth + gap + battleInfoWidth
+      : pokemonTeamWidth
+
+    // Total: right margin + content + panel padding
+    const totalWidth = rightMargin + contentWidth + panelPadding
+
+    // Determine base margin based on window width
+    let baseMargin = 16 // mobile
+    if (window.innerWidth >= 1024) {
+      baseMargin = 32 // lg
+    } else if (window.innerWidth >= 640) {
+      baseMargin = 24 // sm
+    }
+
+    return `${totalWidth + baseMargin}px`
+  }, [isTeamExpanded, battleInfoPokemon])
+
+  // Initialize with correct padding, no animation on mount
+  const [paddingRight, setPaddingRight] = useState(() => {
+    // Calculate initial padding synchronously on mount
+    const panelPadding = 16
+    const rightMargin = 8
+    const gap = 8
+    const pokemonTeamWidth = isTeamExpanded ? 266 : 136
+    const battleInfoWidth = battleInfoPokemon ? 250 : 0
+    const contentWidth = battleInfoPokemon
+      ? pokemonTeamWidth + gap + battleInfoWidth
+      : pokemonTeamWidth
+    const totalWidth = rightMargin + contentWidth + panelPadding
+    let baseMargin = 16
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth >= 1024) {
+        baseMargin = 32
+      } else if (window.innerWidth >= 640) {
+        baseMargin = 24
+      }
+    }
+    return `${totalWidth + baseMargin}px`
+  })
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Update padding when state changes (after mount)
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isMounted) return // Don't update on initial mount
+
+    const updatePadding = () => {
+      setPaddingRight(calculatePadding())
+    }
+
+    updatePadding()
+    window.addEventListener('resize', updatePadding)
+    return () => window.removeEventListener('resize', updatePadding)
+  }, [isMounted, calculatePadding])
 
   // Check if a pokemon is already in the team
   const isPokemonInTeam = (pokemonId: number) => {
-    return pokemonTeam.some(p => p !== null && p.id === pokemonId)
+    return pokemonTeam.some(p => p !== null && p === pokemonId)
   }
 
   // Check if a pokemon is at the selected position
   const isPokemonAtSelectedPosition = (pokemonId: number) => {
     if (selectedPosition === null) return false
-    const pokemonAtPosition = pokemonTeam[selectedPosition]
-    return pokemonAtPosition !== null && pokemonAtPosition.id === pokemonId
+    const pokemonIdAtPosition = pokemonTeam[selectedPosition]
+    return pokemonIdAtPosition !== null && pokemonIdAtPosition === pokemonId
   }
 
   // Check if the team is full (all 6 slots occupied)
@@ -64,11 +143,11 @@ const Pokemon = () => {
   const handleAddToTeam = (pokemon: PokemonDetail) => {
     if (selectedPosition !== null) {
       // If a slot is selected, add to that position
-      addInPosition(pokemon, selectedPosition)
+      addInPosition(pokemon.id, selectedPosition)
       clearSelection()
     } else {
       // Otherwise, use addNext to find first empty slot
-      addNext(pokemon)
+      addNext(pokemon.id)
     }
   }
 
@@ -167,7 +246,18 @@ const Pokemon = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <FloatingPanel top={80} isVisible={true}>
+        <PokemonTeam />
+        <BattleInfoPokemon />
+      </FloatingPanel>
+      <div
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+        style={{
+          paddingRight,
+          willChange: 'padding-right',
+          transition: isMounted ? 'padding-right 0.15s ease-in' : 'none',
+        }}
+      >
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold text-gray-900">
@@ -248,11 +338,9 @@ const Pokemon = () => {
                         #
                       </th>
                       <th
-                        className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        style={{ width: '80px' }}
-                      >
-                        Sprite
-                      </th>
+                        className="py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        style={{ width: 40 }}
+                      />
                       <th className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Info
                       </th>
@@ -294,8 +382,8 @@ const Pokemon = () => {
                             #{pokemon.pokedexNumber}
                           </td>
                           <td
-                            className="px-4 py-1.5 whitespace-nowrap flex-shrink-0"
-                            style={{ width: '80px' }}
+                            className="py-1.5 whitespace-nowrap flex-shrink-0"
+                            style={{ width: 40 }}
                           >
                             {pokemon.sprites.front_default ? (
                               <img

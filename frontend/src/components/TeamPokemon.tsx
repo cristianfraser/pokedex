@@ -4,14 +4,17 @@ import { PokemonDetail } from '../queries/pokemon'
 import AnimatedTypePills from './AnimatedTypePills'
 import TypePill from './TypePill'
 import { MovesCombobox } from './MovesCombobox'
+import { PokemonCombobox } from './PokemonCombobox'
 import { cn } from '@/lib/utils'
 import { usePokemonContext } from '../contexts/PokemonContext'
+import { useStyle } from '../contexts/StyleContext'
 import { useMoves } from '../queries/moves'
+import { usePokemonById } from '../queries/pokemon'
 import { calculateTypeEffectiveness } from '@/constants/types'
 import './TeamPokemon.css'
 
 interface TeamPokemonProps {
-  pokemon: PokemonDetail | null
+  pokemonId: number | null
   position: number
   isSelected: boolean
   onSelect: () => void
@@ -20,8 +23,8 @@ interface TeamPokemonProps {
 }
 
 const TeamPokemon = ({
-  pokemon,
-  position: _position,
+  pokemonId,
+  position,
   isSelected,
   onSelect,
   onRemove,
@@ -33,24 +36,46 @@ const TeamPokemon = ({
     battleInfoPokemon,
     hoveredDefensiveTypes,
     hoveredOffensiveTypes,
+    addInPosition,
   } = usePokemonContext()
-  const [isAnimatingImageName, setIsAnimatingImageName] = useState(false)
-  const [isAnimatingEmpty, setIsAnimatingEmpty] = useState(false)
-  const [exitingPokemon, setExitingPokemon] = useState<PokemonDetail | null>(
-    null
-  )
-  const [isHovered, setIsHovered] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const { data: pokemon, isLoading: isLoadingPokemon } =
+    usePokemonById(pokemonId)
+  const [displayedPokemon, setDisplayedPokemon] =
+    useState<PokemonDetail | null>(null)
+  const [displayedMoves, setDisplayedMoves] = useState<
+    Array<{
+      name: string
+      type: string
+      damage_class?: 'status' | 'physical' | 'special'
+    } | null>
+  >([null, null, null, null])
 
-  // Detect mobile devices
+  // Update displayed pokemon when pokemon data changes
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+    if (pokemon && !isLoadingPokemon) {
+      setDisplayedPokemon(pokemon)
+      // Update displayed moves when new pokemon finishes loading
+      const newMoves = contextMoves[pokemon.id] || [null, null, null, null]
+      setDisplayedMoves(newMoves)
+    } else if (!pokemonId && !isLoadingPokemon) {
+      // Clear displayed pokemon when pokemonId is null and not loading
+      setDisplayedPokemon(null)
+      setDisplayedMoves([null, null, null, null])
     }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+  }, [pokemon, pokemonId, isLoadingPokemon, contextMoves])
+
+  // Initialize displayed pokemon and moves on mount
+  useEffect(() => {
+    if (pokemon && !displayedPokemon) {
+      setDisplayedPokemon(pokemon)
+      const initialMoves = contextMoves[pokemon.id] || [null, null, null, null]
+      setDisplayedMoves(initialMoves)
+    }
+  }, [pokemon, displayedPokemon, contextMoves])
+
+  const [isAnimatingEmpty, setIsAnimatingEmpty] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  const { isMobile } = useStyle()
 
   // Handle touch events on mobile to prevent double-tap issue
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -123,22 +148,29 @@ const TeamPokemon = ({
   }
 
   // Load moves query on hover
-  useMoves(pokemon?.id, isHovered)
+  useMoves(displayedPokemon?.id, isHovered)
 
-  // Get moves from context for this pokemon, default to empty array
-  const moves = useMemo(() => {
-    if (!pokemon) return [null, null, null, null]
-    return contextMoves[pokemon.id] || [null, null, null, null]
-  }, [pokemon, contextMoves])
+  // Update displayed moves when contextMoves changes for the displayed pokemon
+  useEffect(() => {
+    if (displayedPokemon) {
+      const newMoves = contextMoves[displayedPokemon.id] || [
+        null,
+        null,
+        null,
+        null,
+      ]
+      setDisplayedMoves(newMoves)
+    }
+  }, [displayedPokemon, contextMoves])
 
   // Check if there are any highlighted moves or if pokemon has the hovered defensive type
   const hasHighlightedMoves = useMemo(() => {
     if (hoveredDefensiveTypes.length > 0) {
       const hasType =
-        pokemon?.types?.some(t =>
+        displayedPokemon?.types?.some(t =>
           hoveredDefensiveTypes.includes(t.type.name)
         ) || false
-      const hasMoveType = moves.some(
+      const hasMoveType = displayedMoves.some(
         move =>
           move?.type &&
           move?.damage_class !== 'status' &&
@@ -147,107 +179,18 @@ const TeamPokemon = ({
       if (hasType || hasMoveType) return true
     }
     return false
-  }, [moves, hoveredDefensiveTypes, pokemon])
-  const enteringImageNameRef = useRef<HTMLDivElement>(null)
-  const exitingImageNameRef = useRef<HTMLDivElement>(null)
+  }, [displayedMoves, hoveredDefensiveTypes, displayedPokemon])
   const emptyTextRef = useRef<HTMLDivElement>(null)
   const previousPokemonRef = useRef<PokemonDetail | null>(null)
-  const previousPokemonIdRef = useRef<number | null>(null)
 
-  // Use useLayoutEffect to handle image/name animations
+  // Handle empty text fade animation when transitioning from Pokemon to empty
   useLayoutEffect(() => {
-    if (pokemon) {
-      if (previousPokemonRef.current) {
-        // Had a previous Pokemon
-        // Check if Pokemon changed (not just types)
-        const pokemonChanged = previousPokemonRef.current.id !== pokemon.id
-
-        if (pokemonChanged) {
-          // Pokemon changed: animate image/name fade
-          setExitingPokemon(previousPokemonRef.current)
-          setIsAnimatingImageName(true)
-        }
-      } else {
-        // Transitioning from empty to Pokemon: animate image/name fade-in
-        setIsAnimatingImageName(true)
-      }
-    } else {
-      // No pokemon
-      if (previousPokemonRef.current) {
-        // Transitioning from Pokemon to empty: animate empty fade-in
-        setIsAnimatingEmpty(true)
-      }
-      setExitingPokemon(null)
-      setIsAnimatingImageName(false)
+    if (!displayedPokemon && previousPokemonRef.current) {
+      // Transitioning from Pokemon to empty: animate empty fade-in
+      setIsAnimatingEmpty(true)
     }
-
-    // Update ref for next render
-    previousPokemonRef.current = pokemon
-  }, [pokemon])
-
-  // Update previousPokemonIdRef when Pokemon changes
-  useLayoutEffect(() => {
-    const currentId = pokemon?.id ?? null
-    if (currentId !== previousPokemonIdRef.current) {
-      previousPokemonIdRef.current = currentId
-    }
-  }, [pokemon])
-
-  // Handle image/name fade animation
-  useLayoutEffect(() => {
-    if (isAnimatingImageName) {
-      // Apply initial states immediately (no transition) before paint
-      if (enteringImageNameRef.current) {
-        enteringImageNameRef.current.style.transition = 'none'
-        enteringImageNameRef.current.style.opacity = '0'
-      }
-      if (exitingImageNameRef.current && exitingPokemon) {
-        exitingImageNameRef.current.style.transition = 'none'
-        exitingImageNameRef.current.style.opacity = '1'
-      }
-
-      // After paint, enable transitions and animate
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (enteringImageNameRef.current) {
-            enteringImageNameRef.current.style.transition =
-              'opacity 0.3s ease-out'
-            enteringImageNameRef.current.style.opacity = '1'
-          }
-          if (exitingImageNameRef.current && exitingPokemon) {
-            exitingImageNameRef.current.style.transition =
-              'opacity 0.3s ease-out'
-            exitingImageNameRef.current.style.opacity = '0'
-          }
-
-          // After animation completes, clear exiting Pokemon
-          setTimeout(() => {
-            setExitingPokemon(null)
-            setIsAnimatingImageName(false)
-            if (enteringImageNameRef.current) {
-              enteringImageNameRef.current.style.transition = ''
-              enteringImageNameRef.current.style.opacity = ''
-            }
-            if (exitingImageNameRef.current) {
-              exitingImageNameRef.current.style.display = 'none'
-              exitingImageNameRef.current.style.transition = ''
-              exitingImageNameRef.current.style.opacity = ''
-            }
-          }, 300)
-        })
-      })
-    } else if (!isAnimatingImageName) {
-      // No animation needed, reset styles
-      if (enteringImageNameRef.current) {
-        enteringImageNameRef.current.style.transition = ''
-        enteringImageNameRef.current.style.opacity = ''
-      }
-      if (exitingImageNameRef.current) {
-        exitingImageNameRef.current.style.transition = ''
-        exitingImageNameRef.current.style.opacity = ''
-      }
-    }
-  }, [isAnimatingImageName, exitingPokemon])
+    previousPokemonRef.current = displayedPokemon || null
+  }, [displayedPokemon])
 
   // Handle empty text fade animation
   useLayoutEffect(() => {
@@ -285,17 +228,18 @@ const TeamPokemon = ({
 
   // Check if this pokemon has the hovered offensive type
   const hasHoveredOffensiveType = useMemo(() => {
-    if (!pokemon) return false
+    if (!displayedPokemon) return false
     if (hoveredOffensiveTypes.length > 0) {
       return (
-        pokemon.types?.some(t => hoveredOffensiveTypes.includes(t.type.name)) ||
-        false
+        displayedPokemon.types?.some(t =>
+          hoveredOffensiveTypes.includes(t.type.name)
+        ) || false
       )
     }
     return false
-  }, [pokemon, hoveredOffensiveTypes])
+  }, [displayedPokemon, hoveredOffensiveTypes])
 
-  if (!pokemon) {
+  if (!displayedPokemon) {
     return (
       <div
         onClick={onSelect}
@@ -333,7 +277,12 @@ const TeamPokemon = ({
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         'team-pokemon-container group/container',
-        isSelected
+        // Only apply selected styles if not dimmed
+        isSelected &&
+          !(
+            (hoveredOffensiveTypes.length > 0 && !hasHoveredOffensiveType) ||
+            (hoveredDefensiveTypes.length > 0 && !hasHighlightedMoves)
+          )
           ? 'team-pokemon-container-selected'
           : 'team-pokemon-container-unselected',
         hoveredOffensiveTypes.length > 0 &&
@@ -344,7 +293,11 @@ const TeamPokemon = ({
           'team-pokemon-container-dimmed',
         hoveredDefensiveTypes.length > 0 &&
           hasHighlightedMoves &&
-          'team-pokemon-container-highlighted'
+          'team-pokemon-container-highlighted',
+        hoveredDefensiveTypes.length > 0 &&
+          !hasHighlightedMoves &&
+          'team-pokemon-container-dimmed',
+        isLoadingPokemon && 'opacity-50'
       )}
       style={{
         height: '90px',
@@ -352,6 +305,7 @@ const TeamPokemon = ({
         maxHeight: '90px',
         minWidth: 'fit-content',
         gap: isExpanded ? 5 : 0,
+        transition: isLoadingPokemon ? 'opacity 0.2s ease-in-out' : undefined,
       }}
     >
       {/* Delete button - top right */}
@@ -389,67 +343,49 @@ const TeamPokemon = ({
       >
         {/* Image and Name container */}
         <div className="team-pokemon-image-container">
-          {/* Entering image/name */}
-          <div
-            ref={enteringImageNameRef}
-            className="team-pokemon-image-wrapper"
-            style={{
-              opacity: isAnimatingImageName ? 0 : undefined,
-              transition: isAnimatingImageName ? 'none' : undefined,
-            }}
-          >
-            {pokemon.sprites.front_default ? (
-              <img
-                src={pokemon.sprites.front_default}
-                alt={pokemon.name}
-                className="team-pokemon-image"
-                style={{ color: 'transparent' }}
-              />
-            ) : null}
-            <div
-              className="team-pokemon-name"
-              style={{
-                boxShadow: '0 0 8px 4px rgb(243 244 246)',
-                backgroundColor: 'rgba(243, 244, 246, 0.9)',
-              }}
-            >
-              {pokemon.name}
-            </div>
-          </div>
-          {/* Exiting image/name */}
-          {exitingPokemon && (
-            <div
-              ref={exitingImageNameRef}
-              className="team-pokemon-exiting-wrapper"
-              style={{
-                opacity: isAnimatingImageName ? 1 : undefined,
-                transition: isAnimatingImageName ? 'none' : undefined,
-              }}
-            >
-              {exitingPokemon.sprites.front_default ? (
-                <img
-                  src={exitingPokemon.sprites.front_default}
-                  alt={exitingPokemon.name}
-                  className="team-pokemon-image"
-                  style={{ color: 'transparent' }}
-                />
-              ) : null}
-              <div
-                className="team-pokemon-name"
-                style={{
-                  boxShadow: '0 0 8px 4px rgb(243 244 246)',
-                  backgroundColor: 'rgba(243, 244, 246, 0.9)',
-                }}
+          <AnimatePresence mode="wait">
+            {displayedPokemon && (
+              <motion.div
+                key={displayedPokemon.id}
+                className="team-pokemon-image-wrapper"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
               >
-                {exitingPokemon.name}
-              </div>
-            </div>
-          )}
+                {displayedPokemon.sprites.front_default ? (
+                  <img
+                    src={displayedPokemon.sprites.front_default}
+                    alt={displayedPokemon.name}
+                    className="team-pokemon-image"
+                    style={{ color: 'transparent' }}
+                  />
+                ) : null}
+                <PokemonCombobox
+                  value={displayedPokemon.id}
+                  onValueChange={pokemonId => {
+                    addInPosition(pokemonId, position)
+                  }}
+                  trigger={
+                    <div
+                      className="team-pokemon-name cursor-pointer hover:opacity-80 transition-opacity"
+                      style={{
+                        boxShadow: '0 0 8px 4px rgb(243 244 246)',
+                        backgroundColor: 'rgba(243, 244, 246, 0.9)',
+                      }}
+                    >
+                      {displayedPokemon.name}
+                    </div>
+                  }
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Types */}
         <AnimatedTypePills
-          types={pokemon.types || null}
+          types={displayedPokemon.types || null}
           size={isMobile ? 'icon' : 'small'}
         />
       </div>
@@ -464,8 +400,8 @@ const TeamPokemon = ({
         }}
         onTouchEnd={e => e.stopPropagation()}
       >
-        {pokemon &&
-          moves.map((move, index) => {
+        {displayedPokemon &&
+          displayedMoves.map((move, index) => {
             const isHighlighted =
               hoveredDefensiveTypes.length > 0 &&
               move?.type &&
@@ -589,10 +525,13 @@ const TeamPokemon = ({
                 <MovesCombobox
                   key={index}
                   value={move?.name}
-                  pokemonId={pokemon.id}
+                  pokemonId={displayedPokemon.id}
+                  selectedMoves={displayedMoves
+                    .filter((m, i) => m !== null && i !== index)
+                    .map(m => m!.name)}
                   onValueChange={(moveName, moveType, damageClass) => {
-                    if (!pokemon) return
-                    const newMoves = [...moves]
+                    if (!displayedPokemon) return
+                    const newMoves = [...displayedMoves]
                     newMoves[index] = moveName
                       ? {
                           name: moveName,
@@ -600,7 +539,7 @@ const TeamPokemon = ({
                           damage_class: damageClass,
                         }
                       : null
-                    setPokemonMoves(pokemon.id, newMoves)
+                    setPokemonMoves(displayedPokemon.id, newMoves)
                   }}
                   trigger={
                     <div
@@ -609,79 +548,6 @@ const TeamPokemon = ({
                         !move && 'team-pokemon-move-trigger-empty',
                         !!move && 'team-pokemon-move-trigger-filled'
                       )}
-                      onTouchStart={e => {
-                        // Store touch start to detect scroll gestures
-                        if (isMobile) {
-                          const touch = e.touches[0]
-                          if (touch) {
-                            ;(e.currentTarget as any).__touchStart = {
-                              x: touch.clientX,
-                              y: touch.clientY,
-                              time: Date.now(),
-                            }
-                          }
-                        }
-                      }}
-                      onTouchMove={e => {
-                        // Detect if this is a scroll gesture
-                        if (isMobile) {
-                          const touchStart = (e.currentTarget as any)
-                            .__touchStart
-                          if (touchStart) {
-                            const touch = e.touches[0]
-                            if (touch) {
-                              const deltaX = Math.abs(
-                                touch.clientX - touchStart.x
-                              )
-                              const deltaY = Math.abs(
-                                touch.clientY - touchStart.y
-                              )
-                              // If moved more than 10px, consider it a scroll
-                              if (deltaX > 10 || deltaY > 10) {
-                                ;(e.currentTarget as any).__isScrollGesture =
-                                  true
-                              }
-                            }
-                          }
-                        }
-                      }}
-                      onTouchEnd={e => {
-                        // On mobile, trigger click immediately to open combobox
-                        // This prevents the double-tap issue
-                        if (isMobile) {
-                          // Check if this was a scroll gesture
-                          const isScrollGesture = (e.currentTarget as any)
-                            .__isScrollGesture
-                          if (isScrollGesture) {
-                            // Don't open if it was a scroll gesture
-                            e.preventDefault()
-                            e.stopPropagation()
-                            // Clean up
-                            delete (e.currentTarget as any).__touchStart
-                            delete (e.currentTarget as any).__isScrollGesture
-                            return
-                          }
-
-                          // Clean up
-                          delete (e.currentTarget as any).__touchStart
-                          delete (e.currentTarget as any).__isScrollGesture
-
-                          e.preventDefault()
-                          e.stopPropagation()
-                          // Programmatically trigger click to open the popover
-                          const target = e.currentTarget
-                          const clickEvent = new MouseEvent('click', {
-                            bubbles: true,
-                            cancelable: true,
-                            view: window,
-                          })
-                          target.dispatchEvent(clickEvent)
-                        }
-                      }}
-                      onClick={e => {
-                        // Stop propagation to prevent container selection
-                        e.stopPropagation()
-                      }}
                     >
                       {move ? (
                         <>
@@ -704,10 +570,10 @@ const TeamPokemon = ({
                     <button
                       onClick={e => {
                         e.stopPropagation()
-                        if (!pokemon) return
-                        const newMoves = [...moves]
+                        if (!displayedPokemon) return
+                        const newMoves = [...displayedMoves]
                         newMoves[index] = null
-                        setPokemonMoves(pokemon.id, newMoves)
+                        setPokemonMoves(displayedPokemon.id, newMoves)
                       }}
                       className="team-pokemon-clear-move-button"
                       aria-label="Clear move"

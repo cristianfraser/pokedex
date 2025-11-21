@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { API_URL } from '../utils/constants'
 
 export interface MoveListItem {
@@ -57,8 +57,6 @@ export interface MoveDetail {
   }>
 }
 
-const MOVES_PER_PAGE = 100
-
 // Fetch a single move by ID or name
 export const fetchMoveById = async (
   id: string | number
@@ -70,36 +68,30 @@ export const fetchMoveById = async (
   return response.json()
 }
 
-// Hook to fetch all moves with infinite scroll
+// Fetch all moves for a pokemon
+export const fetchMovesByPokemon = async (
+  pokemonId: number
+): Promise<MoveListItem[]> => {
+  const response = await fetch(`${API_URL}/api/moves?pokemon=${pokemonId}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch moves for pokemon: ${pokemonId}`)
+  }
+  return response.json()
+}
+
+// Hook to fetch all moves for a pokemon (no pagination)
 export const useMoves = (pokemonId?: number, enabled: boolean = true) => {
-  const query = useInfiniteQuery({
+  return useQuery({
     queryKey: ['moves', 'list', pokemonId],
-    queryFn: ({ pageParam = 0 }) => {
-      const url = pokemonId
-        ? `${API_URL}/api/moves?page=${pageParam}&limit=${MOVES_PER_PAGE}&pokemon=${pokemonId}`
-        : `${API_URL}/api/moves?page=${pageParam}&limit=${MOVES_PER_PAGE}`
-      return fetch(url).then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to fetch moves list')
-        }
-        return res.json()
-      })
-    },
-    getNextPageParam: (lastPage, _allPages) => {
-      if (!lastPage.next) {
-        return undefined
+    queryFn: () => {
+      if (!pokemonId) {
+        throw new Error('pokemonId is required')
       }
-      // Extract page from next URL (e.g., "/api/moves?page=1&limit=100")
-      const nextUrl = new URL(lastPage.next, window.location.origin)
-      const page = parseInt(nextUrl.searchParams.get('page') || '0', 10)
-      return page
+      return fetchMovesByPokemon(pokemonId)
     },
-    initialPageParam: 0,
-    enabled, // Only fetch when enabled
+    enabled: enabled && !!pokemonId, // Only fetch when enabled and pokemonId is provided
     staleTime: 1000 * 60 * 60, // 1 hour - moves data doesn't change often
   })
-
-  return query
 }
 
 // Hook to fetch a single move by ID or name

@@ -23,7 +23,7 @@ const FloatingPanel = ({
         transition:
           'top 0.1s, width 0.2s ease-in-out, right 0.2s ease-in-out, transform 0.3s ease-in-out',
         willChange: 'width, top, right, transform',
-        maxWidth: 'calc(100% - 2rem)',
+        maxWidth: 'calc(100% - 1rem)',
       }}
     >
       <button

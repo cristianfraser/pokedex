@@ -14,10 +14,10 @@ const PokemonTeam = () => {
     <div className="flex justify-center">
       <div className="grid gap-2 team-pokemon-grid-vertical w-full">
         {/* 6 slots: 1 column vertical stack */}
-        {pokemonTeam.map((pokemon, index) => (
+        {pokemonTeam.map((pokemonId, index) => (
           <TeamPokemon
             key={index}
-            pokemon={pokemon}
+            pokemonId={pokemonId}
             position={index}
             isSelected={selectedPosition === index}
             onSelect={() => selectPokemon(index)}

@@ -22,11 +22,10 @@ type PokemonMoves = Array<{
 } | null>
 
 interface PokemonContextType {
-  pokemonTeam: (PokemonDetail | null)[]
-  addNext: (pokemon: PokemonDetail) => void
-  addInPosition: (pokemon: PokemonDetail, position: number) => void
+  pokemonTeam: (number | null)[]
+  addNext: (pokemonId: number) => void
+  addInPosition: (pokemonId: number, position: number) => void
   removeInPosition: (position: number) => void
-  selectedPokemon: PokemonDetail | null
   selectedPosition: number | null
   selectPokemon: (position: number) => void
   clearSelection: () => void
@@ -47,9 +46,10 @@ interface PokemonContextType {
 const PokemonContext = createContext<PokemonContextType | undefined>(undefined)
 
 export const PokemonProvider = ({ children }: { children: ReactNode }) => {
-  const [pokemonTeam, setPokemonTeam] = useLocalStorage<
-    (PokemonDetail | null)[]
-  >(STORAGE_KEY, Array(6).fill(null))
+  const [pokemonTeam, setPokemonTeam] = useLocalStorage<(number | null)[]>(
+    STORAGE_KEY,
+    Array(6).fill(null)
+  )
   const [contextMoves, setContextMoves] = useLocalStorage<{
     [pokemonId: number]: PokemonMoves
   }>(STORAGE_KEY_MOVES, {})
@@ -69,32 +69,32 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
   const debouncedSetHoveredDefensiveTypesRef = useRef(
     debounce((types: string[]) => {
       setHoveredDefensiveTypes(types)
-    }, 100)
+    }, 150)
   )
 
   const debouncedSetHoveredDefensiveTypes = useCallback((types: string[]) => {
     debouncedSetHoveredDefensiveTypesRef.current(types)
   }, [])
 
-  const addNext = (pokemon: PokemonDetail) => {
+  const addNext = (pokemonId: number) => {
     setPokemonTeam(prev => {
       // Check if pokemon is already in the list
-      const exists = prev.some(p => p !== null && p.id === pokemon.id)
+      const exists = prev.some(p => p !== null && p === pokemonId)
       if (exists) {
         // Do nothing if pokemon is already in the list
         return prev
       }
-      // Find first empty slot and add pokemon
+      // Find first empty slot and add pokemon ID
       const newList = [...prev]
       const emptyIndex = newList.findIndex(p => p === null)
       if (emptyIndex !== -1) {
-        newList[emptyIndex] = pokemon
+        newList[emptyIndex] = pokemonId
       }
       return newList
     })
   }
 
-  const addInPosition = (pokemon: PokemonDetail, position: number) => {
+  const addInPosition = (pokemonId: number, position: number) => {
     if (position < 0 || position > 5) {
       console.warn(
         `Position ${position} is out of range. Must be between 0 and 5.`
@@ -105,13 +105,13 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
       const newList = [...prev]
       // Remove pokemon from previous position if it exists
       const previousIndex = newList.findIndex(
-        p => p !== null && p.id === pokemon.id
+        p => p !== null && p === pokemonId
       )
       if (previousIndex !== -1) {
         newList[previousIndex] = null
       }
-      // Add pokemon to new position
-      newList[position] = pokemon
+      // Add pokemon ID to new position
+      newList[position] = pokemonId
       return newList
     })
   }
@@ -156,9 +156,6 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
     }))
   }
 
-  const selectedPokemon =
-    selectedPosition !== null ? pokemonTeam[selectedPosition] : null
-
   return (
     <PokemonContext.Provider
       value={{
@@ -166,7 +163,6 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
         addNext,
         addInPosition,
         removeInPosition,
-        selectedPokemon,
         selectedPosition,
         selectPokemon,
         clearSelection,

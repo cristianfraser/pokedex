@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { usePokemonContext } from '../contexts/PokemonContext'
 import AnimatedTypePills from './AnimatedTypePills'
@@ -7,6 +7,8 @@ import {
   calculateTypeEffectiveness,
   typeEffectiveness,
 } from '@/constants/types'
+import { PokemonCombobox } from './PokemonCombobox'
+import { usePokemonById } from '../queries/pokemon'
 
 interface BattleInfoPokemonProps {}
 
@@ -17,6 +19,25 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
     setHoveredDefensiveTypes,
     setHoveredOffensiveTypes,
   } = usePokemonContext()
+  const [selectedPokemonId, setSelectedPokemonId] = useState<number | null>(
+    battleInfoPokemon?.id ?? null
+  )
+  const { data: newPokemon, isLoading: isLoadingNewPokemon } =
+    usePokemonById(selectedPokemonId)
+
+  // Sync selectedPokemonId with battleInfoPokemon when it changes externally
+  useEffect(() => {
+    if (battleInfoPokemon?.id !== selectedPokemonId) {
+      setSelectedPokemonId(battleInfoPokemon?.id ?? null)
+    }
+  }, [battleInfoPokemon?.id])
+
+  // Update battleInfoPokemon when new pokemon is loaded
+  useEffect(() => {
+    if (newPokemon && selectedPokemonId === newPokemon.id) {
+      setBattleInfoPokemon(newPokemon)
+    }
+  }, [newPokemon, selectedPokemonId, setBattleInfoPokemon])
 
   // Format height and weight
   const heightInMeters = battleInfoPokemon ? battleInfoPokemon.height / 10 : 0
@@ -121,7 +142,9 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
         >
           <div
             style={{ width: 250 }}
-            className="h-full overflow-y-auto bg-white/80 border border-gray-200 rounded-md p-2 relative"
+            className={`h-full overflow-y-auto bg-white/80 border border-gray-200 rounded-md p-2 relative transition-opacity ${
+              isLoadingNewPokemon ? 'opacity-50' : 'opacity-100'
+            }`}
           >
             {/* Close button - top right */}
             <button
@@ -163,22 +186,28 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                   ) : null}
                 </div>
                 {/* Name and Number */}
-                <div
-                  className="text-left relative -ml-4"
-                  style={{
-                    boxShadow: '-16px 0px 20px 14px rgb(255 255 255)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                <PokemonCombobox
+                  value={battleInfoPokemon.id}
+                  onValueChange={pokemonId => {
+                    setSelectedPokemonId(pokemonId)
                   }}
-                >
-                  {/* <div className="absolute bottom-0 -left-4"> */}
-                  <p className="text-sm text-gray-500">
-                    #{battleInfoPokemon.pokedexNumber}
-                  </p>
-                  <h3 className="text-sm font-bold text-gray-900 capitalize">
-                    {battleInfoPokemon.name}
-                  </h3>
-                  {/* </div> */}
-                </div>
+                  trigger={
+                    <div
+                      className="text-left relative -ml-4 cursor-pointer hover:opacity-80 transition-opacity"
+                      style={{
+                        boxShadow: '-16px 0px 20px 14px rgb(255 255 255)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      }}
+                    >
+                      <p className="text-sm text-gray-500">
+                        #{battleInfoPokemon.pokedexNumber}
+                      </p>
+                      <h3 className="text-sm font-bold text-gray-900 capitalize">
+                        {battleInfoPokemon.name}
+                      </h3>
+                    </div>
+                  }
+                />
               </motion.div>
               {/* Types */}
               <div className="width-full -mt-1">
@@ -325,22 +354,24 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                 )}
 
               {/* Defensive Effectiveness */}
-              {(weakTo.length > 0 || resists.length > 0 || true) && (
+              {(weakTo.length > 0 ||
+                resists.length > 0 ||
+                immune.length > 0) && (
                 <div>
                   {/* Weak To */}
-                  {weakTo.length > 0 && (
-                    <div className="mb-2">
-                      <div
-                        className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
-                        onMouseEnter={() => setHoveredDefensiveTypes(weakTo)}
-                        onMouseLeave={() => setHoveredDefensiveTypes([])}
-                      >
-                        <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
-                          Weak To
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {weakTo.map(typeName => (
+                  <div className="mb-2">
+                    <div
+                      className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
+                      onMouseEnter={() => setHoveredDefensiveTypes(weakTo)}
+                      onMouseLeave={() => setHoveredDefensiveTypes([])}
+                    >
+                      <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
+                        Weak To
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {weakTo.length > 0 ? (
+                        weakTo.map(typeName => (
                           <TypePill
                             key={typeName}
                             type={{ name: typeName }}
@@ -350,25 +381,32 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                             }
                             onMouseLeave={() => setHoveredDefensiveTypes([])}
                           />
-                        ))}
-                      </div>
+                        ))
+                      ) : (
+                        <TypePill
+                          type={{ name: 'none' }}
+                          size="small"
+                          onMouseEnter={() => setHoveredDefensiveTypes([])}
+                          onMouseLeave={() => setHoveredDefensiveTypes([])}
+                        />
+                      )}
                     </div>
-                  )}
+                  </div>
 
                   {/* Resists */}
-                  {resists.length > 0 && (
-                    <div className="mb-2">
-                      <div
-                        className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
-                        onMouseEnter={() => setHoveredDefensiveTypes(resists)}
-                        onMouseLeave={() => setHoveredDefensiveTypes([])}
-                      >
-                        <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
-                          Resists
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {resists.map(typeName => (
+                  <div className="mb-2">
+                    <div
+                      className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
+                      onMouseEnter={() => setHoveredDefensiveTypes(resists)}
+                      onMouseLeave={() => setHoveredDefensiveTypes([])}
+                    >
+                      <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
+                        Resists
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {resists.length > 0 ? (
+                        resists.map(typeName => (
                           <TypePill
                             key={typeName}
                             type={{ name: typeName }}
@@ -378,10 +416,17 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                             }
                             onMouseLeave={() => setHoveredDefensiveTypes([])}
                           />
-                        ))}
-                      </div>
+                        ))
+                      ) : (
+                        <TypePill
+                          type={{ name: 'none' }}
+                          size="small"
+                          onMouseEnter={() => setHoveredDefensiveTypes([])}
+                          onMouseLeave={() => setHoveredDefensiveTypes([])}
+                        />
+                      )}
                     </div>
-                  )}
+                  </div>
 
                   {/* Immune */}
                   <div className="mb-2">
