@@ -303,7 +303,6 @@ const TeamPokemon = ({
         height: '90px',
         minHeight: '90px',
         maxHeight: '90px',
-        minWidth: 'fit-content',
         gap: isExpanded ? 5 : 0,
         transition: isLoadingPokemon ? 'opacity 0.2s ease-in-out' : undefined,
       }}
@@ -396,7 +395,8 @@ const TeamPokemon = ({
         style={{
           opacity: isExpanded ? 1 : 0,
           width: isExpanded ? 130 : 0,
-          transition: 'opacity 0.2s ease-in, width 0.2s ease-in',
+          transition:
+            'width 0.2s ease-in, opacity 0.2s ease-in, flex-basis 0.2s ease-in',
         }}
         onTouchEnd={e => e.stopPropagation()}
       >

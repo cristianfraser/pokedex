@@ -107,6 +107,7 @@
 /* Right side: Moves */
 .team-pokemon-moves {
   @apply flex flex-col gap-1 justify-center flex-1;
+  min-width: 0; /* Allow flex item to shrink below content size */
 }
 
 /* Move item */
@@ -138,6 +139,8 @@
 /* Move combobox trigger */
 .team-pokemon-move-trigger {
   @apply text-2xs h-4 rounded cursor-pointer transition-colors flex items-center px-1 relative;
+  min-width: 0; /* Allow flex item to shrink below content size */
+  overflow: hidden; /* Enable truncation */
   touch-action: manipulation; /* Prevent double-tap zoom and improve touch responsiveness */
   -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
 }
@@ -166,6 +169,7 @@
 
 .team-pokemon-move-name {
   @apply text-2xs text-gray-700 capitalize truncate pr-4;
+  min-width: 0; /* Allow truncation in flex container */
 }
 
 /* Clear move button */
