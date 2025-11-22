@@ -60,7 +60,7 @@ const AnimatedTypePills = ({
             initial={{ y: animationOffset, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: animationOffset, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
             className={cn(
               'flex gap-[2px] justify-center items-center fit-content absolute top-0 left-0 right-0',
               contentHeight,
@@ -91,9 +91,9 @@ const AnimatedTypePills = ({
             initial={{ y: 0, opacity: 1 }}
             animate={{ y: -animationOffset, opacity: 0.3 }}
             exit={{ y: -animationOffset, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
             className={cn(
-              'flex gap-[5px] justify-center items-center',
+              'flex gap-[2px] justify-center items-center',
               contentHeight,
               'absolute top-0 left-0 right-0'
             )}

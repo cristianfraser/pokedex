@@ -4,6 +4,16 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
+import versionData from '../version.json'
+
+// Expose version as window variable
+declare global {
+  interface Window {
+    version: number
+  }
+}
+
+window.version = versionData.version
 
 const queryClient = new QueryClient({
   defaultOptions: {
