@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { usePokemonContext } from '../contexts/PokemonContext'
+import { useStyle } from '../contexts/StyleContext'
 import AnimatedTypePills from './AnimatedTypePills'
 import TypePill from './TypePill'
 import {
@@ -19,6 +20,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
     setHoveredDefensiveTypes,
     setHoveredOffensiveTypes,
   } = usePokemonContext()
+  const { isMobile } = useStyle()
   const [selectedPokemonId, setSelectedPokemonId] = useState<number | null>(
     battleInfoPokemon?.id ?? null
   )
@@ -181,7 +183,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
           onAnimationComplete={() => {
             if (ref.current!.offsetWidth > 50 && battleInfoPokemon) {
               console.log('ref.current!.clientWidth', ref.current!.clientWidth)
-              setFinalWidth(ref.current!.clientWidth)
+              setFinalWidth(isMobile ? 188 : ref.current!.clientWidth)
             }
           }}
           style={{ display: 'flex' }}
