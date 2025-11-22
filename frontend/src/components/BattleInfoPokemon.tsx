@@ -24,7 +24,6 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
   )
   const { data: newPokemon, isLoading: isLoadingNewPokemon } =
     usePokemonById(selectedPokemonId)
-  const [animating, setAnimating] = useState(false)
   // Sync selectedPokemonId with battleInfoPokemon when it changes externally
   useEffect(() => {
     if (battleInfoPokemon?.id !== selectedPokemonId) {
@@ -179,13 +178,11 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
           animate={{ width: 250, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeIn' }}
-          onAnimationStart={() => setAnimating(true)}
           onAnimationComplete={() => {
             if (ref.current!.offsetWidth > 50 && battleInfoPokemon) {
               console.log('ref.current!.clientWidth', ref.current!.clientWidth)
               setFinalWidth(ref.current!.clientWidth)
             }
-            setAnimating(false)
           }}
           style={{ display: 'flex' }}
         >
@@ -234,7 +231,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                     <img
                       src={battleInfoPokemon.sprites.front_default}
                       alt={battleInfoPokemon.name}
-                      className="w-20 h-24 sm:w-24  -ml-2 object-contain color-transparent"
+                      className="w-20 h-24 sm:w-24 -ml-2 object-contain color-transparent"
                     />
                   ) : null}
                 </div>

@@ -16,11 +16,6 @@ import {
 } from '@/components/ui/popover'
 import { useStyle } from '@/contexts/StyleContext'
 
-interface ComboboxOption<T> {
-  value: string
-  data: T
-}
-
 interface ComboboxProps<T> {
   options: T[]
   filteredOptions: T[]
@@ -50,7 +45,6 @@ interface ComboboxProps<T> {
 }
 
 export function Combobox<T>({
-  options,
   filteredOptions,
   isLoading = false,
   searchValue,
