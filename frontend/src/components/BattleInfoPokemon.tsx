@@ -7,6 +7,7 @@ import TypePill from './TypePill'
 import {
   calculateTypeEffectiveness,
   typeEffectiveness,
+  NONE_TYPE_MARKER,
 } from '@/constants/types'
 import { PokemonCombobox } from './PokemonCombobox'
 import { usePokemonById } from '../queries/pokemon'
@@ -419,7 +420,11 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                   <div className="mb-2">
                     <div
                       className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
-                      onMouseEnter={() => setHoveredDefensiveTypes(weakTo)}
+                      onMouseEnter={() =>
+                        setHoveredDefensiveTypes(
+                          weakTo.length > 0 ? weakTo : [NONE_TYPE_MARKER]
+                        )
+                      }
                       onMouseLeave={() => setHoveredDefensiveTypes([])}
                     >
                       <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
@@ -443,7 +448,9 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                         <TypePill
                           type={{ name: 'none' }}
                           size="small"
-                          onMouseEnter={() => setHoveredDefensiveTypes([])}
+                          onMouseEnter={() =>
+                            setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                          }
                           onMouseLeave={() => setHoveredDefensiveTypes([])}
                         />
                       )}
@@ -454,7 +461,11 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                   <div className="mb-2">
                     <div
                       className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
-                      onMouseEnter={() => setHoveredDefensiveTypes(resists)}
+                      onMouseEnter={() =>
+                        setHoveredDefensiveTypes(
+                          resists.length > 0 ? resists : [NONE_TYPE_MARKER]
+                        )
+                      }
                       onMouseLeave={() => setHoveredDefensiveTypes([])}
                     >
                       <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
@@ -478,7 +489,9 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                         <TypePill
                           type={{ name: 'none' }}
                           size="small"
-                          onMouseEnter={() => setHoveredDefensiveTypes([])}
+                          onMouseEnter={() =>
+                            setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                          }
                           onMouseLeave={() => setHoveredDefensiveTypes([])}
                         />
                       )}
@@ -491,7 +504,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                       className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
                       onMouseEnter={() =>
                         setHoveredDefensiveTypes(
-                          immune.length > 0 ? immune : []
+                          immune.length > 0 ? immune : [NONE_TYPE_MARKER]
                         )
                       }
                       onMouseLeave={() => setHoveredDefensiveTypes([])}
@@ -517,7 +530,9 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                         <TypePill
                           type={{ name: 'none' }}
                           size="small"
-                          onMouseEnter={() => setHoveredDefensiveTypes([])}
+                          onMouseEnter={() =>
+                            setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                          }
                           onMouseLeave={() => setHoveredDefensiveTypes([])}
                         />
                       )}

@@ -10,7 +10,7 @@ import { usePokemonContext } from '../contexts/PokemonContext'
 import { useStyle } from '../contexts/StyleContext'
 import { useMoves } from '../queries/moves'
 import { usePokemonById } from '../queries/pokemon'
-import { calculateTypeEffectiveness } from '@/constants/types'
+import { calculateTypeEffectiveness, NONE_TYPE_MARKER } from '@/constants/types'
 import './TeamPokemon.css'
 
 interface TeamPokemonProps {
@@ -166,6 +166,10 @@ const TeamPokemon = ({
   // Check if there are any highlighted moves or if pokemon has the hovered defensive type
   const hasHighlightedMoves = useMemo(() => {
     if (hoveredDefensiveTypes.length > 0) {
+      // Special case: if hovering "none", no pokemon should be highlighted (all dimmed)
+      if (hoveredDefensiveTypes.includes(NONE_TYPE_MARKER)) {
+        return false
+      }
       const hasType =
         displayedPokemon?.types?.some(t =>
           hoveredDefensiveTypes.includes(t.type.name)
@@ -255,16 +259,23 @@ const TeamPokemon = ({
           maxHeight: '90px',
         }}
       >
-        <div
-          ref={emptyTextRef}
-          className="team-pokemon-empty-text"
-          style={{
-            opacity: isAnimatingEmpty ? 0 : undefined,
-            transition: isAnimatingEmpty ? 'none' : undefined,
+        <PokemonCombobox
+          onValueChange={pokemonId => {
+            addInPosition(pokemonId, position)
           }}
-        >
-          Empty
-        </div>
+          trigger={
+            <div
+              ref={emptyTextRef}
+              className="team-pokemon-empty-text hover:bg-gray-200 p-2 rounded"
+              style={{
+                opacity: isAnimatingEmpty ? 0 : undefined,
+                transition: isAnimatingEmpty ? 'none' : undefined,
+              }}
+            >
+              Empty
+            </div>
+          }
+        />
       </div>
     )
   }

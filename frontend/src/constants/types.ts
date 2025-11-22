@@ -1,3 +1,6 @@
+// Special marker for "none" type hover state (when no types apply)
+export const NONE_TYPE_MARKER = '__NONE__'
+
 // Type colors for visual representation
 export const typeColors: Record<string, string> = {
   normal: '#a8a878',
