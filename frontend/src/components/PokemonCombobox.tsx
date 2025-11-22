@@ -95,7 +95,6 @@ export function PokemonCombobox({
       loadingMessage="Loading pokemon..."
       popoverWidth="w-[200px]"
       estimateItemSize={28}
-      inputClassName="h-9"
     />
   )
 }

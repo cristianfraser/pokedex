@@ -16,7 +16,7 @@ const FloatingPanel = ({
   const { isTeamExpanded, setIsTeamExpanded } = usePokemonContext()
   return (
     <div
-      className={`fixed z-40 right-2 ml-4`}
+      className={`fixed z-40 right-2 ml-2`}
       style={{
         top: `${top}px`,
         transform: isVisible ? 'translateX(0)' : 'translateX(110%)',
@@ -50,7 +50,7 @@ const FloatingPanel = ({
           />
         </svg>
       </button>
-      <div className="overflow-x-auto flex gap-2 bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative">
+      <div className="overflow-x-hidden flex gap-2 bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative">
         {children}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { usePokemonContext } from '../contexts/PokemonContext'
 import AnimatedTypePills from './AnimatedTypePills'
@@ -24,7 +24,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
   )
   const { data: newPokemon, isLoading: isLoadingNewPokemon } =
     usePokemonById(selectedPokemonId)
-
+  const [animating, setAnimating] = useState(false)
   // Sync selectedPokemonId with battleInfoPokemon when it changes externally
   useEffect(() => {
     if (battleInfoPokemon?.id !== selectedPokemonId) {
@@ -130,6 +130,46 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
     }
   }, [battleInfoPokemon])
 
+  const ref = useRef<HTMLDivElement>(null)
+  const [finalWidth, setFinalWidth] = useState(188)
+
+  useEffect(() => {
+    let rafId: number | null = null
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+    const handleResize = () => {
+      // Clear existing debounce timer
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+
+      // Debounce the resize event
+      debounceTimer = setTimeout(() => {
+        // Cancel any pending RAF
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId)
+        }
+
+        // Schedule with requestAnimationFrame
+        rafId = requestAnimationFrame(() => {
+          setFinalWidth(188)
+          rafId = null
+        })
+      }, 150) // 150ms debounce
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+      }
+    }
+  }, [])
   return (
     <AnimatePresence mode="wait">
       {battleInfoPokemon && (
@@ -139,9 +179,22 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
           animate={{ width: 250, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeIn' }}
+          onAnimationStart={() => setAnimating(true)}
+          onAnimationComplete={() => {
+            if (ref.current!.offsetWidth > 50 && battleInfoPokemon) {
+              console.log('ref.current!.clientWidth', ref.current!.clientWidth)
+              setFinalWidth(ref.current!.clientWidth)
+            }
+            setAnimating(false)
+          }}
+          style={{ display: 'flex' }}
         >
           <div
-            style={{ width: 250 }}
+            style={{
+              minWidth: finalWidth > 50 ? finalWidth : 'unset',
+              flexGrow: 1,
+            }}
+            ref={ref}
             className={`h-full overflow-y-auto bg-white/80 border border-gray-200 rounded-md p-2 relative transition-opacity ${
               isLoadingNewPokemon ? 'opacity-50' : 'opacity-100'
             }`}
@@ -170,7 +223,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
               {/* Pokemon Image */}
               <motion.div
                 key={`pokemon-info-${battleInfoPokemon.id}`}
-                className="flex items-center"
+                className="flex items-center relative"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -181,7 +234,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                     <img
                       src={battleInfoPokemon.sprites.front_default}
                       alt={battleInfoPokemon.name}
-                      className="w-24 h-24 object-contain"
+                      className="w-20 h-24 sm:w-24  -ml-2 object-contain color-transparent"
                     />
                   ) : null}
                 </div>
@@ -193,10 +246,14 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                   }}
                   trigger={
                     <div
-                      className="text-left relative -ml-4 cursor-pointer hover:opacity-80 transition-opacity"
+                      className="text-left relative cursor-pointer hover:opacity-80 transition-opacity"
                       style={{
-                        boxShadow: '-16px 0px 20px 14px rgb(255 255 255)',
+                        boxShadow: '-5px 0px 20px 14px rgb(255 255 255)',
                         backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        position: 'absolute',
+                        left: '50%',
+                        top: '50%',
+                        transform: 'translate(-50%, -50%)',
                       }}
                     >
                       <p className="text-sm text-gray-500">

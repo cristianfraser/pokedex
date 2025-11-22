@@ -336,7 +336,7 @@ export function Combobox<T>({
   }, [])
 
   return (
-    <div ref={containerRef} className="relative group">
+    <div ref={containerRef} className="group">
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <div
@@ -365,9 +365,13 @@ export function Combobox<T>({
               ref={commandListRef}
             >
               {isLoading ? (
-                <CommandEmpty>{loadingMessage}</CommandEmpty>
+                <CommandEmpty className="text-2xs text-center p-2">
+                  {loadingMessage}
+                </CommandEmpty>
               ) : filteredOptions.length === 0 ? (
-                <CommandEmpty>{emptyMessage}</CommandEmpty>
+                <CommandEmpty className="text-2xs text-center p-2">
+                  {emptyMessage}
+                </CommandEmpty>
               ) : null}
               <CommandGroup
                 ref={parentRef}
