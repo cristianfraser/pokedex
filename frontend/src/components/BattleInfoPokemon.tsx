@@ -253,6 +253,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                         left: '50%',
                         top: '50%',
                         transform: 'translate(-50%, -50%)',
+                        height: 60,
                       }}
                     >
                       <p className="text-sm text-gray-500">
@@ -266,7 +267,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
                 />
               </motion.div>
               {/* Types */}
-              <div className="width-full -mt-1">
+              <div className="width-full -mt-2">
                 <AnimatedTypePills types={battleInfoPokemon.types} />
               </div>
 

@@ -111,41 +111,79 @@ export function Combobox<T>({
     }
   }, [])
 
-  // Handle clicks outside the combobox to close it
+  // Create full-page overlay when combobox opens
   React.useEffect(() => {
     if (!open) return
 
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      const target = event.target as Node
-
-      // Check if click is outside the container and popover content
-      const container = containerRef.current
-      const popoverContent = document.querySelector(
-        '[data-radix-portal][role="dialog"]'
-      )
-
-      if (
-        container &&
-        !container.contains(target) &&
-        popoverContent &&
-        !popoverContent.contains(target)
-      ) {
-        setOpen(false)
-      }
-    }
-
-    // Use capture phase to catch events before they reach TeamPokemon handlers
-    // This ensures we close the popover before hover states are triggered
-    document.addEventListener('mousedown', handleClickOutside, true)
-    document.addEventListener('touchstart', handleClickOutside, true)
-    document.addEventListener('click', handleClickOutside, true)
+    const overlay = document.createElement('div')
+    overlay.style.position = 'fixed'
+    overlay.style.top = '0'
+    overlay.style.left = '0'
+    overlay.style.right = '0'
+    overlay.style.bottom = '0'
+    overlay.style.width = '100%'
+    overlay.style.height = '100%'
+    overlay.style.userSelect = 'none'
+    // overlay.style.webkitUserSelect = 'none'
+    // overlay.style.mozUserSelect = 'none'
+    // overlay.style.msUserSelect = 'none'
+    // overlay.style.oUserSelect = 'none'
+    overlay.style.zIndex = '40' // Below popover (z-50) but above most content
+    document.body.appendChild(overlay)
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside, true)
-      document.removeEventListener('touchstart', handleClickOutside, true)
-      document.removeEventListener('click', handleClickOutside, true)
+      if (document.body.contains(overlay)) {
+        document.body.removeChild(overlay)
+      }
     }
   }, [open])
+
+  // Handle clicks outside the combobox to close it
+  // React.useEffect(() => {
+  //   const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+  //     console.log('handleClickOutside', open)
+  //     if (!open) return
+  //     const target = event.target as Node
+
+  //     // Check if click is outside the container and popover content
+  //     const container = containerRef.current
+  //     const popoverContent = document.querySelector(
+  //       '[data-radix-portal][role="dialog"]'
+  //     )
+
+  //     console.log('container', container)
+  //     console.log('popoverContent', popoverContent)
+  //     console.log('target', target)
+  //     console.log('container.contains(target)', container?.contains(target))
+  //     console.log(
+  //       'popoverContent.contains(target)',
+  //       popoverContent?.contains(target)
+  //     )
+
+  //     if (
+  //       container &&
+  //       !container.contains(target) &&
+  //       popoverContent &&
+  //       !popoverContent.contains(target)
+  //     ) {
+  //       console.log('close popover')
+  //       event.preventDefault()
+  //       setOpen(false)
+  //     }
+  //   }
+
+  //   // Use capture phase to catch events before they reach TeamPokemon handlers
+  //   // This ensures we close the popover before hover states are triggered
+  //   document.addEventListener('mousedown', handleClickOutside, true)
+  //   document.addEventListener('touchstart', handleClickOutside, true)
+  //   document.addEventListener('click', handleClickOutside, true)
+
+  //   return () => {
+  //     document.removeEventListener('mousedown', handleClickOutside, true)
+  //     document.removeEventListener('touchstart', handleClickOutside, true)
+  //     document.removeEventListener('click', handleClickOutside, true)
+  //   }
+  // }, [open])
 
   // Virtualizer for the list
   const rowVirtualizer = useVirtualizer({

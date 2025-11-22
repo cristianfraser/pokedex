@@ -90,6 +90,10 @@
     @apply bg-gray-50 text-gray-900;
     font-family: 'PKMN RBYGSC', sans-serif;
     box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
   :root {
     --background: 0 0% 100%;
