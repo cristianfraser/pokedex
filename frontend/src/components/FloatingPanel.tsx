@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, forwardRef } from 'react'
 import { usePokemonContext } from '../contexts/PokemonContext'
 
 interface FloatingPanelProps {
@@ -8,15 +8,13 @@ interface FloatingPanelProps {
   isVisible?: boolean // Control visibility with slide animation
 }
 
-const FloatingPanel = ({
-  top,
-  children,
-  isVisible = true,
-}: FloatingPanelProps) => {
-  const { isTeamExpanded, setIsTeamExpanded } = usePokemonContext()
-  return (
-    <div
-      className={`fixed z-40 right-2 ml-2`}
+const FloatingPanel = forwardRef<HTMLDivElement, FloatingPanelProps>(
+  ({ top, children, isVisible = true }, ref) => {
+    const { isTeamExpanded, setIsTeamExpanded } = usePokemonContext()
+    return (
+      <div
+        ref={ref}
+        className={`fixed z-40 right-2 ml-2`}
       style={{
         top: `${top}px`,
         transform: isVisible ? 'translateX(0)' : 'translateX(110%)',
@@ -54,7 +52,10 @@ const FloatingPanel = ({
         {children}
       </div>
     </div>
-  )
-}
+    )
+  }
+)
+
+FloatingPanel.displayName = 'FloatingPanel'
 
 export default FloatingPanel

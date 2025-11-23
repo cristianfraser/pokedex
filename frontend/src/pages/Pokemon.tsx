@@ -5,6 +5,7 @@ import TypePill from '../components/TypePill'
 import { usePokemonList, PokemonDetail } from '../queries/pokemon'
 import { useDebounce } from '../hooks/useDebounce'
 import { usePokemonContext } from '../contexts/PokemonContext'
+import { useStyle } from '../contexts/StyleContext'
 import {
   Tooltip,
   TooltipContent,
@@ -16,6 +17,7 @@ import BattleInfoPokemon from '../components/BattleInfoPokemon'
 
 const Pokemon = () => {
   const [searchTerm, setSearchTerm] = useState('')
+  const { isMobile } = useStyle()
   const {
     addNext,
     addInPosition,
@@ -24,82 +26,8 @@ const Pokemon = () => {
     pokemonTeam,
     setBattleInfoPokemon,
     isTeamExpanded,
-    battleInfoPokemon,
+    battleInfoPokemon: battleInfoPokemonState,
   } = usePokemonContext()
-  // Calculate initial padding based on initial state
-  // PokemonTeam panel: 136px (collapsed) or 266px (expanded = 136px base + 130px moves)
-  // BattleInfoPokemon panel: 250px (always this width when visible)
-  // Gap between panels: 8px (gap-2)
-  // FloatingPanel padding: p-2 = 8px left + 8px right = 16px total
-  // FloatingPanel right margin: right-2 = 8px
-  const calculatePadding = useCallback(() => {
-    const panelPadding = 16 // FloatingPanel p-2 = 8px * 2
-    const rightMargin = 8 // FloatingPanel right-2 = 8px
-    const gap = 8 // gap-2 between panels
-
-    // Current state widths
-    const pokemonTeamWidth = isTeamExpanded ? 266 : 136 // 136px base + 130px moves when expanded
-    const battleInfoWidth = battleInfoPokemon ? 250 : 0
-
-    // Calculate content width based on current state
-    const contentWidth = battleInfoPokemon
-      ? pokemonTeamWidth + gap + battleInfoWidth
-      : pokemonTeamWidth
-
-    // Total: right margin + content + panel padding
-    const totalWidth = rightMargin + contentWidth + panelPadding
-
-    // Determine base margin based on window width
-    let baseMargin = 16 // mobile
-    if (window.innerWidth >= 1024) {
-      baseMargin = 32 // lg
-    } else if (window.innerWidth >= 640) {
-      baseMargin = 24 // sm
-    }
-
-    return `${totalWidth + baseMargin}px`
-  }, [isTeamExpanded, battleInfoPokemon])
-
-  // Initialize with correct padding, no animation on mount
-  const [paddingRight, setPaddingRight] = useState(() => {
-    // Calculate initial padding synchronously on mount
-    const panelPadding = 16
-    const rightMargin = 8
-    const gap = 8
-    const pokemonTeamWidth = isTeamExpanded ? 266 : 136
-    const battleInfoWidth = battleInfoPokemon ? 250 : 0
-    const contentWidth = battleInfoPokemon
-      ? pokemonTeamWidth + gap + battleInfoWidth
-      : pokemonTeamWidth
-    const totalWidth = rightMargin + contentWidth + panelPadding
-    let baseMargin = 16
-    if (typeof window !== 'undefined') {
-      if (window.innerWidth >= 1024) {
-        baseMargin = 32
-      } else if (window.innerWidth >= 640) {
-        baseMargin = 24
-      }
-    }
-    return `${totalWidth + baseMargin}px`
-  })
-  const [isMounted, setIsMounted] = useState(false)
-
-  // Update padding when state changes (after mount)
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!isMounted) return // Don't update on initial mount
-
-    const updatePadding = () => {
-      setPaddingRight(calculatePadding())
-    }
-
-    updatePadding()
-    window.addEventListener('resize', updatePadding)
-    return () => window.removeEventListener('resize', updatePadding)
-  }, [isMounted, calculatePadding])
 
   // Check if a pokemon is already in the team
   const isPokemonInTeam = (pokemonId: number) => {
@@ -245,300 +173,382 @@ const Pokemon = () => {
   }, [handleObserver, filteredPokemon.length])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex">
       <FloatingPanel top={80} isVisible={true}>
         <PokemonTeam />
         <BattleInfoPokemon />
       </FloatingPanel>
-      <div
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-        style={{
-          paddingRight,
-          willChange: 'padding-right',
-          transition: isMounted ? 'padding-right 0.15s ease-in' : 'none',
-        }}
-      >
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Pokémon Database
-            </h1>
-          </div>
-          <div className="max-w-md">
-            <input
-              type="text"
-              placeholder="Search Pokémon..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
-          {totalCount > 0 && (
-            <p className="mt-2 text-sm text-gray-600">
-              Showing {filteredPokemon.length} of {totalCount} Pokémon
-              {debouncedSearchTerm && ' (filtered)'}
-            </p>
-          )}
-          {isError && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm mb-2">
-                Error loading Pokémon: {error?.message || 'Unknown error'}
-              </p>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => window.location.reload()}
-              >
-                Retry
-              </Button>
-            </div>
-          )}
-        </div>
-
-        <div className="relative">
-          {/* Loading overlay - show when initial loading or when fetching (search change) with existing data */}
-          {(isLoading ||
-            (isFetching &&
-              !isFetchingNextPage &&
-              filteredPokemon.length > 0)) && (
-            <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10 rounded-lg">
-              <div className="text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                <p className="mt-2 text-sm text-gray-600">Loading Pokémon...</p>
+      {/* <div className="px-4 sm:px-6 lg:px-8 py-8 flex min-w-0"> */}
+      <div style={{ flexShrink: 100, minWidth: 0, overflow: 'hidden' }}>
+        <div className="px-4 sm:px-6 lg:px-8 py-8 flex min-w-0">
+          <div className="flex-1 min-w-0">
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Pokémon Database
+                </h1>
               </div>
-            </div>
-          )}
-
-          {/* Table with opacity when fetching (search change), but not when loading next page */}
-          <div
-            className={`transition-opacity duration-200 ${
-              isFetching && !isFetchingNextPage && filteredPokemon.length > 0
-                ? 'opacity-50'
-                : 'opacity-100'
-            }`}
-          >
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
-              <div
-                style={{
-                  height: `${rowVirtualizer.getTotalSize() + 29}px`, // Add header height
-                  width: '100%',
-                  position: 'relative',
-                }}
-              >
-                <table
-                  className="min-w-full divide-y divide-gray-200"
-                  style={{ tableLayout: 'fixed', width: '100%' }}
-                >
-                  <thead className="bg-gray-50 sticky top-0 z-10">
-                    <tr>
-                      <th
-                        className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        style={{ width: '60px' }}
-                      >
-                        #
-                      </th>
-                      <th
-                        className="py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        style={{ width: 40 }}
-                      />
-                      <th className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Info
-                      </th>
-                      <th
-                        className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        // style={{ width: '200px' }}
-                      >
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody
-                    ref={parentRef}
-                    className="bg-white divide-y divide-gray-200"
+              <div className="max-w-md">
+                <input
+                  type="text"
+                  placeholder="Search Pokémon..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
+              {totalCount > 0 && (
+                <p className="mt-2 text-sm text-gray-600">
+                  Showing {filteredPokemon.length} of {totalCount} Pokémon
+                  {debouncedSearchTerm && ' (filtered)'}
+                </p>
+              )}
+              {isError && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm mb-2">
+                    Error loading Pokémon: {error?.message || 'Unknown error'}
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => window.location.reload()}
                   >
-                    {rowVirtualizer.getVirtualItems().map(virtualRow => {
-                      const pokemon = filteredPokemon[virtualRow.index]
-                      if (!pokemon) return null
+                    Retry
+                  </Button>
+                </div>
+              )}
+            </div>
 
-                      return (
-                        <tr
-                          key={pokemon.id}
-                          ref={rowVirtualizer.measureElement}
-                          data-index={virtualRow.index}
-                          className="hover:bg-gray-50 transition-colors flex items-center"
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: `${virtualRow.size}px`,
-                            transform: `translateY(${virtualRow.start + 29}px)`, // Add header height offset
-                          }}
-                        >
-                          <td
-                            className="px-4 py-1.5 whitespace-nowrap text-2xs text-gray-500"
+            <div className="relative">
+              {/* Loading overlay - show when initial loading or when fetching (search change) with existing data */}
+              {(isLoading ||
+                (isFetching &&
+                  !isFetchingNextPage &&
+                  filteredPokemon.length > 0)) && (
+                <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10 rounded-lg">
+                  <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                    <p className="mt-2 text-sm text-gray-600">
+                      Loading Pokémon...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Table with opacity when fetching (search change), but not when loading next page */}
+              <div
+                className={`transition-opacity duration-200 ${
+                  isFetching &&
+                  !isFetchingNextPage &&
+                  filteredPokemon.length > 0
+                    ? 'opacity-50'
+                    : 'opacity-100'
+                }`}
+              >
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+                  <div
+                    style={{
+                      height: `${rowVirtualizer.getTotalSize() + 29}px`, // Add header height
+                      width: '100%',
+                      position: 'relative',
+                    }}
+                  >
+                    <table
+                      className="min-w-full divide-y divide-gray-200"
+                      style={{ tableLayout: 'fixed', width: '100%' }}
+                    >
+                      <thead className="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                          <th
+                            className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                             style={{ width: '60px' }}
                           >
-                            #{pokemon.pokedexNumber}
-                          </td>
-                          <td
-                            className="py-1.5 whitespace-nowrap flex-shrink-0"
+                            #
+                          </th>
+                          <th
+                            className="py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                             style={{ width: 40 }}
+                          />
+                          <th className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Info
+                          </th>
+                          <th
+                            className="px-4 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            // style={{ width: '200px' }}
                           >
-                            {pokemon.sprites.front_default ? (
-                              <img
-                                src={pokemon.sprites.front_default}
-                                alt={pokemon.name}
-                                className="w-10 h-10 object-contain"
-                                style={{ color: 'transparent' }}
-                              />
-                            ) : (
-                              <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-400 text-xs">
-                                {pokemon.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-4 py-1.5 flex-grow">
-                            <div className="flex flex-col">
-                              <div className="flex flex-wrap gap-[5px]">
-                                {pokemon.types.map(type => (
-                                  <TypePill key={type.slot} type={type.type} />
-                                ))}
-                              </div>
-                              {/* <div className="flex gap-1">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody
+                        ref={parentRef}
+                        className="bg-white divide-y divide-gray-200"
+                      >
+                        {rowVirtualizer.getVirtualItems().map(virtualRow => {
+                          const pokemon = filteredPokemon[virtualRow.index]
+                          if (!pokemon) return null
+
+                          return (
+                            <tr
+                              key={pokemon.id}
+                              ref={rowVirtualizer.measureElement}
+                              data-index={virtualRow.index}
+                              className="hover:bg-gray-50 transition-colors flex items-center"
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: `${virtualRow.size}px`,
+                                transform: `translateY(${virtualRow.start + 29}px)`, // Add header height offset
+                              }}
+                            >
+                              <td
+                                className="px-4 py-1.5 whitespace-nowrap text-2xs text-gray-500"
+                                style={{ width: '60px' }}
+                              >
+                                #{pokemon.pokedexNumber}
+                              </td>
+                              <td
+                                className="py-1.5 whitespace-nowrap flex-shrink-0"
+                                style={{ width: 40 }}
+                              >
+                                {pokemon.sprites.front_default ? (
+                                  <img
+                                    src={pokemon.sprites.front_default}
+                                    alt={pokemon.name}
+                                    className="w-10 h-10 object-contain"
+                                    style={{ color: 'transparent' }}
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-400 text-xs">
+                                    {pokemon.name.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-4 py-1.5 flex-grow">
+                                <div className="flex flex-col">
+                                  <div className="flex flex-wrap gap-[5px]">
+                                    {pokemon.types.map(type => (
+                                      <TypePill
+                                        key={type.slot}
+                                        type={type.type}
+                                      />
+                                    ))}
+                                  </div>
+                                  {/* <div className="flex gap-1">
                                 {pokemon.is_legendary && <LegendaryTag />}
                                 {pokemon.is_mythical && <MythicalTag />}
                               </div> */}
-                              <div className="text-sm font-medium text-gray-900 capitalize">
-                                {pokemon.name}
-                              </div>
-                            </div>
-                          </td>
-                          <td
-                            className="px-4 py-1.5 whitespace-nowrap text-sm"
-                            // style={{ width: '200px' }}
-                          >
-                            <div className="flex gap-2">
-                              {isButtonDisabled(pokemon.id) ? (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span>
-                                      <Button
-                                        size="sm"
-                                        onClick={(
-                                          e?: React.MouseEvent<HTMLButtonElement>
-                                        ) => {
-                                          e?.stopPropagation()
-                                          handleAddToTeam(pokemon)
-                                        }}
-                                        disabled={true}
-                                      >
-                                        {getButtonText(pokemon.id)}
-                                      </Button>
-                                    </span>
-                                  </TooltipTrigger>
-                                  {isPokemonAtSelectedPosition(pokemon.id) && (
-                                    <TooltipContent>
-                                      <p>Select a pokemon slot before adding</p>
-                                    </TooltipContent>
-                                  )}
-                                  {isPokemonInTeam(pokemon.id) &&
-                                    selectedPosition === null && (
-                                      <TooltipContent>
-                                        <p>
-                                          Select a pokemon slot first before
-                                          adding
-                                        </p>
-                                      </TooltipContent>
-                                    )}
-                                  {isTeamFull &&
-                                    selectedPosition === null &&
-                                    !isPokemonInTeam(pokemon.id) && (
-                                      <TooltipContent>
-                                        <p>
-                                          Select or remove a pokemon from the
-                                          team before adding
-                                        </p>
-                                      </TooltipContent>
-                                    )}
-                                </Tooltip>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  onClick={(
-                                    e?: React.MouseEvent<HTMLButtonElement>
-                                  ) => {
-                                    e?.stopPropagation()
-                                    handleAddToTeam(pokemon)
-                                  }}
-                                  disabled={false}
-                                >
-                                  {getButtonText(pokemon.id)}
-                                </Button>
-                              )}
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={(
-                                  e?: React.MouseEvent<HTMLButtonElement>
-                                ) => {
-                                  e?.stopPropagation()
-                                  setBattleInfoPokemon(pokemon)
-                                }}
+                                  <div className="text-sm font-medium text-gray-900 capitalize">
+                                    {pokemon.name}
+                                  </div>
+                                </div>
+                              </td>
+                              <td
+                                className="px-4 py-1.5 whitespace-nowrap text-sm"
+                                // style={{ width: '200px' }}
                               >
-                                Battle Info
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+                                <div className="flex gap-2">
+                                  {isButtonDisabled(pokemon.id) ? (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span>
+                                          <Button
+                                            size="sm"
+                                            onClick={(
+                                              e?: React.MouseEvent<HTMLButtonElement>
+                                            ) => {
+                                              e?.stopPropagation()
+                                              handleAddToTeam(pokemon)
+                                            }}
+                                            disabled={true}
+                                          >
+                                            {getButtonText(pokemon.id)}
+                                          </Button>
+                                        </span>
+                                      </TooltipTrigger>
+                                      {isPokemonAtSelectedPosition(
+                                        pokemon.id
+                                      ) && (
+                                        <TooltipContent>
+                                          <p>
+                                            Select a pokemon slot before adding
+                                          </p>
+                                        </TooltipContent>
+                                      )}
+                                      {isPokemonInTeam(pokemon.id) &&
+                                        selectedPosition === null && (
+                                          <TooltipContent>
+                                            <p>
+                                              Select a pokemon slot first before
+                                              adding
+                                            </p>
+                                          </TooltipContent>
+                                        )}
+                                      {isTeamFull &&
+                                        selectedPosition === null &&
+                                        !isPokemonInTeam(pokemon.id) && (
+                                          <TooltipContent>
+                                            <p>
+                                              Select or remove a pokemon from
+                                              the team before adding
+                                            </p>
+                                          </TooltipContent>
+                                        )}
+                                    </Tooltip>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      onClick={(
+                                        e?: React.MouseEvent<HTMLButtonElement>
+                                      ) => {
+                                        e?.stopPropagation()
+                                        handleAddToTeam(pokemon)
+                                      }}
+                                      disabled={false}
+                                    >
+                                      {getButtonText(pokemon.id)}
+                                    </Button>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={(
+                                      e?: React.MouseEvent<HTMLButtonElement>
+                                    ) => {
+                                      e?.stopPropagation()
+                                      setBattleInfoPokemon(pokemon)
+                                    }}
+                                  >
+                                    Battle Info
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            {/* Loading indicator for next page */}
+            {hasNextPage && !isFetchingNextPage && (
+              <div ref={loadingIndicatorRef} className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <p className="mt-2 text-gray-600 text-sm">
+                  Loading more Pokémon...
+                </p>
+              </div>
+            )}
+            {isFetchingNextPage && (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <p className="mt-2 text-gray-600 text-sm">
+                  Loading more Pokémon...
+                </p>
+              </div>
+            )}
+
+            {/* End of list indicator */}
+            {!hasNextPage &&
+              filteredPokemon.length > 0 &&
+              !debouncedSearchTerm && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">All Pokémon loaded!</p>
+                </div>
+              )}
+
+            {filteredPokemon.length === 0 && debouncedSearchTerm && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">
+                  No Pokémon found matching "{debouncedSearchTerm}"
+                </p>
+                <Button
+                  variant="secondary"
+                  onClick={() => setSearchTerm('')}
+                  className="mt-4"
+                >
+                  Clear Search
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Dummy floating panel for layout spacing - hidden but maintains width in document flow */}
+      <div
+        className="overflow-x-hidden flex gap-2 bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative flex-shrink-0"
+        style={{
+          opacity: 0,
+          pointerEvents: 'none',
+          transition: 'width 0.2s ease-in-out',
+          marginLeft: '8px',
+          marginRight: '8px',
+          height: 'fit-content',
+          maxWidth: 'calc(100% - 1rem)',
+          minWidth: 0,
+        }}
+      >
+        {/* Dummy PokemonTeam */}
+        <div className="flex gap-2 flex-col min-w-0">
+          <div
+            className="team-pokemon-container px-1 bg-gray-100 rounded-lg border flex flex-row gap-[5px] relative cursor-pointer overflow-hidden"
+            style={{
+              height: '90px',
+              minHeight: '90px',
+              maxHeight: '90px',
+              gap: isTeamExpanded ? 5 : 0,
+              transition: 'gap 0.2s ease-in',
+            }}
+          >
+            {/* Dummy left side - matches team-pokemon-left width */}
+            <div
+              className="flex flex-col items-center justify-center flex-shrink-0 transition-opacity"
+              style={{
+                width: isMobile ? undefined : '110px',
+              }}
+            >
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <div className="w-full h-full" />
+              </div>
+            </div>
+            {/* Dummy moves section - matches team-pokemon-moves width */}
+            <div
+              className="team-pokemon-moves"
+              style={{
+                opacity: isTeamExpanded ? 1 : 0,
+                width: isTeamExpanded ? 130 : 0,
+                minWidth: 0,
+                transition:
+                  'width 0.2s ease-in, opacity 0.2s ease-in, flex-basis 0.2s ease-in',
+              }}
+            >
+              <div className="relative" style={{ height: '16px' }} />
             </div>
           </div>
         </div>
-
-        {/* Loading indicator for next page */}
-        {hasNextPage && !isFetchingNextPage && (
-          <div ref={loadingIndicatorRef} className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            <p className="mt-2 text-gray-600 text-sm">
-              Loading more Pokémon...
-            </p>
-          </div>
-        )}
-        {isFetchingNextPage && (
-          <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            <p className="mt-2 text-gray-600 text-sm">
-              Loading more Pokémon...
-            </p>
-          </div>
-        )}
-
-        {/* End of list indicator */}
-        {!hasNextPage && filteredPokemon.length > 0 && !debouncedSearchTerm && (
-          <div className="text-center py-8">
-            <p className="text-gray-500">All Pokémon loaded!</p>
-          </div>
-        )}
-
-        {filteredPokemon.length === 0 && debouncedSearchTerm && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              No Pokémon found matching "{debouncedSearchTerm}"
-            </p>
-            <Button
-              variant="secondary"
-              onClick={() => setSearchTerm('')}
-              className="mt-4"
-            >
-              Clear Search
-            </Button>
-          </div>
-        )}
+        {/* Dummy BattleInfoPokemon */}
+        <div
+          style={{
+            width: battleInfoPokemonState ? 250 : 0,
+            opacity: 1,
+            transition: 'width 0.2s ease-in, opacity 0.2s ease-in',
+            display: 'flex',
+          }}
+        >
+          <div
+            className="h-full overflow-y-auto bg-white/80 border border-gray-200 rounded-md p-2 relative"
+            style={{
+              minWidth: 250,
+              flexGrow: 1,
+            }}
+          />
+        </div>
       </div>
     </div>
   )
