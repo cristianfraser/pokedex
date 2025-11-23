@@ -1,4 +1,14 @@
 /**
+ * Check if the current viewport is mobile (width < 768px)
+ */
+export const isMobile = (): boolean => {
+  if (typeof window === 'undefined') {
+    return false
+  }
+  return window.innerWidth < 768
+}
+
+/**
  * Capitalizes the first letter of a string
  */
 export const capitalize = (str: string): string => {

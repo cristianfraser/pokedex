@@ -10,7 +10,7 @@ import {
 } from 'react'
 import { PokemonDetail } from '../queries/pokemon'
 import { useLocalStorage } from '../hooks/useLocalStorage'
-import { debounce } from '../utils/helpers'
+import { debounce, isMobile } from '../utils/helpers'
 
 const STORAGE_KEY = 'pokedex_team_pokemon'
 const STORAGE_KEY_MOVES = 'pokedex_team_moves'
@@ -55,7 +55,10 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
   }>(STORAGE_KEY_MOVES, {})
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null)
   const [isPanelExpanded, setIsPanelExpanded] = useState(true)
-  const [isTeamExpanded, setIsTeamExpanded] = useState(true)
+  const [isTeamExpanded, setIsTeamExpanded] = useState(() => {
+    // Start collapsed on mobile
+    return !isMobile()
+  })
   const [battleInfoPokemon, setBattleInfoPokemon] =
     useState<PokemonDetail | null>(null)
   const [hoveredDefensiveTypes, setHoveredDefensiveTypes] = useState<string[]>(
