@@ -24,9 +24,9 @@ const Pokemon = () => {
     selectedPosition,
     clearSelection,
     pokemonTeam,
-    setBattleInfoPokemon,
+    setBattleInfoPokemonId,
     isTeamExpanded,
-    battleInfoPokemon: battleInfoPokemonState,
+    battleInfoPokemon,
   } = usePokemonContext()
 
   // Check if a pokemon is already in the team
@@ -97,20 +97,33 @@ const Pokemon = () => {
   // Keep previous pokemon list while fetching new data to prevent empty state
   const previousPokemonListRef = useRef<PokemonDetail[]>([])
 
-  // Update the ref when we have new data and we're not fetching
+  // Update the ref when we have new data
+  // Always update when pokemonList changes and has more items than before
   useEffect(() => {
-    if (pokemonList && pokemonList.length > 0 && !isFetching) {
-      previousPokemonListRef.current = pokemonList
+    if (pokemonList && pokemonList.length > 0) {
+      // Update if we have more items (new page loaded) or if not fetching next page
+      if (
+        pokemonList.length > previousPokemonListRef.current.length ||
+        !isFetchingNextPage
+      ) {
+        previousPokemonListRef.current = pokemonList
+      }
     }
-  }, [pokemonList, isFetching])
+  }, [pokemonList, isFetchingNextPage])
 
   // Use previous data while fetching, otherwise use current data
   const filteredPokemon = useMemo(() => {
+    // Always prefer pokemonList if it has data (React Query merges pages automatically)
+    // This ensures new pages appear immediately when they're loaded
+    if (pokemonList && pokemonList.length > 0) {
+      return pokemonList
+    }
     // On initial load (no previous data), use current data (even if empty)
     if (isLoading && previousPokemonListRef.current.length === 0) {
       return pokemonList || []
     }
-    // If we're fetching and have previous data, keep showing it (prevents empty state)
+    // If we're fetching (but not next page) and have previous data, keep showing it
+    // This prevents empty state when searching/filtering
     if (
       isFetching &&
       !isFetchingNextPage &&
@@ -118,10 +131,8 @@ const Pokemon = () => {
     ) {
       return previousPokemonListRef.current
     }
-    // Otherwise use current data (or previous if current is empty)
-    return pokemonList && pokemonList.length > 0
-      ? pokemonList
-      : previousPokemonListRef.current || []
+    // Fallback to previous data
+    return previousPokemonListRef.current || []
   }, [pokemonList, isFetching, isLoading, isFetchingNextPage])
 
   // Get total count from first page
@@ -418,7 +429,7 @@ const Pokemon = () => {
                                       e?: React.MouseEvent<HTMLButtonElement>
                                     ) => {
                                       e?.stopPropagation()
-                                      setBattleInfoPokemon(pokemon)
+                                      setBattleInfoPokemonId(pokemon.id)
                                     }}
                                   >
                                     Battle Info
@@ -535,7 +546,7 @@ const Pokemon = () => {
         {/* Dummy BattleInfoPokemon */}
         <div
           style={{
-            width: battleInfoPokemonState ? 250 : 0,
+            width: battleInfoPokemon ? 250 : 0,
             opacity: 1,
             transition: 'width 0.2s ease-in, opacity 0.2s ease-in',
             display: 'flex',

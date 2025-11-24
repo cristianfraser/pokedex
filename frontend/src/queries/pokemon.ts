@@ -1,4 +1,8 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { API_URL } from '../utils/constants'
 
@@ -45,6 +49,7 @@ export interface PokemonDetail {
     effort: number
     stat: {
       name: string
+      short_name?: string
       url: string
     }
   }>
@@ -168,12 +173,74 @@ export const useAllPokemonBasic = () => {
   })
 }
 
+// Helper function to find Pokemon in cache synchronously
+const findPokemonInCache = (
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: number
+): PokemonDetail | undefined => {
+  // Get all query cache entries
+  const cache = queryClient.getQueryCache()
+  const allQueries = cache.getAll()
+
+  // Search through all pokemon list queries
+  for (const query of allQueries) {
+    const queryKey = query.queryKey
+    // Check if this is a pokemon list query
+    if (
+      Array.isArray(queryKey) &&
+      queryKey[0] === 'pokemon' &&
+      queryKey[1] === 'list'
+    ) {
+      const queryData = query.state.data
+      // Check if it's an infinite query with pages
+      if (queryData && typeof queryData === 'object' && 'pages' in queryData) {
+        const pages = (queryData as { pages: unknown[] }).pages
+        // Search through all pages
+        for (const page of pages) {
+          if (
+            page &&
+            typeof page === 'object' &&
+            'results' in page &&
+            Array.isArray(page.results)
+          ) {
+            const pokemon = (page.results as PokemonDetail[]).find(
+              p => p.id === id
+            )
+            if (pokemon) {
+              return pokemon
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return undefined
+}
+
 // Hook to fetch pokemon by ID
 export const usePokemonById = (id: number | null | undefined) => {
+  const queryClient = useQueryClient()
+
+  // Check cache synchronously before query runs
+  const cachedPokemon =
+    id !== null && id !== undefined
+      ? findPokemonInCache(queryClient, id)
+      : undefined
+
   return useQuery({
     queryKey: ['pokemon', 'byId', id],
-    queryFn: () => fetchPokemonById(id!),
+    queryFn: async () => {
+      // If we have cached data, return it immediately (shouldn't happen due to initialData, but as fallback)
+      if (cachedPokemon) {
+        return cachedPokemon
+      }
+      // If not found in cache, fetch from API
+      return fetchPokemonById(id!)
+    },
     enabled: id !== null && id !== undefined,
     staleTime: 1000 * 60 * 60, // 1 hour
+    initialData: cachedPokemon, // Use cached data as initial data to avoid loading state
+    placeholderData: cachedPokemon, // Also use as placeholder to prevent loading flash
   })
 }

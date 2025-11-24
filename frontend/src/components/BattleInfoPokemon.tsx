@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
+import { PokemonDetail } from '../queries/pokemon'
 import { AnimatePresence, motion } from 'framer-motion'
 import { usePokemonContext } from '../contexts/PokemonContext'
 import { useStyle } from '../contexts/StyleContext'
@@ -10,48 +11,42 @@ import {
   NONE_TYPE_MARKER,
 } from '@/constants/types'
 import { PokemonCombobox } from './PokemonCombobox'
-import { usePokemonById } from '../queries/pokemon'
 
 interface BattleInfoPokemonProps {}
 
 const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
   const {
+    battleInfoPokemonId,
+    setBattleInfoPokemonId,
     battleInfoPokemon,
-    setBattleInfoPokemon,
+    isLoadingBattleInfoPokemon,
     setHoveredDefensiveTypes,
     setHoveredOffensiveTypes,
   } = usePokemonContext()
   const { isMobile } = useStyle()
-  const [selectedPokemonId, setSelectedPokemonId] = useState<number | null>(
-    battleInfoPokemon?.id ?? null
-  )
-  const { data: newPokemon, isLoading: isLoadingNewPokemon } =
-    usePokemonById(selectedPokemonId)
-  // Sync selectedPokemonId with battleInfoPokemon when it changes externally
-  useEffect(() => {
-    if (battleInfoPokemon?.id !== selectedPokemonId) {
-      setSelectedPokemonId(battleInfoPokemon?.id ?? null)
-    }
-  }, [battleInfoPokemon?.id])
+  const [displayedPokemon, setDisplayedPokemon] =
+    useState<PokemonDetail | null>(battleInfoPokemon || null)
 
-  // Update battleInfoPokemon when new pokemon is loaded
   useEffect(() => {
-    if (newPokemon && selectedPokemonId === newPokemon.id) {
-      setBattleInfoPokemon(newPokemon)
+    if (battleInfoPokemon) {
+      setDisplayedPokemon(battleInfoPokemon)
+    } else if (!battleInfoPokemonId) {
+      // Clear displayed pokemon when battleInfoPokemonId is null
+      setDisplayedPokemon(null)
     }
-  }, [newPokemon, selectedPokemonId, setBattleInfoPokemon])
+  }, [battleInfoPokemon, battleInfoPokemonId])
 
   // Format height and weight
-  const heightInMeters = battleInfoPokemon ? battleInfoPokemon.height / 10 : 0
-  const weightInKg = battleInfoPokemon ? battleInfoPokemon.weight / 10 : 0
+  const heightInMeters = displayedPokemon ? displayedPokemon.height / 10 : 0
+  const weightInKg = displayedPokemon ? displayedPokemon.weight / 10 : 0
 
   // Calculate offensive effectiveness (what this pokemon is strong/weak against when attacking)
   const { superEffective, notVeryEffective, noEffect } = useMemo(() => {
-    if (!battleInfoPokemon || !battleInfoPokemon.types) {
+    if (!displayedPokemon || !displayedPokemon.types) {
       return { superEffective: [], notVeryEffective: [], noEffect: [] }
     }
 
-    const pokemonTypes = battleInfoPokemon.types.map(t => t.type.name)
+    const pokemonTypes = displayedPokemon.types.map(t => t.type.name)
     const superEffectiveList: string[] = []
     const notVeryEffectiveList: string[] = []
     const noEffectList: string[] = []
@@ -89,15 +84,15 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
       notVeryEffective: notVeryEffectiveList.sort(),
       noEffect: noEffectList.sort(),
     }
-  }, [battleInfoPokemon])
+  }, [displayedPokemon])
 
   // Calculate defensive effectiveness (what types are strong/weak against this pokemon)
   const { weakTo, resists, immune } = useMemo(() => {
-    if (!battleInfoPokemon || !battleInfoPokemon.types) {
+    if (!displayedPokemon || !displayedPokemon.types) {
       return { weakTo: [], resists: [], immune: [] }
     }
 
-    const pokemonTypes = battleInfoPokemon.types.map(t => t.type.name)
+    const pokemonTypes = displayedPokemon.types.map(t => t.type.name)
     const weakToList: string[] = []
     const resistsList: string[] = []
     const immuneList: string[] = []
@@ -130,7 +125,22 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
       resists: resistsList.sort(),
       immune: immuneList.sort(),
     }
-  }, [battleInfoPokemon])
+  }, [displayedPokemon])
+
+  // Reorder stats for display: [hp, special-attack, attack, special-defense, defense, speed]
+  // Original order: [hp, attack, defense, special-attack, special-defense, speed]
+  // New order indices: [0, 3, 1, 4, 2, 5]
+  const reorderedStats = useMemo(() => {
+    if (!displayedPokemon || !displayedPokemon.stats) return []
+    return [
+      displayedPokemon.stats[0], // hp
+      displayedPokemon.stats[3], // special-attack
+      displayedPokemon.stats[1], // attack
+      displayedPokemon.stats[4], // special-defense
+      displayedPokemon.stats[2], // defense
+      displayedPokemon.stats[5], // speed
+    ]
+  }, [displayedPokemon?.stats])
 
   const ref = useRef<HTMLDivElement>(null)
   const [finalWidth, setFinalWidth] = useState(188)
@@ -172,9 +182,10 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
       }
     }
   }, [])
+
   return (
     <AnimatePresence mode="wait">
-      {battleInfoPokemon && (
+      {displayedPokemon && (
         <motion.div
           key="battle-info-panel"
           initial={{ width: 0, opacity: 0 }}
@@ -182,409 +193,426 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
           exit={{ width: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeIn' }}
           onAnimationComplete={() => {
-            if (ref.current!.offsetWidth > 50 && battleInfoPokemon) {
-              console.log('ref.current!.clientWidth', ref.current!.clientWidth)
+            if (ref.current!.offsetWidth > 50 && displayedPokemon) {
               setFinalWidth(isMobile ? 188 : ref.current!.clientWidth)
             }
           }}
-          style={{ display: 'flex' }}
+          style={{ gap: 5 }}
         >
-          <div
-            style={{
-              minWidth: finalWidth > 50 ? finalWidth : 'unset',
-              flexGrow: 1,
-            }}
-            ref={ref}
-            className={`h-full overflow-y-auto bg-white/80 border border-gray-200 rounded-md p-2 relative transition-opacity ${
-              isLoadingNewPokemon ? 'opacity-50' : 'opacity-100'
-            }`}
-          >
-            {/* Close button - top right */}
-            <button
-              onClick={() => setBattleInfoPokemon(null)}
-              className="absolute top-1 left-1 w-6 h-6 flex items-center justify-center hover:bg-red-100 rounded-lg transition-colors z-10"
-              aria-label="Close battle info"
-            >
-              <svg
-                className="w-4 h-4 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-            <div>
-              {/* Pokemon Image */}
-              <motion.div
-                key={`pokemon-info-${battleInfoPokemon.id}`}
-                className="flex items-center relative"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex-shrink-0">
-                  {battleInfoPokemon.sprites.front_default ? (
-                    <img
-                      src={battleInfoPokemon.sprites.front_default}
-                      alt={battleInfoPokemon.name}
-                      className="w-20 h-24 sm:w-24 -ml-2 object-contain color-transparent"
-                    />
-                  ) : null}
-                </div>
-                {/* Name and Number */}
-                <PokemonCombobox
-                  value={battleInfoPokemon.id}
-                  onValueChange={pokemonId => {
-                    setSelectedPokemonId(pokemonId)
-                  }}
-                  trigger={
-                    <div
-                      className="text-left relative cursor-pointer hover:opacity-80 transition-opacity"
-                      style={{
-                        boxShadow: '-5px 0px 20px 14px rgb(255 255 255)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                        position: 'absolute',
-                        left: '50%',
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        height: 60,
-                      }}
-                    >
-                      <p className="text-sm text-gray-500">
-                        #{battleInfoPokemon.pokedexNumber}
-                      </p>
-                      <h3 className="text-sm font-bold text-gray-900 capitalize">
-                        {battleInfoPokemon.name}
-                      </h3>
-                    </div>
-                  }
-                />
-              </motion.div>
-              {/* Types */}
-              <div className="width-full -mt-2">
-                <AnimatedTypePills types={battleInfoPokemon.types} />
+          <div className="grid grid-cols-6 gap-1 h-10">
+            {new Array(6).fill(0).map((_, index) => (
+              <div key={index}>
+                <div className="w-full h-full bg-gray-100 rounded-full"></div>
               </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex' }}>
+            <div
+              style={{
+                minWidth: finalWidth > 50 ? finalWidth : 'unset',
+                flexGrow: 1,
+              }}
+              ref={ref}
+              className={`h-full overflow-y-auto bg-white/80 border border-gray-200 rounded-md p-2 relative transition-opacity ${
+                isLoadingBattleInfoPokemon ? 'opacity-50' : 'opacity-100'
+              }`}
+            >
+              {/* Close button - top right */}
+              <button
+                onClick={() => setBattleInfoPokemonId(null)}
+                className="absolute top-1 left-1 w-6 h-6 flex items-center justify-center hover:bg-red-100 rounded-lg transition-colors z-10"
+                aria-label="Close battle info"
+              >
+                <svg
+                  className="w-4 h-4 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <div>
+                {/* Pokemon Image */}
+                <motion.div
+                  key={`pokemon-info-${displayedPokemon.id}`}
+                  className="flex items-center relative"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="flex-shrink-0">
+                    {displayedPokemon.sprites.front_default ? (
+                      <img
+                        src={displayedPokemon.sprites.front_default}
+                        alt={displayedPokemon.name}
+                        className="w-20 h-24 sm:w-24 -ml-2 object-contain color-transparent"
+                      />
+                    ) : null}
+                  </div>
+                  {/* Name and Number */}
+                  <PokemonCombobox
+                    value={displayedPokemon?.id ?? null}
+                    onValueChange={pokemonId => {
+                      setBattleInfoPokemonId(pokemonId)
+                    }}
+                    trigger={
+                      <div
+                        className="text-left relative cursor-pointer hover:opacity-80 transition-opacity"
+                        style={{
+                          boxShadow: '-5px 0px 20px 14px rgb(255 255 255)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                          position: 'absolute',
+                          left: '50%',
+                          top: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          height: 60,
+                        }}
+                      >
+                        <p className="text-sm text-gray-500">
+                          #{displayedPokemon.pokedexNumber}
+                        </p>
+                        <h3 className="text-sm font-bold text-gray-900 capitalize">
+                          {displayedPokemon.name}
+                        </h3>
+                      </div>
+                    }
+                  />
+                </motion.div>
+                {/* Types */}
+                <div className="width-full -mt-2">
+                  <AnimatedTypePills types={displayedPokemon.types} />
+                </div>
 
-              {/* Offensive Effectiveness */}
-              {(superEffective.length > 0 ||
-                notVeryEffective.length > 0 ||
-                noEffect.length > 0) &&
-                false && (
+                {/* Offensive Effectiveness */}
+                {(superEffective.length > 0 ||
+                  notVeryEffective.length > 0 ||
+                  noEffect.length > 0) &&
+                  false && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-700 mb-2">
+                        (Offensive)
+                      </p>
+
+                      {/* Super Effective */}
+                      {superEffective.length > 0 && (
+                        <div className="mb-2">
+                          <div
+                            className="flex items-center gap-1.5 mb-1"
+                            onMouseEnter={() =>
+                              setHoveredOffensiveTypes(superEffective)
+                            }
+                            onMouseLeave={() => setHoveredOffensiveTypes([])}
+                          >
+                            <svg
+                              className="w-3 h-3 text-gray-600"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                            >
+                              <circle cx="6" cy="6" r="2" fill="currentColor" />
+                              <circle
+                                cx="6"
+                                cy="6"
+                                r="4.5"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                fill="none"
+                              />
+                            </svg>
+                            <p className="text-xs text-gray-600">
+                              Strong against
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {superEffective.map(typeName => (
+                              <TypePill
+                                key={typeName}
+                                type={{ name: typeName }}
+                                size="small"
+                                onMouseEnter={() =>
+                                  setHoveredOffensiveTypes([typeName])
+                                }
+                                onMouseLeave={() =>
+                                  setHoveredOffensiveTypes([])
+                                }
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Not Very Effective */}
+                      {notVeryEffective.length > 0 && (
+                        <div className="mb-2">
+                          <div
+                            className="flex items-center gap-1.5 mb-1"
+                            onMouseEnter={() =>
+                              setHoveredOffensiveTypes(notVeryEffective)
+                            }
+                            onMouseLeave={() => setHoveredOffensiveTypes([])}
+                          >
+                            <svg
+                              className="w-3 h-3 text-gray-600"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                            >
+                              <path
+                                d="M6 5.2 L7.5 8 L4.5 8 Z"
+                                fill="currentColor"
+                              />
+                              <path
+                                d="M6 1.5 L10.5 10 L1.5 10 Z"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                fill="none"
+                              />
+                            </svg>
+                            <p className="text-xs text-gray-600">
+                              Weak against
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {notVeryEffective.map(typeName => (
+                              <TypePill
+                                key={typeName}
+                                type={{ name: typeName }}
+                                size="small"
+                                onMouseEnter={() =>
+                                  setHoveredOffensiveTypes([typeName])
+                                }
+                                onMouseLeave={() =>
+                                  setHoveredOffensiveTypes([])
+                                }
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* No Effect */}
+                      {noEffect.length > 0 && (
+                        <div className="mb-2">
+                          <div
+                            className="flex items-center gap-1.5 mb-1"
+                            onMouseEnter={() =>
+                              setHoveredOffensiveTypes(noEffect)
+                            }
+                            onMouseLeave={() => setHoveredOffensiveTypes([])}
+                          >
+                            <svg
+                              className="w-3 h-3 text-gray-700"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            >
+                              <path d="M2 2 L10 10 M10 2 L2 10" />
+                            </svg>
+                            <p className="text-xs text-gray-600">No Effect</p>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {noEffect.map(typeName => (
+                              <TypePill
+                                key={typeName}
+                                type={{ name: typeName }}
+                                size="small"
+                                onMouseEnter={() =>
+                                  setHoveredOffensiveTypes([typeName])
+                                }
+                                onMouseLeave={() =>
+                                  setHoveredOffensiveTypes([])
+                                }
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                {/* Defensive Effectiveness */}
+                {(weakTo.length > 0 ||
+                  resists.length > 0 ||
+                  immune.length > 0) && (
                   <div>
-                    <p className="text-xs font-semibold text-gray-700 mb-2">
-                      (Offensive)
-                    </p>
-
-                    {/* Super Effective */}
-                    {superEffective.length > 0 && (
-                      <div className="mb-2">
-                        <div
-                          className="flex items-center gap-1.5 mb-1"
-                          onMouseEnter={() =>
-                            setHoveredOffensiveTypes(superEffective)
-                          }
-                          onMouseLeave={() => setHoveredOffensiveTypes([])}
-                        >
-                          <svg
-                            className="w-3 h-3 text-gray-600"
-                            viewBox="0 0 12 12"
-                            fill="none"
-                          >
-                            <circle cx="6" cy="6" r="2" fill="currentColor" />
-                            <circle
-                              cx="6"
-                              cy="6"
-                              r="4.5"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              fill="none"
-                            />
-                          </svg>
-                          <p className="text-xs text-gray-600">
-                            Strong against
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {superEffective.map(typeName => (
+                    {/* Weak To */}
+                    <div className="mb-2">
+                      <div
+                        className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
+                        onMouseEnter={() =>
+                          setHoveredDefensiveTypes(
+                            weakTo.length > 0 ? weakTo : [NONE_TYPE_MARKER]
+                          )
+                        }
+                        onMouseLeave={() => setHoveredDefensiveTypes([])}
+                      >
+                        <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
+                          Weak To
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {weakTo.length > 0 ? (
+                          weakTo.map(typeName => (
                             <TypePill
                               key={typeName}
                               type={{ name: typeName }}
                               size="small"
                               onMouseEnter={() =>
-                                setHoveredOffensiveTypes([typeName])
+                                setHoveredDefensiveTypes([typeName])
                               }
-                              onMouseLeave={() => setHoveredOffensiveTypes([])}
+                              onMouseLeave={() => setHoveredDefensiveTypes([])}
                             />
-                          ))}
-                        </div>
+                          ))
+                        ) : (
+                          <TypePill
+                            type={{ name: 'none' }}
+                            size="small"
+                            onMouseEnter={() =>
+                              setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                            }
+                            onMouseLeave={() => setHoveredDefensiveTypes([])}
+                          />
+                        )}
                       </div>
-                    )}
+                    </div>
 
-                    {/* Not Very Effective */}
-                    {notVeryEffective.length > 0 && (
-                      <div className="mb-2">
-                        <div
-                          className="flex items-center gap-1.5 mb-1"
-                          onMouseEnter={() =>
-                            setHoveredOffensiveTypes(notVeryEffective)
-                          }
-                          onMouseLeave={() => setHoveredOffensiveTypes([])}
-                        >
-                          <svg
-                            className="w-3 h-3 text-gray-600"
-                            viewBox="0 0 12 12"
-                            fill="none"
-                          >
-                            <path
-                              d="M6 5.2 L7.5 8 L4.5 8 Z"
-                              fill="currentColor"
-                            />
-                            <path
-                              d="M6 1.5 L10.5 10 L1.5 10 Z"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              fill="none"
-                            />
-                          </svg>
-                          <p className="text-xs text-gray-600">Weak against</p>
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {notVeryEffective.map(typeName => (
+                    {/* Resists */}
+                    <div className="mb-2">
+                      <div
+                        className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
+                        onMouseEnter={() =>
+                          setHoveredDefensiveTypes(
+                            resists.length > 0 ? resists : [NONE_TYPE_MARKER]
+                          )
+                        }
+                        onMouseLeave={() => setHoveredDefensiveTypes([])}
+                      >
+                        <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
+                          Resists
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {resists.length > 0 ? (
+                          resists.map(typeName => (
                             <TypePill
                               key={typeName}
                               type={{ name: typeName }}
                               size="small"
                               onMouseEnter={() =>
-                                setHoveredOffensiveTypes([typeName])
+                                setHoveredDefensiveTypes([typeName])
                               }
-                              onMouseLeave={() => setHoveredOffensiveTypes([])}
+                              onMouseLeave={() => setHoveredDefensiveTypes([])}
                             />
-                          ))}
-                        </div>
+                          ))
+                        ) : (
+                          <TypePill
+                            type={{ name: 'none' }}
+                            size="small"
+                            onMouseEnter={() =>
+                              setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                            }
+                            onMouseLeave={() => setHoveredDefensiveTypes([])}
+                          />
+                        )}
                       </div>
-                    )}
+                    </div>
 
-                    {/* No Effect */}
-                    {noEffect.length > 0 && (
-                      <div className="mb-2">
-                        <div
-                          className="flex items-center gap-1.5 mb-1"
-                          onMouseEnter={() =>
-                            setHoveredOffensiveTypes(noEffect)
-                          }
-                          onMouseLeave={() => setHoveredOffensiveTypes([])}
-                        >
-                          <svg
-                            className="w-3 h-3 text-gray-700"
-                            viewBox="0 0 12 12"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                          >
-                            <path d="M2 2 L10 10 M10 2 L2 10" />
-                          </svg>
-                          <p className="text-xs text-gray-600">No Effect</p>
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {noEffect.map(typeName => (
+                    {/* Immune */}
+                    <div className="mb-2">
+                      <div
+                        className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
+                        onMouseEnter={() =>
+                          setHoveredDefensiveTypes(
+                            immune.length > 0 ? immune : [NONE_TYPE_MARKER]
+                          )
+                        }
+                        onMouseLeave={() => setHoveredDefensiveTypes([])}
+                      >
+                        <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
+                          Immune
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {immune.length > 0 ? (
+                          immune.map(typeName => (
                             <TypePill
                               key={typeName}
                               type={{ name: typeName }}
                               size="small"
                               onMouseEnter={() =>
-                                setHoveredOffensiveTypes([typeName])
+                                setHoveredDefensiveTypes([typeName])
                               }
-                              onMouseLeave={() => setHoveredOffensiveTypes([])}
+                              onMouseLeave={() => setHoveredDefensiveTypes([])}
                             />
-                          ))}
-                        </div>
+                          ))
+                        ) : (
+                          <TypePill
+                            type={{ name: 'none' }}
+                            size="small"
+                            onMouseEnter={() =>
+                              setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                            }
+                            onMouseLeave={() => setHoveredDefensiveTypes([])}
+                          />
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 )}
 
-              {/* Defensive Effectiveness */}
-              {(weakTo.length > 0 ||
-                resists.length > 0 ||
-                immune.length > 0) && (
+                {/* Physical Stats */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-gray-50 rounded p-2 text-center">
+                    <p className="text-xs text-gray-600">Height</p>
+                    <p className="text-sm font-semibold">{heightInMeters}m</p>
+                  </div>
+                  <div className="bg-gray-50 rounded p-2 text-center">
+                    <p className="text-xs text-gray-600">Weight</p>
+                    <p className="text-sm font-semibold">{weightInKg}kg</p>
+                  </div>
+                  <div className="bg-gray-50 rounded p-2 text-center">
+                    <p className="text-xs text-gray-600">Base Exp</p>
+                    <p className="text-sm font-semibold">
+                      {displayedPokemon.base_experience}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Base Stats */}
                 <div>
-                  {/* Weak To */}
-                  <div className="mb-2">
-                    <div
-                      className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
-                      onMouseEnter={() =>
-                        setHoveredDefensiveTypes(
-                          weakTo.length > 0 ? weakTo : [NONE_TYPE_MARKER]
-                        )
-                      }
-                      onMouseLeave={() => setHoveredDefensiveTypes([])}
-                    >
-                      <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
-                        Weak To
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {weakTo.length > 0 ? (
-                        weakTo.map(typeName => (
-                          <TypePill
-                            key={typeName}
-                            type={{ name: typeName }}
-                            size="small"
-                            onMouseEnter={() =>
-                              setHoveredDefensiveTypes([typeName])
-                            }
-                            onMouseLeave={() => setHoveredDefensiveTypes([])}
+                  <p className="text-xs text-gray-600 mb-2">Base Stats</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {reorderedStats.map(stat => (
+                      <div key={stat.stat.name}>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-medium text-gray-700 capitalize">
+                            {stat.stat.short_name ||
+                              stat.stat.name.replace('-', ' ')}
+                          </span>
+                          <span className="text-xs font-semibold text-gray-900">
+                            {stat.base_stat}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className="bg-primary-600 h-1.5 rounded-full"
+                            style={{
+                              width: `${Math.min((stat.base_stat / 255) * 100, 100)}%`,
+                              transition: 'width 200ms ease-in-out',
+                              willChange: 'width',
+                            }}
                           />
-                        ))
-                      ) : (
-                        <TypePill
-                          type={{ name: 'none' }}
-                          size="small"
-                          onMouseEnter={() =>
-                            setHoveredDefensiveTypes([NONE_TYPE_MARKER])
-                          }
-                          onMouseLeave={() => setHoveredDefensiveTypes([])}
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Resists */}
-                  <div className="mb-2">
-                    <div
-                      className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
-                      onMouseEnter={() =>
-                        setHoveredDefensiveTypes(
-                          resists.length > 0 ? resists : [NONE_TYPE_MARKER]
-                        )
-                      }
-                      onMouseLeave={() => setHoveredDefensiveTypes([])}
-                    >
-                      <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
-                        Resists
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {resists.length > 0 ? (
-                        resists.map(typeName => (
-                          <TypePill
-                            key={typeName}
-                            type={{ name: typeName }}
-                            size="small"
-                            onMouseEnter={() =>
-                              setHoveredDefensiveTypes([typeName])
-                            }
-                            onMouseLeave={() => setHoveredDefensiveTypes([])}
-                          />
-                        ))
-                      ) : (
-                        <TypePill
-                          type={{ name: 'none' }}
-                          size="small"
-                          onMouseEnter={() =>
-                            setHoveredDefensiveTypes([NONE_TYPE_MARKER])
-                          }
-                          onMouseLeave={() => setHoveredDefensiveTypes([])}
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Immune */}
-                  <div className="mb-2">
-                    <div
-                      className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
-                      onMouseEnter={() =>
-                        setHoveredDefensiveTypes(
-                          immune.length > 0 ? immune : [NONE_TYPE_MARKER]
-                        )
-                      }
-                      onMouseLeave={() => setHoveredDefensiveTypes([])}
-                    >
-                      <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
-                        Immune
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {immune.length > 0 ? (
-                        immune.map(typeName => (
-                          <TypePill
-                            key={typeName}
-                            type={{ name: typeName }}
-                            size="small"
-                            onMouseEnter={() =>
-                              setHoveredDefensiveTypes([typeName])
-                            }
-                            onMouseLeave={() => setHoveredDefensiveTypes([])}
-                          />
-                        ))
-                      ) : (
-                        <TypePill
-                          type={{ name: 'none' }}
-                          size="small"
-                          onMouseEnter={() =>
-                            setHoveredDefensiveTypes([NONE_TYPE_MARKER])
-                          }
-                          onMouseLeave={() => setHoveredDefensiveTypes([])}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Physical Stats */}
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-gray-50 rounded p-2 text-center">
-                  <p className="text-xs text-gray-600">Height</p>
-                  <p className="text-sm font-semibold">{heightInMeters}m</p>
-                </div>
-                <div className="bg-gray-50 rounded p-2 text-center">
-                  <p className="text-xs text-gray-600">Weight</p>
-                  <p className="text-sm font-semibold">{weightInKg}kg</p>
-                </div>
-                <div className="bg-gray-50 rounded p-2 text-center">
-                  <p className="text-xs text-gray-600">Base Exp</p>
-                  <p className="text-sm font-semibold">
-                    {battleInfoPokemon.base_experience}
-                  </p>
-                </div>
-              </div>
-
-              {/* Base Stats */}
-              <div>
-                <p className="text-xs text-gray-600 mb-2">Base Stats</p>
-                <div className="space-y-2">
-                  {battleInfoPokemon.stats.map(stat => (
-                    <div key={stat.stat.name}>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs font-medium text-gray-700 capitalize">
-                          {stat.stat.name.replace('-', ' ')}
-                        </span>
-                        <span className="text-xs font-semibold text-gray-900">
-                          {stat.base_stat}
-                        </span>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5">
-                        <div
-                          className="bg-primary-600 h-1.5 rounded-full"
-                          style={{
-                            width: `${Math.min((stat.base_stat / 255) * 100, 100)}%`,
-                            transition: 'width 200ms ease-in-out',
-                            willChange: 'width',
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

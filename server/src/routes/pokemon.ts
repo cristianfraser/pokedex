@@ -96,7 +96,7 @@ router.get('/list', async (req, res) => {
         )
 
         const statsResult = await pool.query(
-          `SELECT stat_name, base_stat, effort
+          `SELECT stat_name, base_stat, effort, short_name
            FROM pokemon_stats
            WHERE pokemon_id = $1`,
           [p.id]
@@ -107,6 +107,7 @@ router.get('/list', async (req, res) => {
           stat_name: string
           base_stat: number
           effort: number
+          short_name: string | null
         }>
 
         return {
@@ -137,6 +138,7 @@ router.get('/list', async (req, res) => {
             effort: s.effort,
             stat: {
               name: s.stat_name,
+              short_name: s.short_name || s.stat_name,
               url: `/api/stat/${s.stat_name}`,
             },
           })),
@@ -258,7 +260,7 @@ router.get('/:id', async (req, res) => {
 
     // Get stats
     const statsResult = await pool.query(
-      `SELECT stat_name, base_stat, effort
+      `SELECT stat_name, base_stat, effort, short_name
        FROM pokemon_stats
        WHERE pokemon_id = $1`,
       [pokemon.id]
@@ -269,6 +271,7 @@ router.get('/:id', async (req, res) => {
       stat_name: string
       base_stat: number
       effort: number
+      short_name: string | null
     }>
 
     // Format response to match frontend expectations
@@ -300,6 +303,7 @@ router.get('/:id', async (req, res) => {
         effort: s.effort,
         stat: {
           name: s.stat_name,
+          short_name: s.short_name || s.stat_name,
           url: `/api/stat/${s.stat_name}`,
         },
       })),

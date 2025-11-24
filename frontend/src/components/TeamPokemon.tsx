@@ -33,15 +33,16 @@ const TeamPokemon = ({
   const {
     contextMoves,
     setPokemonMoves,
-    battleInfoPokemon,
+    battleInfoPokemonId,
     hoveredDefensiveTypes,
     hoveredOffensiveTypes,
     addInPosition,
   } = usePokemonContext()
   const { data: pokemon, isLoading: isLoadingPokemon } =
     usePokemonById(pokemonId)
+  const { data: battleInfoPokemon } = usePokemonById(battleInfoPokemonId)
   const [displayedPokemon, setDisplayedPokemon] =
-    useState<PokemonDetail | null>(null)
+    useState<PokemonDetail | null>(pokemon || null)
   const [displayedMoves, setDisplayedMoves] = useState<
     Array<{
       name: string

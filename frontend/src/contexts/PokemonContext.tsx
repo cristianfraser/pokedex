@@ -4,13 +4,14 @@ import {
   useState,
   useRef,
   useCallback,
+  useEffect,
   ReactNode,
   Dispatch,
   SetStateAction,
 } from 'react'
-import { PokemonDetail } from '../queries/pokemon'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { debounce, isMobile } from '../utils/helpers'
+import { usePokemonById, PokemonDetail } from '../queries/pokemon'
 
 const STORAGE_KEY = 'pokedex_team_pokemon'
 const STORAGE_KEY_MOVES = 'pokedex_team_moves'
@@ -35,8 +36,10 @@ interface PokemonContextType {
   setIsPanelExpanded: (expanded: boolean) => void
   isTeamExpanded: boolean
   setIsTeamExpanded: Dispatch<SetStateAction<boolean>>
+  battleInfoPokemonId: number | null
+  setBattleInfoPokemonId: (pokemonId: number | null) => void
   battleInfoPokemon: PokemonDetail | null
-  setBattleInfoPokemon: (pokemon: PokemonDetail | null) => void
+  isLoadingBattleInfoPokemon: boolean
   hoveredDefensiveTypes: string[]
   setHoveredDefensiveTypes: (types: string[]) => void
   hoveredOffensiveTypes: string[]
@@ -59,8 +62,23 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
     // Start collapsed on mobile
     return !isMobile()
   })
+  const [battleInfoPokemonId, setBattleInfoPokemonId] = useState<number | null>(
+    null
+  )
+  const { data: battleInfoPokemonData, isLoading: isLoadingBattleInfo } =
+    usePokemonById(battleInfoPokemonId)
   const [battleInfoPokemon, setBattleInfoPokemon] =
-    useState<PokemonDetail | null>(null)
+    useState<PokemonDetail | null>(battleInfoPokemonData || null)
+
+  // Update battleInfoPokemon when data changes
+  useEffect(() => {
+    if (battleInfoPokemonData && !isLoadingBattleInfo) {
+      setBattleInfoPokemon(battleInfoPokemonData)
+    } else if (!battleInfoPokemonId && !isLoadingBattleInfo) {
+      // Clear displayed pokemon when battleInfoPokemonId is null and not loading
+      setBattleInfoPokemon(null)
+    }
+  }, [battleInfoPokemonData, battleInfoPokemonId, isLoadingBattleInfo])
   const [hoveredDefensiveTypes, setHoveredDefensiveTypes] = useState<string[]>(
     []
   )
@@ -175,8 +193,10 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
         setIsPanelExpanded,
         isTeamExpanded,
         setIsTeamExpanded,
+        battleInfoPokemonId,
+        setBattleInfoPokemonId,
         battleInfoPokemon,
-        setBattleInfoPokemon,
+        isLoadingBattleInfoPokemon: isLoadingBattleInfo,
         hoveredDefensiveTypes,
         setHoveredDefensiveTypes: debouncedSetHoveredDefensiveTypes,
         hoveredOffensiveTypes,

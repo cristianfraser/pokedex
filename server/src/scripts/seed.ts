@@ -119,14 +119,14 @@ async function seedTypes(pool: Pool) {
   const data = (await response.json()) as PokeAPIListResponse
 
   const typeNames = data.results.map((t: PokeAPIType) => t.name)
-  
+
   for (const typeName of typeNames) {
     await pool.query(
       'INSERT INTO types (name) VALUES ($1) ON CONFLICT (name) DO NOTHING',
       [typeName]
     )
   }
-  
+
   console.log(`Seeded ${typeNames.length} types`)
 }
 
@@ -220,7 +220,8 @@ async function seedPokemon(pool: Pool, limit?: number) {
               pokemonData.base_experience,
               pokemonData.sprites.front_default,
               pokemonData.sprites.front_shiny,
-              pokemonData.sprites.other?.['official-artwork']?.front_default || null,
+              pokemonData.sprites.other?.['official-artwork']?.front_default ||
+                null,
               speciesData.is_legendary ? 1 : 0,
               speciesData.is_mythical ? 1 : 0,
               speciesData.color?.name || null,
@@ -240,19 +241,24 @@ async function seedPokemon(pool: Pool, limit?: number) {
           }
 
           // Insert stats
+          const statShortNames: Record<string, string> = {
+            'hp': 'hp',
+            'attack': 'atk',
+            'defense': 'def',
+            'special-attack': 'sp. atk',
+            'special-defense': 'sp. def',
+            'speed': 'speed',
+          }
           for (const stat of pokemonData.stats) {
+            const shortName = statShortNames[stat.stat.name] || stat.stat.name
             await client.query(
-              `INSERT INTO pokemon_stats (pokemon_id, stat_name, base_stat, effort)
-               VALUES ($1, $2, $3, $4)
+              `INSERT INTO pokemon_stats (pokemon_id, stat_name, base_stat, effort, short_name)
+               VALUES ($1, $2, $3, $4, $5)
                ON CONFLICT (pokemon_id, stat_name) DO UPDATE SET
                  base_stat = EXCLUDED.base_stat,
-                 effort = EXCLUDED.effort`,
-              [
-                pokemonData.id,
-                stat.stat.name,
-                stat.base_stat,
-                stat.effort,
-              ]
+                 effort = EXCLUDED.effort,
+                 short_name = EXCLUDED.short_name`,
+              [pokemonData.id, stat.stat.name, stat.base_stat, stat.effort, shortName]
             )
           }
 
@@ -427,7 +433,7 @@ async function main() {
 
   try {
     console.log('Starting database seed...')
-    
+
     // Initialize schema first
     console.log('Initializing database schema...')
     await initializeSchema(pool)

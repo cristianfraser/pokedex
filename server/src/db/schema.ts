@@ -72,9 +72,23 @@ export async function initializeSchema(pool: Pool) {
         stat_name VARCHAR(255) NOT NULL,
         base_stat INTEGER NOT NULL,
         effort INTEGER NOT NULL,
+        short_name VARCHAR(50),
         PRIMARY KEY (pokemon_id, stat_name),
         FOREIGN KEY (pokemon_id) REFERENCES pokemon(id) ON DELETE CASCADE
       )
+    `)
+    
+    // Add short_name column if it doesn't exist (for existing databases)
+    await client.query(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'pokemon_stats' AND column_name = 'short_name'
+        ) THEN
+          ALTER TABLE pokemon_stats ADD COLUMN short_name VARCHAR(50);
+        END IF;
+      END $$;
     `)
 
     // Moves table

@@ -9,7 +9,9 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "seed": "tsx src/scripts/seed.ts",
-    "db:migrate": "tsx src/db/migrate.ts"
+    "image-seed": "tsx src/scripts/image-seed.ts",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "migrate:stat-short-names": "tsx src/db/migrations/add-stat-short-names.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",
