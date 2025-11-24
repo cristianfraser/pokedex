@@ -11,6 +11,7 @@ import {
   NONE_TYPE_MARKER,
 } from '@/constants/types'
 import { PokemonCombobox } from './PokemonCombobox'
+import { cn } from '@/lib/utils'
 
 interface BattleInfoPokemonProps {}
 
@@ -200,18 +201,29 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
           }}
           className="flex flex-col gap-1"
         >
-          <div className="grid grid-cols-6 gap-1 h-10">
-            {[...battleInfoPokemonHistory].reverse().map((pokemonId, index) => (
-              <HistoryCircle
-                key={`${pokemonId}-${index}`}
-                pokemonId={pokemonId}
-                onClick={() => {
-                  if (pokemonId !== null) {
-                    setBattleInfoPokemonId(pokemonId)
-                  }
-                }}
-              />
-            ))}
+          <div className="relative h-10 overflow-hidden">
+            <div className="flex flex-nowrap h-full">
+              <AnimatePresence mode="popLayout">
+                {[...battleInfoPokemonHistory]
+                  .reverse()
+                  .slice(0, 6) // Ensure max 6 items are rendered
+                  .map((pokemonId, index) => (
+                    <HistoryCircle
+                      key={
+                        pokemonId !== null
+                          ? `pokemon-${pokemonId}`
+                          : `empty-${index}`
+                      }
+                      pokemonId={pokemonId}
+                      onClick={() => {
+                        if (pokemonId !== null) {
+                          setBattleInfoPokemonId(pokemonId)
+                        }
+                      }}
+                    />
+                  ))}
+              </AnimatePresence>
+            </div>
           </div>
           <div style={{ display: 'flex' }}>
             <div
@@ -641,10 +653,29 @@ const HistoryCircle = ({
   const { data: pokemon } = usePokemonById(pokemonId)
 
   return (
-    <div
-      className={`w-full h-full rounded-full overflow-hidden cursor-pointer transition-opacity hover:opacity-80 ${
-        pokemonId !== null ? 'bg-gray-200' : 'bg-gray-100'
-      }`}
+    <motion.div
+      layout
+      layoutId={pokemonId !== null ? `history-${pokemonId}` : undefined}
+      exit={{ width: 0, opacity: 0, marginRight: 0 }}
+      transition={{
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
+        duration: 0.3,
+      }}
+      style={{
+        width: 'calc((100% - 1.25rem) / 6)',
+        minWidth: 0,
+        flexShrink: 0,
+        overflow: 'hidden',
+        marginRight: '0.25rem',
+        boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1)',
+      }}
+      className={cn(
+        'h-full rounded-full overflow-hidden',
+        !pokemonId && 'bg-gray-100',
+        pokemonId && 'cursor-pointer bg-gray-200 hover:bg-gray-300'
+      )}
       onClick={onClick}
     >
       {pokemon?.sprites.front_default ? (
@@ -654,7 +685,7 @@ const HistoryCircle = ({
           className="w-full h-full object-contain"
         />
       ) : null}
-    </div>
+    </motion.div>
   )
 }
 
