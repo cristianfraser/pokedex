@@ -287,7 +287,8 @@ const BattleInfoPokemon = ({
                       <img
                         src={displayedPokemon.sprites.front_default}
                         alt={displayedPokemon.name}
-                        className="w-20 h-24 sm:w-24 -ml-2 object-contain color-transparent"
+                        className="w-20 h-24 sm:w-24 -ml-2 object-contain"
+                        style={{ color: 'transparent', fontSize: 0 }}
                       />
                     ) : null}
                   </div>
@@ -700,6 +701,7 @@ const HistoryCircle = forwardRef<
             src={pokemon.sprites.front_default}
             alt={pokemon.name}
             className="w-full h-full object-contain"
+            style={{ color: 'transparent', fontSize: 0 }}
           />
         ) : null}
       </div>
