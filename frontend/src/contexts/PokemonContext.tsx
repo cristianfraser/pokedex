@@ -40,6 +40,7 @@ interface PokemonContextType {
   setBattleInfoPokemonId: (pokemonId: number | null) => void
   battleInfoPokemon: PokemonDetail | null
   isLoadingBattleInfoPokemon: boolean
+  battleInfoPokemonHistory: (number | null)[]
   hoveredDefensiveTypes: string[]
   setHoveredDefensiveTypes: (types: string[]) => void
   hoveredOffensiveTypes: string[]
@@ -62,9 +63,38 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
     // Start collapsed on mobile
     return !isMobile()
   })
-  const [battleInfoPokemonId, setBattleInfoPokemonId] = useState<number | null>(
-    null
-  )
+  const [battleInfoPokemonId, setBattleInfoPokemonIdState] = useState<
+    number | null
+  >(null)
+  const [battleInfoPokemonHistory, setBattleInfoPokemonHistory] = useState<
+    (number | null)[]
+  >(Array(6).fill(null))
+
+  // Wrapper function to handle history when setting battleInfoPokemonId
+  const setBattleInfoPokemonId = useCallback((pokemonId: number | null) => {
+    setBattleInfoPokemonIdState(prevId => {
+      setBattleInfoPokemonHistory(prevHistory => {
+        // Remove the new pokemonId from history if it exists there
+        let filteredHistory = prevHistory.filter(id => id !== pokemonId)
+
+        // If there's a previous ID and it's different from the new one, add to history
+        if (prevId !== null && prevId !== pokemonId) {
+          // Remove the previous ID from history if it exists (to avoid duplicates)
+          filteredHistory = filteredHistory.filter(id => id !== prevId)
+          // Add to front (most recent first) and keep max 6 items
+          filteredHistory = [prevId, ...filteredHistory].slice(0, 6)
+        }
+
+        // Pad with nulls if needed to maintain 6-length array
+        return [
+          ...filteredHistory,
+          ...Array(6 - filteredHistory.length).fill(null),
+        ]
+      })
+      return pokemonId
+    })
+  }, [])
+
   const { data: battleInfoPokemonData, isLoading: isLoadingBattleInfo } =
     usePokemonById(battleInfoPokemonId)
   const [battleInfoPokemon, setBattleInfoPokemon] =
@@ -197,6 +227,7 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
         setBattleInfoPokemonId,
         battleInfoPokemon,
         isLoadingBattleInfoPokemon: isLoadingBattleInfo,
+        battleInfoPokemonHistory,
         hoveredDefensiveTypes,
         setHoveredDefensiveTypes: debouncedSetHoveredDefensiveTypes,
         hoveredOffensiveTypes,

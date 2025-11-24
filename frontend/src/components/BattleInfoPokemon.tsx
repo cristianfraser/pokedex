@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
-import { PokemonDetail } from '../queries/pokemon'
+import { PokemonDetail, usePokemonById } from '../queries/pokemon'
 import { AnimatePresence, motion } from 'framer-motion'
 import { usePokemonContext } from '../contexts/PokemonContext'
 import { useStyle } from '../contexts/StyleContext'
@@ -22,6 +22,7 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
     isLoadingBattleInfoPokemon,
     setHoveredDefensiveTypes,
     setHoveredOffensiveTypes,
+    battleInfoPokemonHistory,
   } = usePokemonContext()
   const { isMobile } = useStyle()
   const [displayedPokemon, setDisplayedPokemon] =
@@ -197,13 +198,19 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
               setFinalWidth(isMobile ? 188 : ref.current!.clientWidth)
             }
           }}
-          style={{ gap: 5 }}
+          className="flex flex-col gap-1"
         >
           <div className="grid grid-cols-6 gap-1 h-10">
-            {new Array(6).fill(0).map((_, index) => (
-              <div key={index}>
-                <div className="w-full h-full bg-gray-100 rounded-full"></div>
-              </div>
+            {[...battleInfoPokemonHistory].reverse().map((pokemonId, index) => (
+              <HistoryCircle
+                key={`${pokemonId}-${index}`}
+                pokemonId={pokemonId}
+                onClick={() => {
+                  if (pokemonId !== null) {
+                    setBattleInfoPokemonId(pokemonId)
+                  }
+                }}
+              />
             ))}
           </div>
           <div style={{ display: 'flex' }}>
@@ -620,6 +627,34 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
         </motion.div>
       )}
     </AnimatePresence>
+  )
+}
+
+// Component for displaying a single history circle
+const HistoryCircle = ({
+  pokemonId,
+  onClick,
+}: {
+  pokemonId: number | null
+  onClick: () => void
+}) => {
+  const { data: pokemon } = usePokemonById(pokemonId)
+
+  return (
+    <div
+      className={`w-full h-full rounded-full overflow-hidden cursor-pointer transition-opacity hover:opacity-80 ${
+        pokemonId !== null ? 'bg-gray-200' : 'bg-gray-100'
+      }`}
+      onClick={onClick}
+    >
+      {pokemon?.sprites.front_default ? (
+        <img
+          src={pokemon.sprites.front_default}
+          alt={pokemon.name}
+          className="w-full h-full object-contain"
+        />
+      ) : null}
+    </div>
   )
 }
 
