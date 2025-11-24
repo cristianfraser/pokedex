@@ -6,12 +6,17 @@ import TypePill from './TypePill'
 import { MovesCombobox } from './MovesCombobox'
 import { PokemonCombobox } from './PokemonCombobox'
 import { cn } from '@/lib/utils'
-import { usePokemonContext } from '../contexts/PokemonContext'
 import { useStyle } from '../contexts/StyleContext'
 import { useMoves } from '../queries/moves'
 import { usePokemonById } from '../queries/pokemon'
 import { calculateTypeEffectiveness, NONE_TYPE_MARKER } from '@/constants/types'
 import './TeamPokemon.css'
+
+type PokemonMoves = Array<{
+  name: string
+  type: string
+  damage_class?: 'status' | 'physical' | 'special'
+} | null>
 
 interface TeamPokemonProps {
   pokemonId: number | null
@@ -20,6 +25,12 @@ interface TeamPokemonProps {
   onSelect: () => void
   onRemove: () => void
   isExpanded?: boolean
+  contextMoves: { [pokemonId: number]: PokemonMoves }
+  setPokemonMoves: (pokemonId: number, moves: PokemonMoves) => void
+  battleInfoPokemonId: number | null
+  hoveredDefensiveTypes: string[]
+  hoveredOffensiveTypes: string[]
+  addInPosition: (pokemonId: number, position: number) => void
 }
 
 const TeamPokemon = ({
@@ -29,15 +40,13 @@ const TeamPokemon = ({
   onSelect,
   onRemove,
   isExpanded = true,
+  contextMoves,
+  setPokemonMoves,
+  battleInfoPokemonId,
+  hoveredDefensiveTypes,
+  hoveredOffensiveTypes,
+  addInPosition,
 }: TeamPokemonProps) => {
-  const {
-    contextMoves,
-    setPokemonMoves,
-    battleInfoPokemonId,
-    hoveredDefensiveTypes,
-    hoveredOffensiveTypes,
-    addInPosition,
-  } = usePokemonContext()
   const { data: pokemon, isLoading: isLoadingPokemon } =
     usePokemonById(pokemonId)
   const { data: battleInfoPokemon } = usePokemonById(battleInfoPokemonId)

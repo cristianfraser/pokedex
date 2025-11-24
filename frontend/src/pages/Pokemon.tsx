@@ -12,8 +12,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import FloatingPanel from '../components/FloatingPanel'
-import PokemonTeam from '../components/PokemonTeam'
-import BattleInfoPokemon from '../components/BattleInfoPokemon'
+import ContextPokemonFloatingPanel from '../components/ContextPokemonFloatingPanel'
 
 const Pokemon = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -186,8 +185,7 @@ const Pokemon = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <FloatingPanel top={80} isVisible={true}>
-        <PokemonTeam />
-        <BattleInfoPokemon />
+        <ContextPokemonFloatingPanel />
       </FloatingPanel>
       {/* <div className="px-4 sm:px-6 lg:px-8 py-8 flex min-w-0"> */}
       <div style={{ flexShrink: 100, minWidth: 0, overflow: 'hidden' }}>

@@ -1,7 +1,6 @@
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useRef, forwardRef } from 'react'
 import { PokemonDetail, usePokemonById } from '../queries/pokemon'
 import { AnimatePresence, motion } from 'framer-motion'
-import { usePokemonContext } from '../contexts/PokemonContext'
 import { useStyle } from '../contexts/StyleContext'
 import AnimatedTypePills from './AnimatedTypePills'
 import TypePill from './TypePill'
@@ -13,18 +12,29 @@ import {
 import { PokemonCombobox } from './PokemonCombobox'
 import { cn } from '@/lib/utils'
 
-interface BattleInfoPokemonProps {}
+interface BattleInfoPokemonProps {
+  battleInfoPokemonId: number | null
+  setBattleInfoPokemonId: (pokemonId: number | null) => void
+  battleInfoPokemon: PokemonDetail | null
+  isLoadingBattleInfoPokemon: boolean
+  setHoveredDefensiveTypes: (types: string[]) => void
+  setHoveredOffensiveTypes: (types: string[]) => void
+  battleInfoPokemonHistory: (number | null)[]
+  skipInitialAnimation?: boolean
+  hideCloseButton?: boolean
+}
 
-const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
-  const {
-    battleInfoPokemonId,
-    setBattleInfoPokemonId,
-    battleInfoPokemon,
-    isLoadingBattleInfoPokemon,
-    setHoveredDefensiveTypes,
-    setHoveredOffensiveTypes,
-    battleInfoPokemonHistory,
-  } = usePokemonContext()
+const BattleInfoPokemon = ({
+  battleInfoPokemonId,
+  setBattleInfoPokemonId,
+  battleInfoPokemon,
+  isLoadingBattleInfoPokemon,
+  setHoveredDefensiveTypes,
+  setHoveredOffensiveTypes,
+  battleInfoPokemonHistory,
+  skipInitialAnimation = false,
+  hideCloseButton = false,
+}: BattleInfoPokemonProps) => {
   const { isMobile } = useStyle()
   const [displayedPokemon, setDisplayedPokemon] =
     useState<PokemonDetail | null>(battleInfoPokemon || null)
@@ -190,7 +200,11 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
       {displayedPokemon && (
         <motion.div
           key="battle-info-panel"
-          initial={{ width: 0, opacity: 0 }}
+          initial={
+            skipInitialAnimation
+              ? { width: 250, opacity: 1 }
+              : { width: 0, opacity: 0 }
+          }
           animate={{ width: 250, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeIn' }}
@@ -237,25 +251,27 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
               }`}
             >
               {/* Close button - top right */}
-              <button
-                onClick={() => setBattleInfoPokemonId(null)}
-                className="absolute top-1 left-1 w-6 h-6 flex items-center justify-center hover:bg-red-100 rounded-lg transition-colors z-10"
-                aria-label="Close battle info"
-              >
-                <svg
-                  className="w-4 h-4 text-red-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {!hideCloseButton && (
+                <button
+                  onClick={() => setBattleInfoPokemonId(null)}
+                  className="absolute top-1 left-1 w-6 h-6 flex items-center justify-center hover:bg-red-100 rounded-lg transition-colors z-10"
+                  aria-label="Close battle info"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    className="w-4 h-4 text-red-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
               <div>
                 {/* Pokemon Image */}
                 <motion.div
@@ -643,13 +659,13 @@ const BattleInfoPokemon = ({}: BattleInfoPokemonProps) => {
 }
 
 // Component for displaying a single history circle
-const HistoryCircle = ({
-  pokemonId,
-  onClick,
-}: {
-  pokemonId: number | null
-  onClick: () => void
-}) => {
+const HistoryCircle = forwardRef<
+  HTMLDivElement,
+  {
+    pokemonId: number | null
+    onClick: () => void
+  }
+>(({ pokemonId, onClick }, ref) => {
   const { data: pokemon } = usePokemonById(pokemonId)
 
   return (
@@ -678,15 +694,19 @@ const HistoryCircle = ({
       )}
       onClick={onClick}
     >
-      {pokemon?.sprites.front_default ? (
-        <img
-          src={pokemon.sprites.front_default}
-          alt={pokemon.name}
-          className="w-full h-full object-contain"
-        />
-      ) : null}
+      <div ref={ref}>
+        {pokemon?.sprites.front_default ? (
+          <img
+            src={pokemon.sprites.front_default}
+            alt={pokemon.name}
+            className="w-full h-full object-contain"
+          />
+        ) : null}
+      </div>
     </motion.div>
   )
-}
+})
+
+HistoryCircle.displayName = 'HistoryCircle'
 
 export default BattleInfoPokemon
