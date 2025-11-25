@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef, forwardRef } from 'react'
 import { PokemonDetail, usePokemonById } from '../queries/pokemon'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, Target } from 'framer-motion'
 import { useStyle } from '../contexts/StyleContext'
 import AnimatedTypePills from './AnimatedTypePills'
 import TypePill from './TypePill'
@@ -156,7 +156,7 @@ const BattleInfoPokemon = ({
 
   const ref = useRef<HTMLDivElement>(null)
   const [finalWidth, setFinalWidth] = useState(188)
-
+  const historyRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     let rafId: number | null = null
     let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -208,6 +208,12 @@ const BattleInfoPokemon = ({
           animate={{ width: 250, opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeIn' }}
+          onAnimationStart={(definition: Target) => {
+            if (definition.width === 0) {
+              historyRef.current!.style.minWidth =
+                historyRef.current!.clientWidth + 'px'
+            }
+          }}
           onAnimationComplete={() => {
             if (ref.current!.offsetWidth > 50 && displayedPokemon) {
               setFinalWidth(isMobile ? 188 : ref.current!.clientWidth)
@@ -215,8 +221,12 @@ const BattleInfoPokemon = ({
           }}
           className="flex flex-col gap-1"
         >
-          <div className="relative h-10 overflow-hidden">
-            <div className="flex flex-nowrap h-full">
+          <div className="relative overflow-hidden">
+            <div
+              className="flex flex-nowrap h-full"
+              style={{ minHeight: 28 }}
+              ref={historyRef}
+            >
               <AnimatePresence mode="popLayout">
                 {[...battleInfoPokemonHistory]
                   .reverse()
@@ -674,12 +684,7 @@ const HistoryCircle = forwardRef<
       layout
       layoutId={pokemonId !== null ? `history-${pokemonId}` : undefined}
       exit={{ width: 0, opacity: 0, marginRight: 0 }}
-      transition={{
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-        duration: 0.3,
-      }}
+      transition={{ duration: 0.3, ease: 'easeIn' }}
       style={{
         width: 'calc((100% - 1.25rem) / 6)',
         minWidth: 0,
@@ -689,7 +694,7 @@ const HistoryCircle = forwardRef<
         boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1)',
       }}
       className={cn(
-        'h-full rounded-full overflow-hidden',
+        'h-full rounded-full relative overflow-hidden',
         !pokemonId && 'bg-gray-100',
         pokemonId && 'cursor-pointer bg-gray-200 hover:bg-gray-300'
       )}
@@ -700,10 +705,17 @@ const HistoryCircle = forwardRef<
           <img
             src={pokemon.sprites.front_default}
             alt={pokemon.name}
-            className="w-full h-full object-contain"
+            className="w-full object-contain"
             style={{ color: 'transparent', fontSize: 0 }}
           />
-        ) : null}
+        ) : (
+          <img
+            src={'/pokemon/0001-bulbasaur-front-default.png'}
+            alt="empty"
+            className="w-full h-full object-contain"
+            style={{ opacity: 0 }}
+          />
+        )}
       </div>
     </motion.div>
   )

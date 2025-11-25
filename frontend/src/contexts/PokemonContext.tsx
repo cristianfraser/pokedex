@@ -73,24 +73,36 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
   // Wrapper function to handle history when setting battleInfoPokemonId
   const setBattleInfoPokemonId = useCallback((pokemonId: number | null) => {
     setBattleInfoPokemonIdState(prevId => {
-      setBattleInfoPokemonHistory(prevHistory => {
-        // Remove the new pokemonId from history if it exists there
-        let filteredHistory = prevHistory.filter(id => id !== pokemonId)
+      // If opening from null (closed), expand the team
+      if (prevId === null && pokemonId !== null) {
+        setIsTeamExpanded(true)
+      }
 
-        // If there's a previous ID and it's different from the new one, add to history
-        if (prevId !== null && prevId !== pokemonId) {
-          // Remove the previous ID from history if it exists (to avoid duplicates)
-          filteredHistory = filteredHistory.filter(id => id !== prevId)
-          // Add to front (most recent first) and keep max 6 items
-          filteredHistory = [prevId, ...filteredHistory].slice(0, 6)
-        }
+      const setBattleInfoPokemonHistoryFunction = () => {
+        setBattleInfoPokemonHistory(prevHistory => {
+          // Remove the new pokemonId from history if it exists there
+          let filteredHistory = prevHistory.filter(id => id !== pokemonId)
 
-        // Pad with nulls if needed to maintain 6-length array
-        return [
-          ...filteredHistory,
-          ...Array(6 - filteredHistory.length).fill(null),
-        ]
-      })
+          // If there's a previous ID and it's different from the new one, add to history
+          if (prevId !== null && prevId !== pokemonId) {
+            // Remove the previous ID from history if it exists (to avoid duplicates)
+            filteredHistory = filteredHistory.filter(id => id !== prevId)
+            // Add to front (most recent first) and keep max 6 items
+            filteredHistory = [prevId, ...filteredHistory].slice(0, 6)
+          }
+
+          // Pad with nulls if needed to maintain 6-length array
+          return [
+            ...filteredHistory,
+            ...Array(6 - filteredHistory.length).fill(null),
+          ]
+        })
+      }
+      if (pokemonId === null) {
+        setTimeout(setBattleInfoPokemonHistoryFunction, 200)
+      } else {
+        setBattleInfoPokemonHistoryFunction()
+      }
       return pokemonId
     })
   }, [])

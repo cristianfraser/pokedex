@@ -337,7 +337,7 @@ const Pokemon = () => {
                               </td>
                               <td className="px-4 py-1.5 flex-grow">
                                 <div className="flex flex-col">
-                                  <div className="flex flex-wrap gap-[5px]">
+                                  <div className="flex flex-nowrap gap-[5px]">
                                     {pokemon.types.map(type => (
                                       <TypePill
                                         key={type.slot}
