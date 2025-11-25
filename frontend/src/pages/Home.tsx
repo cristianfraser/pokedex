@@ -54,6 +54,8 @@ const Home = () => {
                   position: 'relative',
                   pointerEvents: 'none',
                   margin: '10px auto 0',
+                  transform:
+                    'perspective(82em) rotateX(19deg) rotateZ(-12deg) rotateY(30deg) translateX(50px)',
                 }}
               >
                 <DemoPokemonTeamBattleInfo />
