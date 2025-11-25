@@ -184,9 +184,18 @@ const Pokemon = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* <div
+        style={{
+          height: 600,
+          width: 600,
+          transform:
+            'perspective(82em) rotateX(19deg) rotateZ(-12deg) rotateY(30deg) translateX(50px)',
+        }}
+      > */}
       <FloatingPanel top={80} isVisible={true}>
         <ContextPokemonFloatingPanel />
       </FloatingPanel>
+      {/* </div> */}
       {/* <div className="px-4 sm:px-6 lg:px-8 py-8 flex min-w-0"> */}
       <div style={{ flexShrink: 100, minWidth: 0, overflow: 'hidden' }}>
         <div className="px-4 sm:px-6 lg:px-8 py-8 flex min-w-0">

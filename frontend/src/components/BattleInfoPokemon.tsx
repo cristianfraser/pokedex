@@ -230,7 +230,7 @@ const BattleInfoPokemon = ({
               <AnimatePresence mode="popLayout">
                 {[...battleInfoPokemonHistory]
                   .reverse()
-                  .slice(0, 6) // Ensure max 6 items are rendered
+                  // .slice(0, 6) // Ensure max 6 items are rendered
                   .map((pokemonId, index) => (
                     <HistoryCircle
                       key={
@@ -682,7 +682,19 @@ const HistoryCircle = forwardRef<
   return (
     <motion.div
       layout
-      layoutId={pokemonId !== null ? `history-${pokemonId}` : undefined}
+      // layoutId={pokemonId !== null ? `history-${pokemonId}` : undefined}
+      initial={{
+        transform: 'translateX(105%)',
+        width: 'calc((100% - 1.25rem) / 6)',
+        opacity: 0,
+        marginRight: '0.25rem',
+      }}
+      animate={{
+        transform: 'translateX(0)',
+        width: 'calc((100% - 1.25rem) / 6)',
+        opacity: 1,
+        marginRight: '0.25rem',
+      }}
       exit={{ width: 0, opacity: 0, marginRight: 0 }}
       transition={{ duration: 0.3, ease: 'easeIn' }}
       style={{
