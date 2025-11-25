@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import PokemonFloatingPanel from './PokemonFloatingPanel'
-import { usePokemonById } from '../queries/pokemon'
+import { fetchPokemonById, usePokemonById } from '../queries/pokemon'
 import { PokemonDetail } from '../queries/pokemon'
+import { useQueryClient } from '@tanstack/react-query'
 
 type PokemonMoves = Array<{
   name: string
@@ -59,6 +61,30 @@ const DemoPokemonTeamBattleInfo = () => {
   const [battleInfoPokemonId, setBattleInfoPokemonId] = useState<number | null>(
     () => randomIds[3]
   )
+
+  const queryClient = useQueryClient()
+  const [isReady, setIsReady] = useState(false)
+
+  useEffect(() => {
+    Promise.all([
+      queryClient.prefetchQuery({
+        queryKey: ['pokemon', 'byId', PRESET_POKEMON_IDS[0]!],
+        queryFn: () => fetchPokemonById(PRESET_POKEMON_IDS[0]!.toString()),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: ['pokemon', 'byId', PRESET_POKEMON_IDS[1]!],
+        queryFn: () => fetchPokemonById(PRESET_POKEMON_IDS[1]!.toString()),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: ['pokemon', 'byId', PRESET_POKEMON_IDS[2]!],
+        queryFn: () => fetchPokemonById(PRESET_POKEMON_IDS[2]!.toString()),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: ['pokemon', 'byId', randomIds[3]],
+        queryFn: () => fetchPokemonById(randomIds[3].toString()),
+      }),
+    ]).then(() => setIsReady(true))
+  }, [])
 
   // State for battle info history (6-length array)
   const [battleInfoPokemonHistory, setBattleInfoPokemonHistory] = useState<
@@ -143,12 +169,22 @@ const DemoPokemonTeamBattleInfo = () => {
 
   // Ref to store current battleInfoPokemonId to avoid dependency issues
   const battleInfoPokemonIdRef = useRef<number | null>(battleInfoPokemonId)
+  const previousBattleInfoPokemonIdRef = useRef<number | null>(null)
+
+  // Update refs when battleInfoPokemonId changes
+  useEffect(() => {
+    previousBattleInfoPokemonIdRef.current = battleInfoPokemonIdRef.current
+    battleInfoPokemonIdRef.current = battleInfoPokemonId
+  }, [battleInfoPokemonId])
 
   // Set up interval to randomly select Pokemon
   useEffect(() => {
     const interval = setInterval(() => {
       const currentId = battleInfoPokemonIdRef.current
-      const availableIds = randomIds.filter(id => id !== currentId)
+      const previousId = previousBattleInfoPokemonIdRef.current
+      const availableIds = randomIds.filter(
+        id => id !== currentId && id !== previousId
+      )
 
       if (availableIds.length > 0) {
         const randomIndex = Math.floor(Math.random() * availableIds.length)
@@ -160,28 +196,36 @@ const DemoPokemonTeamBattleInfo = () => {
     return () => clearInterval(interval)
   }, [handleSetBattleInfoPokemonId]) // Include handler in dependencies
 
+  if (!isReady) return null
+
   return (
-    <PokemonFloatingPanel
-      pokemonTeam={pokemonTeam}
-      selectPokemon={selectPokemon}
-      selectedPosition={selectedPosition}
-      removeInPosition={removeInPosition}
-      isTeamExpanded={isTeamExpanded}
-      battleInfoPokemonId={battleInfoPokemonId}
-      setBattleInfoPokemonId={handleSetBattleInfoPokemonId}
-      battleInfoPokemon={battleInfoPokemon}
-      isLoadingBattleInfoPokemon={isLoadingBattleInfoPokemon}
-      setHoveredDefensiveTypes={setHoveredDefensiveTypes}
-      setHoveredOffensiveTypes={setHoveredOffensiveTypes}
-      battleInfoPokemonHistory={battleInfoPokemonHistory}
-      contextMoves={contextMoves}
-      setPokemonMoves={setPokemonMoves}
-      hoveredDefensiveTypes={hoveredDefensiveTypes}
-      hoveredOffensiveTypes={hoveredOffensiveTypes}
-      addInPosition={addInPosition}
-      skipInitialAnimation={true}
-      hideCloseButton={true}
-    />
+    <motion.div
+      initial={{ y: 50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 1, ease: 'easeOut' }}
+    >
+      <PokemonFloatingPanel
+        pokemonTeam={pokemonTeam}
+        selectPokemon={selectPokemon}
+        selectedPosition={selectedPosition}
+        removeInPosition={removeInPosition}
+        isTeamExpanded={isTeamExpanded}
+        battleInfoPokemonId={battleInfoPokemonId}
+        setBattleInfoPokemonId={handleSetBattleInfoPokemonId}
+        battleInfoPokemon={battleInfoPokemon}
+        isLoadingBattleInfoPokemon={isLoadingBattleInfoPokemon}
+        setHoveredDefensiveTypes={setHoveredDefensiveTypes}
+        setHoveredOffensiveTypes={setHoveredOffensiveTypes}
+        battleInfoPokemonHistory={battleInfoPokemonHistory}
+        contextMoves={contextMoves}
+        setPokemonMoves={setPokemonMoves}
+        hoveredDefensiveTypes={hoveredDefensiveTypes}
+        hoveredOffensiveTypes={hoveredOffensiveTypes}
+        addInPosition={addInPosition}
+        skipInitialAnimation={true}
+        hideCloseButton={true}
+      />
+    </motion.div>
   )
 }
 
