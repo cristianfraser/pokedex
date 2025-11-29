@@ -10,6 +10,12 @@ import { useStyle } from '../contexts/StyleContext'
 import { useMoves } from '../queries/moves'
 import { usePokemonById } from '../queries/pokemon'
 import { calculateTypeEffectiveness, NONE_TYPE_MARKER } from '@/constants/types'
+import {
+  DeleteIcon,
+  SuperEffectiveIcon,
+  NotVeryEffectiveIcon,
+  ImmuneIcon,
+} from './icons'
 import './TeamPokemon.css'
 
 type PokemonMoves = Array<{
@@ -337,19 +343,7 @@ const TeamPokemon = ({
         className="team-pokemon-delete-button"
         aria-label="Remove Pokemon"
       >
-        <svg
-          className="team-pokemon-delete-icon"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
+        <DeleteIcon className="team-pokemon-delete-icon" />
       </button>
 
       {/* Left side: Image, Name, and Types */}
@@ -465,64 +459,17 @@ const TeamPokemon = ({
                     if (effectiveness === 0) {
                       // Immune - cross
                       icon = (
-                        <svg
-                          className="team-pokemon-effectiveness-icon-svg"
-                          viewBox="0 0 12 12"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          role="img"
-                          aria-label="No effect"
-                        >
-                          <title>No effect</title>
-                          <path d="M2 2 L10 10 M10 2 L2 10" />
-                        </svg>
+                        <ImmuneIcon className="team-pokemon-effectiveness-icon-svg" />
                       )
                     } else if (effectiveness < 1) {
                       // Resistant - triangle
                       icon = (
-                        <svg
-                          className="team-pokemon-effectiveness-icon-svg-gray"
-                          viewBox="0 0 12 12"
-                          fill="none"
-                          role="img"
-                          aria-label="Not very effective"
-                        >
-                          <title>Not very effective</title>
-                          <path
-                            d="M6 5.2 L7.5 8 L4.5 8 Z"
-                            fill="currentColor"
-                          />
-                          <path
-                            d="M6 1.5 L10.5 10 L1.5 10 Z"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            fill="none"
-                          />
-                        </svg>
+                        <NotVeryEffectiveIcon className="team-pokemon-effectiveness-icon-svg" />
                       )
                     } else if (effectiveness > 1) {
                       // Weak - circle
                       icon = (
-                        <svg
-                          className="team-pokemon-effectiveness-icon-svg-gray"
-                          viewBox="0 0 12 12"
-                          fill="none"
-                          role="img"
-                          aria-label="Super effective"
-                        >
-                          <title>Super effective</title>
-                          <circle cx="6" cy="6" r="2" fill="currentColor" />
-                          <circle
-                            cx="6"
-                            cy="6"
-                            r="4.5"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            fill="none"
-                          />
-                        </svg>
+                        <SuperEffectiveIcon className="team-pokemon-effectiveness-icon-svg" />
                       )
                     }
 
@@ -599,19 +546,7 @@ const TeamPokemon = ({
                       className="team-pokemon-clear-move-button"
                       aria-label="Clear move"
                     >
-                      <svg
-                        className="team-pokemon-clear-move-icon"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
+                      <DeleteIcon className="team-pokemon-clear-move-icon" />
                     </button>
                   </>
                 )}

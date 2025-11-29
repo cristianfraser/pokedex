@@ -11,6 +11,12 @@ import {
 } from '@/constants/types'
 import { PokemonCombobox } from './PokemonCombobox'
 import { cn } from '@/lib/utils'
+import {
+  DeleteIcon,
+  SuperEffectiveIcon,
+  NotVeryEffectiveIcon,
+  ImmuneIcon,
+} from './icons'
 
 interface BattleInfoPokemonProps {
   battleInfoPokemonId: number | null
@@ -267,19 +273,7 @@ const BattleInfoPokemon = ({
                   className="absolute top-1 left-1 w-6 h-6 flex items-center justify-center hover:bg-red-100 rounded-lg transition-colors z-10"
                   aria-label="Close battle info"
                 >
-                  <svg
-                    className="w-4 h-4 text-red-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <DeleteIcon className="w-4 h-4 text-red-600" />
                 </button>
               )}
               <div>
@@ -356,21 +350,7 @@ const BattleInfoPokemon = ({
                             }
                             onMouseLeave={() => setHoveredOffensiveTypes([])}
                           >
-                            <svg
-                              className="w-3 h-3 text-gray-600"
-                              viewBox="0 0 12 12"
-                              fill="none"
-                            >
-                              <circle cx="6" cy="6" r="2" fill="currentColor" />
-                              <circle
-                                cx="6"
-                                cy="6"
-                                r="4.5"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                fill="none"
-                              />
-                            </svg>
+                            <SuperEffectiveIcon className="w-3 h-3 text-gray-600" />
                             <p className="text-xs text-gray-600">
                               Strong against
                             </p>
@@ -403,22 +383,7 @@ const BattleInfoPokemon = ({
                             }
                             onMouseLeave={() => setHoveredOffensiveTypes([])}
                           >
-                            <svg
-                              className="w-3 h-3 text-gray-600"
-                              viewBox="0 0 12 12"
-                              fill="none"
-                            >
-                              <path
-                                d="M6 5.2 L7.5 8 L4.5 8 Z"
-                                fill="currentColor"
-                              />
-                              <path
-                                d="M6 1.5 L10.5 10 L1.5 10 Z"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                fill="none"
-                              />
-                            </svg>
+                            <NotVeryEffectiveIcon className="w-3 h-3 text-gray-600" />
                             <p className="text-xs text-gray-600">
                               Weak against
                             </p>
@@ -451,16 +416,7 @@ const BattleInfoPokemon = ({
                             }
                             onMouseLeave={() => setHoveredOffensiveTypes([])}
                           >
-                            <svg
-                              className="w-3 h-3 text-gray-700"
-                              viewBox="0 0 12 12"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            >
-                              <path d="M2 2 L10 10 M10 2 L2 10" />
-                            </svg>
+                            <ImmuneIcon className="w-3 h-3 text-gray-700" />
                             <p className="text-xs text-gray-600">No Effect</p>
                           </div>
                           <div className="flex flex-wrap gap-1">

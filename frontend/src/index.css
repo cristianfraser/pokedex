@@ -83,6 +83,36 @@
   .pokemon-font-2 {
     font-family: 'EssentiarumVG', sans-serif;
   }
+
+  /* Home page grid layout */
+  /* .home-content-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  } */
+
+  @media (min-width: 769px) {
+    .home-content-grid {
+      grid-template-columns: 3fr 4fr;
+    }
+  }
+
+  /* Demo Pokemon Team 3D transform */
+  .demo-pokemon-transform {
+    width: fit-content;
+    height: 330px;
+    overflow: hidden;
+    position: relative;
+    pointer-events: none;
+    margin: 10px auto 0;
+    transform: perspective(82em) rotateX(19deg) rotateZ(-12deg) rotateY(30deg)
+      translateX(50px);
+  }
+
+  @media (max-width: 768px) {
+    .demo-pokemon-transform {
+      transform: perspective(82em) rotateX(13deg) rotateZ(-8deg) rotateY(40deg)
+        translateX(-40px) scale(0.9);
+    }
+  }
 }
 
 @layer base {

@@ -128,12 +128,17 @@
   @apply absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 flex items-center;
 }
 
-.team-pokemon-effectiveness-icon-svg {
-  @apply w-3 h-3 text-gray-700;
+@media (max-width: 768px) {
+  .team-pokemon-effectiveness-icon {
+    transform: translateX(-80%) translateY(-50%);
+  }
 }
 
-.team-pokemon-effectiveness-icon-svg-gray {
-  @apply w-3 h-3 text-gray-600;
+.team-pokemon-effectiveness-icon-svg {
+  @apply w-3 h-3 text-gray-700 bg-gray-100;
+  box-shadow: 0 0 2px 2px rgb(243, 244, 246);
+  border-radius: 50%;
+  overflow: visible;
 }
 
 /* Move combobox trigger */
