@@ -45,6 +45,7 @@ interface PokemonContextType {
   setHoveredDefensiveTypes: (types: string[]) => void
   hoveredOffensiveTypes: string[]
   setHoveredOffensiveTypes: (types: string[]) => void
+  isTouch: boolean
 }
 
 const PokemonContext = createContext<PokemonContextType | undefined>(undefined)
@@ -219,6 +220,43 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
     }))
   }
 
+  // Detect if device is touch capable (not based on screen width)
+  const [isTouch, setIsTouch] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return (
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      (navigator as any).msMaxTouchPoints > 0 ||
+      window.matchMedia('(pointer: coarse)').matches
+    )
+  })
+
+  // Update touch detection on mount/resize (in case device capabilities change)
+  useEffect(() => {
+    const updateTouchDetection = () => {
+      setIsTouch(
+        'ontouchstart' in window ||
+          navigator.maxTouchPoints > 0 ||
+          (navigator as any).msMaxTouchPoints > 0 ||
+          window.matchMedia('(pointer: coarse)').matches
+      )
+    }
+
+    // Check on mount
+    updateTouchDetection()
+
+    // Listen for changes in pointer media query
+    const mediaQuery = window.matchMedia('(pointer: coarse)')
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', updateTouchDetection)
+      return () => mediaQuery.removeEventListener('change', updateTouchDetection)
+    } else {
+      // Fallback for older browsers
+      mediaQuery.addListener(updateTouchDetection)
+      return () => mediaQuery.removeListener(updateTouchDetection)
+    }
+  }, [])
+
   return (
     <PokemonContext.Provider
       value={{
@@ -244,6 +282,7 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
         setHoveredDefensiveTypes: debouncedSetHoveredDefensiveTypes,
         hoveredOffensiveTypes,
         setHoveredOffensiveTypes,
+        isTouch,
       }}
     >
       {children}

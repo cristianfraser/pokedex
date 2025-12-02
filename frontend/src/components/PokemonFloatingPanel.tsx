@@ -27,7 +27,7 @@ export interface PokemonFloatingPanelProps {
   hoveredOffensiveTypes: string[]
   addInPosition: (pokemonId: number, position: number) => void
   skipInitialAnimation?: boolean
-  hideCloseButton?: boolean
+  hideRemoveButton?: boolean
 }
 
 const PokemonFloatingPanel = ({
@@ -49,7 +49,7 @@ const PokemonFloatingPanel = ({
   hoveredOffensiveTypes,
   addInPosition,
   skipInitialAnimation = false,
-  hideCloseButton = false,
+  hideRemoveButton = false,
 }: PokemonFloatingPanelProps) => {
   return (
     <div className="overflow-x-hidden flex gap-2 bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative">
@@ -65,6 +65,7 @@ const PokemonFloatingPanel = ({
         hoveredDefensiveTypes={hoveredDefensiveTypes}
         hoveredOffensiveTypes={hoveredOffensiveTypes}
         addInPosition={addInPosition}
+        hideRemoveButton={hideRemoveButton}
       />
       <BattleInfoPokemon
         battleInfoPokemonId={battleInfoPokemonId}
@@ -75,7 +76,7 @@ const PokemonFloatingPanel = ({
         setHoveredOffensiveTypes={setHoveredOffensiveTypes}
         battleInfoPokemonHistory={battleInfoPokemonHistory}
         skipInitialAnimation={skipInitialAnimation}
-        hideCloseButton={hideCloseButton}
+        hideRemoveButton={hideRemoveButton}
       />
     </div>
   )

@@ -26,6 +26,7 @@ const Pokemon = () => {
     setBattleInfoPokemonId,
     isTeamExpanded,
     battleInfoPokemon,
+    isTeamLoading,
   } = usePokemonContext()
 
   // Check if a pokemon is already in the team
@@ -192,7 +193,7 @@ const Pokemon = () => {
             'perspective(82em) rotateX(19deg) rotateZ(-12deg) rotateY(30deg) translateX(50px)',
         }}
       > */}
-      <FloatingPanel top={80} isVisible={true}>
+      <FloatingPanel top={80} isVisible={!isTeamLoading}>
         <ContextPokemonFloatingPanel />
       </FloatingPanel>
       {/* </div> */}
@@ -203,7 +204,7 @@ const Pokemon = () => {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-3xl font-bold text-gray-900">
-                  Pokémon Database
+                  Build your team
                 </h1>
               </div>
               <div className="max-w-md">

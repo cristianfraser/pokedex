@@ -18,6 +18,7 @@ interface PokemonTeamProps {
   hoveredDefensiveTypes: string[]
   hoveredOffensiveTypes: string[]
   addInPosition: (pokemonId: number, position: number) => void
+  hideRemoveButton?: boolean
 }
 
 const PokemonTeam = ({
@@ -32,6 +33,7 @@ const PokemonTeam = ({
   hoveredDefensiveTypes,
   hoveredOffensiveTypes,
   addInPosition,
+  hideRemoveButton = false,
 }: PokemonTeamProps) => {
   return (
     <div className="flex gap-2 flex-col min-w-0">
@@ -52,6 +54,7 @@ const PokemonTeam = ({
           hoveredDefensiveTypes={hoveredDefensiveTypes}
           hoveredOffensiveTypes={hoveredOffensiveTypes}
           addInPosition={addInPosition}
+          hideRemoveButton={hideRemoveButton}
         />
       ))}
       {/* </div> */}

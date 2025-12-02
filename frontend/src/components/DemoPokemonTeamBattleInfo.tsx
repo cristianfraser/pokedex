@@ -223,7 +223,7 @@ const DemoPokemonTeamBattleInfo = () => {
         hoveredOffensiveTypes={hoveredOffensiveTypes}
         addInPosition={addInPosition}
         skipInitialAnimation={true}
-        hideCloseButton={true}
+        hideRemoveButton={true}
       />
     </motion.div>
   )

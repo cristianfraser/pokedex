@@ -7,6 +7,7 @@ import { MovesCombobox } from './MovesCombobox'
 import { PokemonCombobox } from './PokemonCombobox'
 import { cn } from '@/lib/utils'
 import { useStyle } from '../contexts/StyleContext'
+import { usePokemonContext } from '../contexts/PokemonContext'
 import { useMoves } from '../queries/moves'
 import { usePokemonById } from '../queries/pokemon'
 import { calculateTypeEffectiveness, NONE_TYPE_MARKER } from '@/constants/types'
@@ -37,6 +38,7 @@ interface TeamPokemonProps {
   hoveredDefensiveTypes: string[]
   hoveredOffensiveTypes: string[]
   addInPosition: (pokemonId: number, position: number) => void
+  hideRemoveButton?: boolean
 }
 
 const TeamPokemon = ({
@@ -52,6 +54,7 @@ const TeamPokemon = ({
   hoveredDefensiveTypes,
   hoveredOffensiveTypes,
   addInPosition,
+  hideRemoveButton = false,
 }: TeamPokemonProps) => {
   const { data: pokemon, isLoading: isLoadingPokemon } =
     usePokemonById(pokemonId)
@@ -92,10 +95,11 @@ const TeamPokemon = ({
   const [isAnimatingEmpty, setIsAnimatingEmpty] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const { isMobile } = useStyle()
+  const { isTouch } = usePokemonContext()
 
-  // Handle touch events on mobile to prevent double-tap issue
+  // Handle touch events on touch devices to prevent double-tap issue
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!isMobile) return
+    if (!isTouch) return
 
     const target = e.target as HTMLElement
 
@@ -136,9 +140,9 @@ const TeamPokemon = ({
   }
 
   const handleClick = (e: React.MouseEvent) => {
-    // On mobile, ignore click events if we already handled it via touch
+    // On touch devices, ignore click events if we already handled it via touch
     // This prevents double-firing
-    if (isMobile) {
+    if (isTouch) {
       const target = e.target as HTMLElement
       const movesArea = target.closest('.team-pokemon-moves')
       const moveItem = target.closest('.team-pokemon-move-item')
@@ -259,42 +263,8 @@ const TeamPokemon = ({
     return false
   }, [displayedPokemon, hoveredOffensiveTypes])
 
-  if (!displayedPokemon) {
-    return (
-      <div
-        onClick={onSelect}
-        className={cn(
-          'team-pokemon-empty',
-          isSelected
-            ? 'team-pokemon-empty-selected'
-            : 'team-pokemon-empty-unselected'
-        )}
-        style={{
-          height: '90px',
-          minHeight: '90px',
-          maxHeight: '90px',
-        }}
-      >
-        <PokemonCombobox
-          onValueChange={pokemonId => {
-            addInPosition(pokemonId, position)
-          }}
-          trigger={
-            <div
-              ref={emptyTextRef}
-              className="team-pokemon-empty-text hover:bg-gray-200 p-2 rounded"
-              style={{
-                opacity: isAnimatingEmpty ? 0 : undefined,
-                transition: isAnimatingEmpty ? 'none' : undefined,
-              }}
-            >
-              Empty
-            </div>
-          }
-        />
-      </div>
-    )
-  }
+  // Check if we're in empty state (no displayedPokemon and not loading)
+  const isEmpty = !displayedPokemon && !isLoadingPokemon
 
   return (
     <div
@@ -334,17 +304,19 @@ const TeamPokemon = ({
         transition: isLoadingPokemon ? 'opacity 0.2s ease-in-out' : undefined,
       }}
     >
-      {/* Delete button - top right */}
-      <button
-        onClick={e => {
-          e.stopPropagation()
-          onRemove()
-        }}
-        className="team-pokemon-delete-button"
-        aria-label="Remove Pokemon"
-      >
-        <DeleteIcon className="team-pokemon-delete-icon" />
-      </button>
+      {/* Delete button - top left */}
+      {!hideRemoveButton && !isEmpty && (
+        <button
+          onClick={e => {
+            e.stopPropagation()
+            onRemove()
+          }}
+          className="team-pokemon-delete-button"
+          aria-label="Remove Pokemon"
+        >
+          <DeleteIcon className="team-pokemon-delete-icon" />
+        </button>
+      )}
 
       {/* Left side: Image, Name, and Types */}
       <div
@@ -399,7 +371,7 @@ const TeamPokemon = ({
 
         {/* Types */}
         <AnimatedTypePills
-          types={displayedPokemon.types || null}
+          types={displayedPokemon?.types || null}
           size={isMobile ? 'icon' : 'small'}
         />
       </div>
@@ -408,15 +380,18 @@ const TeamPokemon = ({
       <div
         className="team-pokemon-moves"
         style={{
-          opacity: isExpanded ? 1 : 0,
-          width: isExpanded ? 130 : 0,
+          opacity: isEmpty ? 0 : isExpanded ? 1 : 0,
+          width: isEmpty ? (isExpanded ? 130 : 0) : isExpanded ? 130 : 0,
+          visibility: isEmpty ? ('hidden' as const) : undefined,
+          pointerEvents: isEmpty ? ('none' as const) : undefined,
           transition:
             'width 0.2s ease-in, opacity 0.2s ease-in, flex-basis 0.2s ease-in',
         }}
         onTouchEnd={e => e.stopPropagation()}
       >
-        {displayedPokemon &&
-          displayedMoves.map((move, index) => {
+        {/* Render 4 move items to maintain width when empty */}
+        {(displayedPokemon ? displayedMoves : [null, null, null, null]).map(
+          (move, index) => {
             const isHighlighted =
               hoveredDefensiveTypes.length > 0 &&
               move?.type &&
@@ -493,10 +468,14 @@ const TeamPokemon = ({
                 <MovesCombobox
                   key={index}
                   value={move?.name}
-                  pokemonId={displayedPokemon.id}
-                  selectedMoves={displayedMoves
-                    .filter((m, i) => m !== null && i !== index)
-                    .map(m => m!.name)}
+                  pokemonId={displayedPokemon?.id || 0}
+                  selectedMoves={
+                    displayedPokemon
+                      ? displayedMoves
+                          .filter((m, i) => m !== null && i !== index)
+                          .map(m => m!.name)
+                      : []
+                  }
                   onValueChange={(moveName, moveType, damageClass) => {
                     if (!displayedPokemon) return
                     const newMoves = [...displayedMoves]
@@ -552,8 +531,32 @@ const TeamPokemon = ({
                 )}
               </div>
             )
-          })}
+          }
+        )}
       </div>
+
+      {/* Empty state combobox - displayed over everything */}
+      {isEmpty && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <PokemonCombobox
+            onValueChange={pokemonId => {
+              addInPosition(pokemonId, position)
+            }}
+            trigger={
+              <div
+                ref={emptyTextRef}
+                className="team-pokemon-empty-text hover:bg-gray-200 p-2 rounded pointer-events-auto cursor-pointer"
+                style={{
+                  opacity: isAnimatingEmpty ? 0 : undefined,
+                  transition: isAnimatingEmpty ? 'none' : undefined,
+                }}
+              >
+                Empty
+              </div>
+            }
+          />
+        </div>
+      )}
     </div>
   )
 }

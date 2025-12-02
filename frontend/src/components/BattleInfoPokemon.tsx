@@ -27,7 +27,7 @@ interface BattleInfoPokemonProps {
   setHoveredOffensiveTypes: (types: string[]) => void
   battleInfoPokemonHistory: (number | null)[]
   skipInitialAnimation?: boolean
-  hideCloseButton?: boolean
+  hideRemoveButton?: boolean
 }
 
 const BattleInfoPokemon = ({
@@ -39,11 +39,12 @@ const BattleInfoPokemon = ({
   setHoveredOffensiveTypes,
   battleInfoPokemonHistory,
   skipInitialAnimation = false,
-  hideCloseButton = false,
+  hideRemoveButton = false,
 }: BattleInfoPokemonProps) => {
   const { isMobile } = useStyle()
   const [displayedPokemon, setDisplayedPokemon] =
     useState<PokemonDetail | null>(battleInfoPokemon || null)
+  const mouseHasMovedRef = useRef(true)
 
   useEffect(() => {
     if (battleInfoPokemon) {
@@ -53,6 +54,25 @@ const BattleInfoPokemon = ({
       setDisplayedPokemon(null)
     }
   }, [battleInfoPokemon, battleInfoPokemonId])
+
+  // Track mouse movement to allow mouseenter after combobox closes
+  useEffect(() => {
+    const handleMouseMove = () => {
+      mouseHasMovedRef.current = true
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
+  // Helper function to handle mouseenter with combobox close protection
+  const handleMouseEnter = (handler: () => void) => {
+    // If mouse hasn't moved since combobox closed, ignore the event
+    if (!mouseHasMovedRef.current) {
+      return
+    }
+    handler()
+  }
 
   // Format height and weight
   const heightInMeters = displayedPokemon ? displayedPokemon.height / 10 : 0
@@ -267,7 +287,7 @@ const BattleInfoPokemon = ({
               }`}
             >
               {/* Close button - top right */}
-              {!hideCloseButton && (
+              {!hideRemoveButton && (
                 <button
                   onClick={() => setBattleInfoPokemonId(null)}
                   className="absolute top-1 left-1 w-6 h-6 flex items-center justify-center hover:bg-red-100 rounded-lg transition-colors z-10"
@@ -300,6 +320,8 @@ const BattleInfoPokemon = ({
                   <PokemonCombobox
                     value={displayedPokemon?.id ?? null}
                     onValueChange={pokemonId => {
+                      // Mark that mouse hasn't moved since combobox closed
+                      mouseHasMovedRef.current = false
                       setBattleInfoPokemonId(pokemonId)
                     }}
                     trigger={
@@ -449,8 +471,10 @@ const BattleInfoPokemon = ({
                       <div
                         className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
                         onMouseEnter={() =>
-                          setHoveredDefensiveTypes(
-                            weakTo.length > 0 ? weakTo : [NONE_TYPE_MARKER]
+                          handleMouseEnter(() =>
+                            setHoveredDefensiveTypes(
+                              weakTo.length > 0 ? weakTo : [NONE_TYPE_MARKER]
+                            )
                           )
                         }
                         onMouseLeave={() => setHoveredDefensiveTypes([])}
@@ -467,7 +491,9 @@ const BattleInfoPokemon = ({
                               type={{ name: typeName }}
                               size="small"
                               onMouseEnter={() =>
-                                setHoveredDefensiveTypes([typeName])
+                                handleMouseEnter(() =>
+                                  setHoveredDefensiveTypes([typeName])
+                                )
                               }
                               onMouseLeave={() => setHoveredDefensiveTypes([])}
                             />
@@ -477,7 +503,9 @@ const BattleInfoPokemon = ({
                             type={{ name: 'none' }}
                             size="small"
                             onMouseEnter={() =>
-                              setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                              handleMouseEnter(() =>
+                                setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                              )
                             }
                             onMouseLeave={() => setHoveredDefensiveTypes([])}
                           />
@@ -490,8 +518,10 @@ const BattleInfoPokemon = ({
                       <div
                         className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
                         onMouseEnter={() =>
-                          setHoveredDefensiveTypes(
-                            resists.length > 0 ? resists : [NONE_TYPE_MARKER]
+                          handleMouseEnter(() =>
+                            setHoveredDefensiveTypes(
+                              resists.length > 0 ? resists : [NONE_TYPE_MARKER]
+                            )
                           )
                         }
                         onMouseLeave={() => setHoveredDefensiveTypes([])}
@@ -508,7 +538,9 @@ const BattleInfoPokemon = ({
                               type={{ name: typeName }}
                               size="small"
                               onMouseEnter={() =>
-                                setHoveredDefensiveTypes([typeName])
+                                handleMouseEnter(() =>
+                                  setHoveredDefensiveTypes([typeName])
+                                )
                               }
                               onMouseLeave={() => setHoveredDefensiveTypes([])}
                             />
@@ -518,7 +550,9 @@ const BattleInfoPokemon = ({
                             type={{ name: 'none' }}
                             size="small"
                             onMouseEnter={() =>
-                              setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                              handleMouseEnter(() =>
+                                setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                              )
                             }
                             onMouseLeave={() => setHoveredDefensiveTypes([])}
                           />
@@ -531,8 +565,10 @@ const BattleInfoPokemon = ({
                       <div
                         className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
                         onMouseEnter={() =>
-                          setHoveredDefensiveTypes(
-                            immune.length > 0 ? immune : [NONE_TYPE_MARKER]
+                          handleMouseEnter(() =>
+                            setHoveredDefensiveTypes(
+                              immune.length > 0 ? immune : [NONE_TYPE_MARKER]
+                            )
                           )
                         }
                         onMouseLeave={() => setHoveredDefensiveTypes([])}
@@ -549,7 +585,9 @@ const BattleInfoPokemon = ({
                               type={{ name: typeName }}
                               size="small"
                               onMouseEnter={() =>
-                                setHoveredDefensiveTypes([typeName])
+                                handleMouseEnter(() =>
+                                  setHoveredDefensiveTypes([typeName])
+                                )
                               }
                               onMouseLeave={() => setHoveredDefensiveTypes([])}
                             />
@@ -559,7 +597,9 @@ const BattleInfoPokemon = ({
                             type={{ name: 'none' }}
                             size="small"
                             onMouseEnter={() =>
-                              setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                              handleMouseEnter(() =>
+                                setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                              )
                             }
                             onMouseLeave={() => setHoveredDefensiveTypes([])}
                           />
