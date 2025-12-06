@@ -6,6 +6,7 @@ interface BlurImageProps {
   className?: string
   style?: React.CSSProperties
   dominantColor?: string | null
+  blurAmount?: number
 }
 
 function BlurImage({
@@ -14,6 +15,7 @@ function BlurImage({
   className,
   style,
   dominantColor,
+  blurAmount = 20,
 }: BlurImageProps) {
   const [loaded, setLoaded] = useState(false)
 
@@ -52,9 +54,9 @@ function BlurImage({
           width: '40%',
           height: '40%',
           borderRadius: '50%',
-          filter: 'blur(20px)',
+          filter: `blur(${blurAmount}px)`,
           opacity: loaded ? 0 : 1,
-          transition: 'opacity 0.3s',
+          transition: 'opacity 1s',
         }}
       />
       {/* Full image */}
@@ -65,7 +67,7 @@ function BlurImage({
         className={imageClasses}
         style={{
           opacity: loaded ? 1 : 0,
-          transition: 'opacity 0.3s',
+          transition: 'opacity 1s',
           position: 'relative',
           width: '100%',
           height: '100%',

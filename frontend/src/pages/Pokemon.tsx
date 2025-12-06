@@ -339,6 +339,7 @@ const Pokemon = () => {
                                     className="w-10 h-10"
                                     style={{ color: 'transparent' }}
                                     dominantColor={pokemon.dominant_color}
+                                    blurAmount={8}
                                   />
                                 ) : (
                                   <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-400 text-xs">

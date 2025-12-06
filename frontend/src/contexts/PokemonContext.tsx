@@ -73,6 +73,10 @@ export const PokemonProvider = ({ children }: { children: ReactNode }) => {
 
   // Wrapper function to handle history when setting battleInfoPokemonId
   const setBattleInfoPokemonId = useCallback((pokemonId: number | null) => {
+    // Clear hover types when battleInfoPokemonId changes
+    setHoveredDefensiveTypes([])
+    setHoveredOffensiveTypes([])
+
     setBattleInfoPokemonIdState(prevId => {
       // If opening from null (closed), expand the team
       if (prevId === null && pokemonId !== null) {
