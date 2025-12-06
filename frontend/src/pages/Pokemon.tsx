@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import Button from '../components/Button'
 import TypePill from '../components/TypePill'
+import BlurImage from '../components/BlurImage'
 import { usePokemonList, PokemonDetail } from '../queries/pokemon'
 import { useDebounce } from '../hooks/useDebounce'
 import { usePokemonContext } from '../contexts/PokemonContext'
@@ -26,7 +27,6 @@ const Pokemon = () => {
     setBattleInfoPokemonId,
     isTeamExpanded,
     battleInfoPokemon,
-    isTeamLoading,
   } = usePokemonContext()
 
   // Check if a pokemon is already in the team
@@ -193,7 +193,7 @@ const Pokemon = () => {
             'perspective(82em) rotateX(19deg) rotateZ(-12deg) rotateY(30deg) translateX(50px)',
         }}
       > */}
-      <FloatingPanel top={80} isVisible={!isTeamLoading}>
+      <FloatingPanel top={80}>
         <ContextPokemonFloatingPanel />
       </FloatingPanel>
       {/* </div> */}
@@ -333,11 +333,12 @@ const Pokemon = () => {
                                 style={{ width: 40 }}
                               >
                                 {pokemon.sprites.front_default ? (
-                                  <img
+                                  <BlurImage
                                     src={pokemon.sprites.front_default}
                                     alt={pokemon.name}
-                                    className="w-10 h-10 object-contain"
+                                    className="w-10 h-10"
                                     style={{ color: 'transparent' }}
+                                    dominantColor={pokemon.dominant_color}
                                   />
                                 ) : (
                                   <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-400 text-xs">

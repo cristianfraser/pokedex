@@ -49,6 +49,7 @@ export async function initializeSchema(pool: Pool) {
         color VARCHAR(255),
         habitat VARCHAR(255),
         flavor_text TEXT,
+        dominant_color VARCHAR(7),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `)

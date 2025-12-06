@@ -11,16 +11,21 @@
     "seed": "tsx src/scripts/seed.ts",
     "image-seed": "tsx src/scripts/image-seed.ts",
     "db:migrate": "tsx src/db/migrate.ts",
-    "migrate:stat-short-names": "tsx src/db/migrations/add-stat-short-names.ts"
+    "migrate:stat-short-names": "tsx src/db/migrations/add-stat-short-names.ts",
+    "migrate:dominant-color": "tsx src/db/migrations/add-dominant-color.ts",
+    "calculate-colors": "tsx src/scripts/calculate-dominant-colors.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "pg": "^8.11.3"
+    "get-pixels": "^3.3.3",
+    "pg": "^8.11.3",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/get-pixels": "^3",
     "@types/node": "^20.10.6",
     "@types/pg": "^8.10.9",
     "tsx": "^4.7.0",

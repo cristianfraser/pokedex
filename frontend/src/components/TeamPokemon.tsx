@@ -1,8 +1,9 @@
-import { useLayoutEffect, useRef, useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { PokemonDetail } from '../queries/pokemon'
 import AnimatedTypePills from './AnimatedTypePills'
 import TypePill from './TypePill'
+import BlurImage from './BlurImage'
 import { MovesCombobox } from './MovesCombobox'
 import { PokemonCombobox } from './PokemonCombobox'
 import { cn } from '@/lib/utils'
@@ -92,7 +93,6 @@ const TeamPokemon = ({
     }
   }, [pokemon, displayedPokemon, contextMoves])
 
-  const [isAnimatingEmpty, setIsAnimatingEmpty] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const { isMobile } = useStyle()
   const { isTouch } = usePokemonContext()
@@ -204,51 +204,6 @@ const TeamPokemon = ({
     }
     return false
   }, [displayedMoves, hoveredDefensiveTypes, displayedPokemon])
-  const emptyTextRef = useRef<HTMLDivElement>(null)
-  const previousPokemonRef = useRef<PokemonDetail | null>(null)
-
-  // Handle empty text fade animation when transitioning from Pokemon to empty
-  useLayoutEffect(() => {
-    if (!displayedPokemon && previousPokemonRef.current) {
-      // Transitioning from Pokemon to empty: animate empty fade-in
-      setIsAnimatingEmpty(true)
-    }
-    previousPokemonRef.current = displayedPokemon || null
-  }, [displayedPokemon])
-
-  // Handle empty text fade animation
-  useLayoutEffect(() => {
-    if (isAnimatingEmpty) {
-      // Apply initial state immediately (no transition) before paint
-      if (emptyTextRef.current) {
-        emptyTextRef.current.style.transition = 'none'
-        emptyTextRef.current.style.opacity = '0'
-      }
-
-      // After paint, enable transition and animate
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (emptyTextRef.current) {
-            emptyTextRef.current.style.transition = 'opacity 0.3s ease-out'
-            emptyTextRef.current.style.opacity = '1'
-          }
-
-          // After animation completes, reset
-          setTimeout(() => {
-            setIsAnimatingEmpty(false)
-            if (emptyTextRef.current) {
-              emptyTextRef.current.style.transition = ''
-              emptyTextRef.current.style.opacity = ''
-            }
-          }, 300)
-        })
-      })
-    } else if (!isAnimatingEmpty && emptyTextRef.current) {
-      // No animation needed, reset styles
-      emptyTextRef.current.style.transition = ''
-      emptyTextRef.current.style.opacity = ''
-    }
-  }, [isAnimatingEmpty])
 
   // Check if this pokemon has the hovered offensive type
   const hasHoveredOffensiveType = useMemo(() => {
@@ -340,11 +295,12 @@ const TeamPokemon = ({
                 transition={{ duration: 0.3 }}
               >
                 {displayedPokemon.sprites.front_default ? (
-                  <img
+                  <BlurImage
                     src={displayedPokemon.sprites.front_default}
                     alt={displayedPokemon.name}
                     className="team-pokemon-image"
                     style={{ color: 'transparent' }}
+                    dominantColor={displayedPokemon.dominant_color}
                   />
                 ) : null}
                 <PokemonCombobox
@@ -536,27 +492,29 @@ const TeamPokemon = ({
       </div>
 
       {/* Empty state combobox - displayed over everything */}
-      {isEmpty && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <PokemonCombobox
-            onValueChange={pokemonId => {
-              addInPosition(pokemonId, position)
-            }}
-            trigger={
-              <div
-                ref={emptyTextRef}
-                className="team-pokemon-empty-text hover:bg-gray-200 p-2 rounded pointer-events-auto cursor-pointer"
-                style={{
-                  opacity: isAnimatingEmpty ? 0 : undefined,
-                  transition: isAnimatingEmpty ? 'none' : undefined,
-                }}
-              >
-                Empty
-              </div>
-            }
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {isEmpty && (
+          <motion.div
+            key="empty-state"
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <PokemonCombobox
+              onValueChange={pokemonId => {
+                addInPosition(pokemonId, position)
+              }}
+              trigger={
+                <div className="team-pokemon-empty-text hover:bg-gray-200 p-2 rounded pointer-events-auto cursor-pointer">
+                  Empty
+                </div>
+              }
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

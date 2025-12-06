@@ -57,7 +57,7 @@ router.get('/list', async (req, res) => {
       SELECT DISTINCT
         p.id, p.name, p.pokedex_number, p.height, p.weight, p.base_experience,
         p.sprite_front_default, p.sprite_front_shiny, p.sprite_official_artwork,
-        p.is_legendary, p.is_mythical, p.color, p.habitat, p.flavor_text
+        p.is_legendary, p.is_mythical, p.color, p.habitat, p.flavor_text, p.dominant_color
       FROM pokemon p
       ${whereClause}
       ORDER BY p.pokedex_number ASC
@@ -81,6 +81,7 @@ router.get('/list', async (req, res) => {
       color: string | null
       habitat: string | null
       flavor_text: string | null
+      dominant_color: string | null
     }>
 
     // Get types and stats for each Pokemon
@@ -169,6 +170,7 @@ router.get('/list', async (req, res) => {
             : undefined,
           is_legendary: p.is_legendary === 1,
           is_mythical: p.is_mythical === 1,
+          dominant_color: p.dominant_color || undefined,
         }
       })
     )
@@ -246,6 +248,7 @@ router.get('/:id', async (req, res) => {
       color: string | null
       habitat: string | null
       flavor_text: string | null
+      dominant_color: string | null
     }
 
     // Get types
@@ -334,6 +337,7 @@ router.get('/:id', async (req, res) => {
         : undefined,
       is_legendary: pokemon.is_legendary === 1,
       is_mythical: pokemon.is_mythical === 1,
+      dominant_color: pokemon.dominant_color || undefined,
     }
 
     res.json(response)

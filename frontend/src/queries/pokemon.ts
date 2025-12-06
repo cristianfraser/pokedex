@@ -82,6 +82,7 @@ export interface PokemonDetail {
   }
   is_legendary?: boolean
   is_mythical?: boolean
+  dominant_color?: string
 }
 
 const POKEMON_PER_PAGE = 100

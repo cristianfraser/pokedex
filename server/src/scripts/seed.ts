@@ -444,6 +444,17 @@ async function main() {
     await seedMoves(pool) // Seed all moves (can add limit if needed)
 
     console.log('Database seed completed successfully!')
+
+    // Calculate dominant colors after seeding
+    console.log('\nCalculating dominant colors from images...')
+    try {
+      const { calculateDominantColors } = await import('./calculate-dominant-colors.js')
+      await calculateDominantColors(pool)
+      console.log('Dominant colors calculated successfully!')
+    } catch (error) {
+      console.warn('Warning: Could not calculate dominant colors:', (error as Error).message)
+      console.warn('You can run "yarn calculate-colors" separately to calculate colors later.')
+    }
   } catch (error) {
     console.error('Error seeding database:', error)
     process.exit(1)

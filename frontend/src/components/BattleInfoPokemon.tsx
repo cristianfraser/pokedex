@@ -4,6 +4,7 @@ import { AnimatePresence, motion, Target } from 'framer-motion'
 import { useStyle } from '../contexts/StyleContext'
 import AnimatedTypePills from './AnimatedTypePills'
 import TypePill from './TypePill'
+import BlurImage from './BlurImage'
 import {
   calculateTypeEffectiveness,
   typeEffectiveness,
@@ -308,11 +309,12 @@ const BattleInfoPokemon = ({
                 >
                   <div className="flex-shrink-0">
                     {displayedPokemon.sprites.front_default ? (
-                      <img
+                      <BlurImage
                         src={displayedPokemon.sprites.front_default}
                         alt={displayedPokemon.name}
-                        className="w-20 h-24 sm:w-24 -ml-2 object-contain"
+                        className="w-20 h-24 sm:w-24 -ml-2"
                         style={{ color: 'transparent', fontSize: 0 }}
+                        dominantColor={displayedPokemon.dominant_color}
                       />
                     ) : null}
                   </div>
@@ -710,11 +712,12 @@ const HistoryCircle = forwardRef<
     >
       <div ref={ref}>
         {pokemon?.sprites.front_default ? (
-          <img
+          <BlurImage
             src={pokemon.sprites.front_default}
             alt={pokemon.name}
-            className="w-full object-contain"
+            className="w-full"
             style={{ color: 'transparent', fontSize: 0 }}
+            dominantColor={pokemon.dominant_color}
           />
         ) : (
           <img
