@@ -3,10 +3,10 @@ import { Link, NavLink } from 'react-router-dom'
 const Header = () => {
   return (
     <header
-      className={`top-2 right-2 left-2 absolute transition-all ease-[cubic-bezier(0.4,0,0.2,1)] md:header-floating sm:header-expanded`}
+      className={`top-2 right-2 left-2 absolute transition-all md:header-floating sm:header-expanded`}
     >
       <div
-        className={`w-full shadow-lg border px-4 sm:px-6 lg:px-8 transition-all ease-[cubic-bezier(0.4,0,0.2,1)] header-floating`}
+        className={`w-full shadow-lg border px-4 sm:px-6 lg:px-8 transition-all header-floating`}
         style={{
           borderRadius: '12px',
           backgroundColor: `rgba(255, 255, 255, 0.7)`,
