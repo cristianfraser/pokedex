@@ -46,6 +46,7 @@ const BattleInfoPokemon = ({
   const [displayedPokemon, setDisplayedPokemon] =
     useState<PokemonDetail | null>(battleInfoPokemon || null)
   const mouseHasMovedRef = useRef(true)
+  const [imageLoaded, setImageLoaded] = useState(false)
 
   useEffect(() => {
     if (battleInfoPokemon) {
@@ -302,15 +303,8 @@ const BattleInfoPokemon = ({
                 </button>
               )}
               <div>
-                {/* Pokemon Image */}
-                <motion.div
-                  key={`pokemon-info-${displayedPokemon.id}`}
-                  className="flex items-center relative"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
+                {/* Pokemon Image, name and number */}
+                <div className="flex items-center relative">
                   <div className="flex-shrink-0">
                     {displayedPokemon.sprites.front_default ? (
                       <BlurImage
@@ -319,40 +313,54 @@ const BattleInfoPokemon = ({
                         className="w-20 h-24 sm:w-24 -ml-2"
                         style={{ color: 'transparent', fontSize: 0 }}
                         dominantColor={displayedPokemon.dominant_color}
+                        showBlur={isLoadingBattleInfoPokemon}
+                        setLoaded={setImageLoaded}
                       />
                     ) : null}
                   </div>
                   {/* Name and Number */}
-                  <PokemonCombobox
-                    value={displayedPokemon?.id ?? null}
-                    onValueChange={pokemonId => {
-                      // Mark that mouse hasn't moved since combobox closed
-                      mouseHasMovedRef.current = false
-                      setBattleInfoPokemonId(pokemonId)
-                    }}
-                    trigger={
-                      <div
-                        className="text-left relative cursor-pointer hover:opacity-80 transition-opacity"
-                        style={{
-                          boxShadow: '-5px 0px 20px 14px rgb(255 255 255)',
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          position: 'absolute',
-                          left: '50%',
-                          top: '50%',
-                          transform: 'translate(-50%, -50%)',
-                          height: 60,
-                        }}
-                      >
-                        <p className="text-sm text-gray-500">
-                          #{displayedPokemon.pokedexNumber}
-                        </p>
-                        <h3 className="text-sm font-bold text-gray-900 capitalize">
-                          {displayedPokemon.name}
-                        </h3>
-                      </div>
-                    }
-                  />
-                </motion.div>
+                  <motion.div
+                    key={`pokemon-info-${displayedPokemon.id}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <PokemonCombobox
+                      value={displayedPokemon?.id ?? null}
+                      onValueChange={pokemonId => {
+                        // Mark that mouse hasn't moved since combobox closed
+                        mouseHasMovedRef.current = false
+                        setBattleInfoPokemonId(pokemonId)
+                      }}
+                      trigger={
+                        <div
+                          className="text-left relative cursor-pointer hover:opacity-80 transition-opacity"
+                          style={{
+                            boxShadow: `-5px 0px 20px 14px ${isLoadingBattleInfoPokemon || !imageLoaded ? 'rgba(255, 255, 255, 0)' : 'rgb(255 255 255)'}`,
+                            backgroundColor:
+                              isLoadingBattleInfoPokemon || !imageLoaded
+                                ? 'rgba(255, 255, 255, 0)'
+                                : 'rgba(255, 255, 255, 0.9)',
+                            position: 'absolute',
+                            left: '50%',
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            height: 60,
+                            transition: 'background-color 1s, box-shadow 1s',
+                          }}
+                        >
+                          <p className="text-sm text-gray-500">
+                            #{displayedPokemon.pokedexNumber}
+                          </p>
+                          <h3 className="text-sm font-bold text-gray-900 capitalize">
+                            {displayedPokemon.name}
+                          </h3>
+                        </div>
+                      }
+                    />
+                  </motion.div>
+                </div>
                 {/* Types */}
                 <div className="width-full -mt-2">
                   <AnimatedTypePills types={displayedPokemon.types} />

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface BlurImageProps {
   src: string | null
@@ -7,6 +7,8 @@ interface BlurImageProps {
   style?: React.CSSProperties
   dominantColor?: string | null
   blurAmount?: number
+  showBlur?: boolean
+  setLoaded?: (loaded: boolean) => void
 }
 
 function BlurImage({
@@ -16,8 +18,20 @@ function BlurImage({
   style,
   dominantColor,
   blurAmount = 20,
+  showBlur,
+  setLoaded: setLoadedCallback,
 }: BlurImageProps) {
   const [loaded, setLoaded] = useState(false)
+
+  // Reset loaded state when src changes
+  useEffect(() => {
+    setLoaded(false)
+    setLoadedCallback?.(false)
+    // if (showBlur) {
+    //   setLoaded(false)
+    //   setLoadedCallback?.(false)
+    // }
+  }, [src, showBlur])
 
   if (!src) {
     return null
@@ -38,6 +52,14 @@ function BlurImage({
   // Default to a light gray if no dominant color is provided
   const backgroundColor = dominantColor || '#e5e7eb'
 
+  // if (test) {
+  //   console.log({
+  //     src,
+  //     loaded,
+  //     showBlur,
+  //   })
+  // }
+
   return (
     <div
       className={containerClasses}
@@ -55,19 +77,22 @@ function BlurImage({
           height: '40%',
           borderRadius: '50%',
           filter: `blur(${blurAmount}px)`,
-          opacity: loaded ? 0 : 1,
-          transition: 'opacity 1s',
+          opacity: showBlur ? 1 : loaded ? 0 : 1,
+          transition: `opacity ${showBlur ? 0.3 : 1}s, backgroundColor 0.3s`,
         }}
       />
       {/* Full image */}
       <img
         src={src}
         alt={alt}
-        onLoad={() => setLoaded(true)}
+        onLoad={() => {
+          setLoaded(true)
+          setLoadedCallback?.(true)
+        }}
         className={imageClasses}
         style={{
-          opacity: loaded ? 1 : 0,
-          transition: 'opacity 1s',
+          opacity: showBlur ? 0 : loaded ? 1 : 0,
+          transition: `opacity ${showBlur ? 0.3 : 1}s`,
           position: 'relative',
           width: '100%',
           height: '100%',
