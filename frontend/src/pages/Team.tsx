@@ -46,7 +46,6 @@ const Team = () => {
           setHoveredOffensiveTypes={setHoveredOffensiveTypes}
           battleInfoPokemonHistory={battleInfoPokemonHistory}
           alwaysShow={true}
-          hideRemoveButton={true}
           skipInitialAnimation={true}
         />
       </div>

@@ -1,5 +1,4 @@
 import { Routes, Route, Outlet } from 'react-router-dom'
-import { ThemeProvider } from '@crfrsr/design-system-react'
 import { PokemonProvider } from './contexts/PokemonContext'
 import { StyleProvider } from './contexts/StyleContext'
 import { TooltipProvider } from './components/ui/tooltip'
@@ -9,6 +8,7 @@ import Pokemon from './pages/Pokemon'
 import PokemonDetail from './pages/PokemonDetail'
 import About from './pages/About'
 import Team from './pages/Team'
+import ThemeProviderWrapper from './components/ThemeProviderWrapper'
 
 function AppContent() {
   return (
@@ -40,7 +40,7 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider skipBodyFontFamily>
+    <ThemeProviderWrapper skipBodyFontFamily>
       <TooltipProvider delayDuration={0}>
         <StyleProvider>
           <PokemonProvider>
@@ -48,7 +48,7 @@ function App() {
           </PokemonProvider>
         </StyleProvider>
       </TooltipProvider>
-    </ThemeProvider>
+    </ThemeProviderWrapper>
   )
 }
 
