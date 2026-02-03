@@ -8,6 +8,7 @@ import Home from './pages/Home'
 import Pokemon from './pages/Pokemon'
 import PokemonDetail from './pages/PokemonDetail'
 import About from './pages/About'
+import Team from './pages/Team'
 
 function AppContent() {
   return (
@@ -30,6 +31,7 @@ function AppContent() {
             <Route path=":id" element={<PokemonDetail />} />
           </Route>
           <Route path="/about" element={<About />} />
+          <Route path="/team" element={<Team />} />
         </Routes>
       </main>
     </div>

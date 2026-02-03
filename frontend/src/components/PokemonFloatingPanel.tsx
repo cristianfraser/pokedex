@@ -28,6 +28,7 @@ export interface PokemonFloatingPanelProps {
   addInPosition: (pokemonId: number, position: number) => void
   skipInitialAnimation?: boolean
   hideRemoveButton?: boolean
+  alwaysShow?: boolean
 }
 
 const PokemonFloatingPanel = ({
@@ -50,6 +51,7 @@ const PokemonFloatingPanel = ({
   addInPosition,
   skipInitialAnimation = false,
   hideRemoveButton = false,
+  alwaysShow = false,
 }: PokemonFloatingPanelProps) => {
   return (
     <div className="overflow-x-hidden flex gap-2 bg-white/80 backdrop-blur-xl shadow-lg border border-gray-200/50 rounded-xl p-2 relative">
@@ -77,6 +79,7 @@ const PokemonFloatingPanel = ({
         battleInfoPokemonHistory={battleInfoPokemonHistory}
         skipInitialAnimation={skipInitialAnimation}
         hideRemoveButton={hideRemoveButton}
+        alwaysShow={alwaysShow}
       />
     </div>
   )

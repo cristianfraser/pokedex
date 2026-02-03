@@ -5,10 +5,11 @@ interface FloatingPanelProps {
   top: number
   children: ReactNode
   offsetRight?: number // Offset from right edge (for positioning second panel)
+  hideCollapseButton?: boolean // Hide the collapse/expand button
 }
 
 const FloatingPanel = forwardRef<HTMLDivElement, FloatingPanelProps>(
-  ({ top, children }, ref) => {
+  ({ top, children, hideCollapseButton = false }, ref) => {
     const { isTeamExpanded, setIsTeamExpanded } = usePokemonContext()
     return (
       <div
@@ -22,30 +23,32 @@ const FloatingPanel = forwardRef<HTMLDivElement, FloatingPanelProps>(
           maxWidth: 'calc(100% - 1rem)',
         }}
       >
-        <button
-          onClick={() => setIsTeamExpanded(prevIsExpanded => !prevIsExpanded)}
-          className="absolute top-2 -left-2 w-6 h-6 flex items-center justify-center text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded transition-colors z-10"
-          style={{ transform: 'translateX(calc(-100%))' }}
-          aria-label={isTeamExpanded ? 'Collapse panel' : 'Expand panel'}
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            style={{
-              transform: isTeamExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s ease-in-out',
-            }}
+        {!hideCollapseButton && (
+          <button
+            onClick={() => setIsTeamExpanded(prevIsExpanded => !prevIsExpanded)}
+            className="absolute top-2 -left-2 w-6 h-6 flex items-center justify-center text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded transition-colors z-10"
+            style={{ transform: 'translateX(calc(-100%))' }}
+            aria-label={isTeamExpanded ? 'Collapse panel' : 'Expand panel'}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              style={{
+                transform: isTeamExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease-in-out',
+              }}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        )}
         {children}
       </div>
     )

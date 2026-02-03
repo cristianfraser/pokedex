@@ -40,6 +40,14 @@ const Header = () => {
               Pokémon
             </NavLink>
             <NavLink
+              to="/team"
+              className={({ isActive }) =>
+                `nav-link ${isActive ? 'active' : ''}`
+              }
+            >
+              Team
+            </NavLink>
+            <NavLink
               to="/about"
               className={({ isActive }) =>
                 `nav-link ${isActive ? 'active' : ''}`

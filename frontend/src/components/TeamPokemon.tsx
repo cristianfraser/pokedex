@@ -363,8 +363,8 @@ const TeamPokemon = ({
                 style={{
                   transition: 'transform 0.1s ease-in',
                   transform: isHighlighted
-                    ? 'translateY(0)'
-                    : 'translateY(2px)',
+                    ? 'translate(0, 0)'
+                    : 'translate(1px, 2px)',
                 }}
                 onClick={e => e.stopPropagation()}
                 onTouchEnd={e => e.stopPropagation()}

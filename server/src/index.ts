@@ -15,7 +15,13 @@ const PORT = process.env.PORT || 3001
 // Allow your frontend domain
 app.use(
   cors({
-    origin: ['https://pokedex-6wpt.onrender.com', 'https://poketeam.crfrsr.io'],
+    origin: [
+      'https://pokedex-6wpt.onrender.com',
+      'https://poketeam.crfrsr.io',
+      'http://localhost:5173', // Vite default port
+      'http://localhost:3000', // Common React dev port
+      'http://localhost:5174', // Vite alternate port
+    ],
   })
 )
 app.use(express.json())

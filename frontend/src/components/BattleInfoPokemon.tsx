@@ -29,6 +29,7 @@ interface BattleInfoPokemonProps {
   battleInfoPokemonHistory: (number | null)[]
   skipInitialAnimation?: boolean
   hideRemoveButton?: boolean
+  alwaysShow?: boolean // Always show the panel even when no pokemon is selected
 }
 
 const BattleInfoPokemon = ({
@@ -41,6 +42,7 @@ const BattleInfoPokemon = ({
   battleInfoPokemonHistory,
   skipInitialAnimation = false,
   hideRemoveButton = false,
+  alwaysShow = false,
 }: BattleInfoPokemonProps) => {
   const { isMobile } = useStyle()
   const [displayedPokemon, setDisplayedPokemon] =
@@ -227,9 +229,12 @@ const BattleInfoPokemon = ({
     }
   }, [])
 
+  // If alwaysShow is true, render even when no pokemon is selected
+  const shouldShow = alwaysShow || displayedPokemon
+
   return (
     <AnimatePresence mode="wait">
-      {displayedPokemon && (
+      {shouldShow && (
         <motion.div
           key="battle-info-panel"
           initial={
@@ -276,21 +281,21 @@ const BattleInfoPokemon = ({
                           setBattleInfoPokemonId(pokemonId)
                         }
                       }}
+                      skipInitialAnimation={skipInitialAnimation}
                     />
                   ))}
               </AnimatePresence>
             </div>
           </div>
-          <div style={{ display: 'flex' }}>
+          <div style={{ display: 'flex', flexGrow: 1 }}>
             <div
               style={{
                 minWidth: finalWidth > 50 ? finalWidth : 'unset',
                 flexGrow: 1,
               }}
               ref={ref}
-              className={`h-full overflow-y-auto bg-white/80 border border-gray-200 rounded-md p-2 relative transition-opacity ${
-                isLoadingBattleInfoPokemon ? 'opacity-50' : 'opacity-100'
-              }`}
+              className={`h-full overflow-y-auto bg-white/80 border border-gray-200 rounded-md p-2 relative transition-opacity ${isLoadingBattleInfoPokemon ? 'opacity-50' : 'opacity-100'
+                }`}
             >
               {/* Close button - top right */}
               {!hideRemoveButton && (
@@ -306,28 +311,37 @@ const BattleInfoPokemon = ({
                 {/* Pokemon Image, name and number */}
                 <div className="flex items-center relative">
                   <div className="flex-shrink-0">
-                    {displayedPokemon.sprites.front_default ? (
+                    {displayedPokemon?.sprites.front_default ? (
                       <BlurImage
                         src={displayedPokemon.sprites.front_default}
                         alt={displayedPokemon.name}
                         className="w-20 h-24 sm:w-24 -ml-2"
-                        style={{ color: 'transparent', fontSize: 0 }}
-                        dominantColor={displayedPokemon.dominant_color}
+                        style={{
+                          color: 'transparent',
+                          fontSize: 0,
+                          visibility: displayedPokemon ? 'visible' : 'hidden'
+                        }}
+                        dominantColor={displayedPokemon.dominant_color || undefined}
                         showBlur={isLoadingBattleInfoPokemon}
                         setLoaded={setImageLoaded}
                       />
-                    ) : null}
+                    ) : (
+                      <div
+                        className="w-20 h-24 sm:w-24 -ml-2"
+                        style={{ visibility: 'hidden' }}
+                      />
+                    )}
                   </div>
                   {/* Name and Number */}
                   <motion.div
-                    key={`pokemon-info-${displayedPokemon.id}`}
+                    key={`pokemon-info-${displayedPokemon?.id ?? 'empty'}`}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                   >
                     <PokemonCombobox
-                      value={displayedPokemon?.id ?? null}
+                      value={displayedPokemon?.id}
                       onValueChange={pokemonId => {
                         // Mark that mouse hasn't moved since combobox closed
                         mouseHasMovedRef.current = false
@@ -350,21 +364,36 @@ const BattleInfoPokemon = ({
                             transition: 'background-color 1s, box-shadow 1s',
                           }}
                         >
-                          <p className="text-sm text-gray-500">
-                            #{displayedPokemon.pokedexNumber}
-                          </p>
-                          <h3 className="text-sm font-bold text-gray-900 capitalize">
-                            {displayedPokemon.name}
-                          </h3>
+                          {displayedPokemon ? (
+                            <>
+                              <p className="text-sm text-gray-500">
+                                #{displayedPokemon.pokedexNumber}
+                              </p>
+                              <h3 className="text-sm font-bold text-gray-900 capitalize">
+                                {displayedPokemon.name}
+                              </h3>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-sm text-gray-500" style={{ visibility: 'hidden' }}>
+                                #000
+                              </p>
+                              <p className="text-sm text-gray-400 italic">
+                                Select a Pokémon
+                              </p>
+                            </>
+                          )}
                         </div>
                       }
                     />
                   </motion.div>
                 </div>
                 {/* Types */}
-                <div className="width-full -mt-2">
-                  <AnimatedTypePills types={displayedPokemon.types} />
-                </div>
+                {displayedPokemon && (
+                  <div className="width-full -mt-2">
+                    <AnimatedTypePills types={displayedPokemon.types} />
+                  </div>
+                )}
 
                 {/* Offensive Effectiveness */}
                 {(superEffective.length > 0 ||
@@ -491,197 +520,201 @@ const BattleInfoPokemon = ({
                 {(weakTo.length > 0 ||
                   resists.length > 0 ||
                   immune.length > 0) && (
-                  <div>
-                    {/* Weak To */}
-                    <div className="mb-2">
-                      <div
-                        className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
-                        onMouseEnter={() =>
-                          handleMouseEnter(() =>
-                            setHoveredDefensiveTypes(
-                              weakTo.length > 0 ? weakTo : [NONE_TYPE_MARKER]
+                    <div>
+                      {/* Weak To */}
+                      <div className="mb-2">
+                        <div
+                          className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
+                          onMouseEnter={() =>
+                            handleMouseEnter(() =>
+                              setHoveredDefensiveTypes(
+                                weakTo.length > 0 ? weakTo : [NONE_TYPE_MARKER]
+                              )
                             )
-                          )
-                        }
-                        onMouseLeave={() => setHoveredDefensiveTypes([])}
-                      >
-                        <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
-                          Weak To
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {weakTo.length > 0 ? (
-                          weakTo.map(typeName => (
+                          }
+                          onMouseLeave={() => setHoveredDefensiveTypes([])}
+                        >
+                          <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
+                            Weak To
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {weakTo.length > 0 ? (
+                            weakTo.map(typeName => (
+                              <TypePill
+                                key={typeName}
+                                type={{ name: typeName }}
+                                size="small"
+                                onMouseEnter={() =>
+                                  handleMouseEnter(() =>
+                                    setHoveredDefensiveTypes([typeName])
+                                  )
+                                }
+                                onMouseLeave={() => setHoveredDefensiveTypes([])}
+                              />
+                            ))
+                          ) : (
                             <TypePill
-                              key={typeName}
-                              type={{ name: typeName }}
+                              type={{ name: 'none' }}
                               size="small"
                               onMouseEnter={() =>
                                 handleMouseEnter(() =>
-                                  setHoveredDefensiveTypes([typeName])
+                                  setHoveredDefensiveTypes([NONE_TYPE_MARKER])
                                 )
                               }
                               onMouseLeave={() => setHoveredDefensiveTypes([])}
                             />
-                          ))
-                        ) : (
-                          <TypePill
-                            type={{ name: 'none' }}
-                            size="small"
-                            onMouseEnter={() =>
-                              handleMouseEnter(() =>
-                                setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Resists */}
+                      <div className="mb-2">
+                        <div
+                          className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
+                          onMouseEnter={() =>
+                            handleMouseEnter(() =>
+                              setHoveredDefensiveTypes(
+                                resists.length > 0 ? resists : [NONE_TYPE_MARKER]
                               )
-                            }
-                            onMouseLeave={() => setHoveredDefensiveTypes([])}
-                          />
-                        )}
+                            )
+                          }
+                          onMouseLeave={() => setHoveredDefensiveTypes([])}
+                        >
+                          <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
+                            Resists
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {resists.length > 0 ? (
+                            resists.map(typeName => (
+                              <TypePill
+                                key={typeName}
+                                type={{ name: typeName }}
+                                size="small"
+                                onMouseEnter={() =>
+                                  handleMouseEnter(() =>
+                                    setHoveredDefensiveTypes([typeName])
+                                  )
+                                }
+                                onMouseLeave={() => setHoveredDefensiveTypes([])}
+                              />
+                            ))
+                          ) : (
+                            <TypePill
+                              type={{ name: 'none' }}
+                              size="small"
+                              onMouseEnter={() =>
+                                handleMouseEnter(() =>
+                                  setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                                )
+                              }
+                              onMouseLeave={() => setHoveredDefensiveTypes([])}
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Immune */}
+                      <div className="mb-2">
+                        <div
+                          className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
+                          onMouseEnter={() =>
+                            handleMouseEnter(() =>
+                              setHoveredDefensiveTypes(
+                                immune.length > 0 ? immune : [NONE_TYPE_MARKER]
+                              )
+                            )
+                          }
+                          onMouseLeave={() => setHoveredDefensiveTypes([])}
+                        >
+                          <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
+                            Immune
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {immune.length > 0 ? (
+                            immune.map(typeName => (
+                              <TypePill
+                                key={typeName}
+                                type={{ name: typeName }}
+                                size="small"
+                                onMouseEnter={() =>
+                                  handleMouseEnter(() =>
+                                    setHoveredDefensiveTypes([typeName])
+                                  )
+                                }
+                                onMouseLeave={() => setHoveredDefensiveTypes([])}
+                              />
+                            ))
+                          ) : (
+                            <TypePill
+                              type={{ name: 'none' }}
+                              size="small"
+                              onMouseEnter={() =>
+                                handleMouseEnter(() =>
+                                  setHoveredDefensiveTypes([NONE_TYPE_MARKER])
+                                )
+                              }
+                              onMouseLeave={() => setHoveredDefensiveTypes([])}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
+                  )}
 
-                    {/* Resists */}
-                    <div className="mb-2">
-                      <div
-                        className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
-                        onMouseEnter={() =>
-                          handleMouseEnter(() =>
-                            setHoveredDefensiveTypes(
-                              resists.length > 0 ? resists : [NONE_TYPE_MARKER]
-                            )
-                          )
-                        }
-                        onMouseLeave={() => setHoveredDefensiveTypes([])}
-                      >
-                        <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
-                          Resists
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {resists.length > 0 ? (
-                          resists.map(typeName => (
-                            <TypePill
-                              key={typeName}
-                              type={{ name: typeName }}
-                              size="small"
-                              onMouseEnter={() =>
-                                handleMouseEnter(() =>
-                                  setHoveredDefensiveTypes([typeName])
-                                )
-                              }
-                              onMouseLeave={() => setHoveredDefensiveTypes([])}
-                            />
-                          ))
-                        ) : (
-                          <TypePill
-                            type={{ name: 'none' }}
-                            size="small"
-                            onMouseEnter={() =>
-                              handleMouseEnter(() =>
-                                setHoveredDefensiveTypes([NONE_TYPE_MARKER])
-                              )
-                            }
-                            onMouseLeave={() => setHoveredDefensiveTypes([])}
-                          />
-                        )}
-                      </div>
+                {/* Physical Stats */}
+                {displayedPokemon && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-gray-50 rounded p-2 text-center">
+                      <p className="text-xs text-gray-600">Height</p>
+                      <p className="text-sm font-semibold">{heightInMeters}m</p>
                     </div>
-
-                    {/* Immune */}
-                    <div className="mb-2">
-                      <div
-                        className="flex items-center gap-1.5 mb-1 hover:bg-gray-100"
-                        onMouseEnter={() =>
-                          handleMouseEnter(() =>
-                            setHoveredDefensiveTypes(
-                              immune.length > 0 ? immune : [NONE_TYPE_MARKER]
-                            )
-                          )
-                        }
-                        onMouseLeave={() => setHoveredDefensiveTypes([])}
-                      >
-                        <p className="text-xs text-gray-600 rounded px-1 py-0.5 transition-colors">
-                          Immune
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {immune.length > 0 ? (
-                          immune.map(typeName => (
-                            <TypePill
-                              key={typeName}
-                              type={{ name: typeName }}
-                              size="small"
-                              onMouseEnter={() =>
-                                handleMouseEnter(() =>
-                                  setHoveredDefensiveTypes([typeName])
-                                )
-                              }
-                              onMouseLeave={() => setHoveredDefensiveTypes([])}
-                            />
-                          ))
-                        ) : (
-                          <TypePill
-                            type={{ name: 'none' }}
-                            size="small"
-                            onMouseEnter={() =>
-                              handleMouseEnter(() =>
-                                setHoveredDefensiveTypes([NONE_TYPE_MARKER])
-                              )
-                            }
-                            onMouseLeave={() => setHoveredDefensiveTypes([])}
-                          />
-                        )}
-                      </div>
+                    <div className="bg-gray-50 rounded p-2 text-center">
+                      <p className="text-xs text-gray-600">Weight</p>
+                      <p className="text-sm font-semibold">{weightInKg}kg</p>
+                    </div>
+                    <div className="bg-gray-50 rounded p-2 text-center">
+                      <p className="text-xs text-gray-600">Base Exp</p>
+                      <p className="text-sm font-semibold">
+                        {displayedPokemon.base_experience}
+                      </p>
                     </div>
                   </div>
                 )}
 
-                {/* Physical Stats */}
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-gray-50 rounded p-2 text-center">
-                    <p className="text-xs text-gray-600">Height</p>
-                    <p className="text-sm font-semibold">{heightInMeters}m</p>
-                  </div>
-                  <div className="bg-gray-50 rounded p-2 text-center">
-                    <p className="text-xs text-gray-600">Weight</p>
-                    <p className="text-sm font-semibold">{weightInKg}kg</p>
-                  </div>
-                  <div className="bg-gray-50 rounded p-2 text-center">
-                    <p className="text-xs text-gray-600">Base Exp</p>
-                    <p className="text-sm font-semibold">
-                      {displayedPokemon.base_experience}
-                    </p>
-                  </div>
-                </div>
-
                 {/* Base Stats */}
-                <div>
-                  <p className="text-xs text-gray-600 mb-2">Base Stats</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {reorderedStats.map(stat => (
-                      <div key={stat.stat.name}>
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-xs font-medium text-gray-700 capitalize">
-                            {stat.stat.short_name ||
-                              stat.stat.name.replace('-', ' ')}
-                          </span>
-                          <span className="text-xs font-semibold text-gray-900">
-                            {stat.base_stat}
-                          </span>
+                {displayedPokemon && (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-2">Base Stats</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {reorderedStats.map(stat => (
+                        <div key={stat.stat.name}>
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-medium text-gray-700 capitalize">
+                              {stat.stat.short_name ||
+                                stat.stat.name.replace('-', ' ')}
+                            </span>
+                            <span className="text-xs font-semibold text-gray-900">
+                              {stat.base_stat}
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-1.5">
+                            <div
+                              className="bg-primary-600 h-1.5 rounded-full"
+                              style={{
+                                width: `${Math.min((stat.base_stat / 255) * 100, 100)}%`,
+                                transition: 'width 200ms ease-in-out',
+                                willChange: 'width',
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
-                          <div
-                            className="bg-primary-600 h-1.5 rounded-full"
-                            style={{
-                              width: `${Math.min((stat.base_stat / 255) * 100, 100)}%`,
-                              transition: 'width 200ms ease-in-out',
-                              willChange: 'width',
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -697,20 +730,30 @@ const HistoryCircle = forwardRef<
   {
     pokemonId: number | null
     onClick: () => void
+    skipInitialAnimation?: boolean
   }
->(({ pokemonId, onClick }, ref) => {
+>(({ pokemonId, onClick, skipInitialAnimation = false }, ref) => {
   const { data: pokemon } = usePokemonById(pokemonId)
 
   return (
     <motion.div
-      layout
+      layout={!skipInitialAnimation}
       // layoutId={pokemonId !== null ? `history-${pokemonId}` : undefined}
-      initial={{
-        transform: 'translateX(105%)',
-        width: 'calc((100% - 1.25rem) / 6)',
-        opacity: 0,
-        marginRight: '0.25rem',
-      }}
+      initial={
+        skipInitialAnimation
+          ? {
+            transform: 'translateX(0)',
+            width: 'calc((100% - 1.25rem) / 6)',
+            opacity: 1,
+            marginRight: '0.25rem',
+          }
+          : {
+            transform: 'translateX(105%)',
+            width: 'calc((100% - 1.25rem) / 6)',
+            opacity: 0,
+            marginRight: '0.25rem',
+          }
+      }
       animate={{
         transform: 'translateX(0)',
         width: 'calc((100% - 1.25rem) / 6)',
@@ -718,7 +761,7 @@ const HistoryCircle = forwardRef<
         marginRight: '0.25rem',
       }}
       exit={{ width: 0, opacity: 0, marginRight: 0 }}
-      transition={{ duration: 0.3, ease: 'easeIn' }}
+      transition={skipInitialAnimation ? { duration: 0 } : { duration: 0.3, ease: 'easeIn' }}
       style={{
         width: 'calc((100% - 1.25rem) / 6)',
         minWidth: 0,
@@ -726,6 +769,7 @@ const HistoryCircle = forwardRef<
         overflow: 'hidden',
         marginRight: '0.25rem',
         boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1)',
+        aspectRatio: '1',
       }}
       className={cn(
         'h-full rounded-full relative overflow-hidden',

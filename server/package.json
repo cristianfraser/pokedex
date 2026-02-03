@@ -13,7 +13,8 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "migrate:stat-short-names": "tsx src/db/migrations/add-stat-short-names.ts",
     "migrate:dominant-color": "tsx src/db/migrations/add-dominant-color.ts",
-    "calculate-colors": "tsx src/scripts/calculate-dominant-colors.ts"
+    "calculate-colors": "tsx src/scripts/calculate-dominant-colors.ts",
+    "verify-seed": "tsx src/scripts/verify-seed.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",
