@@ -12,12 +12,8 @@ import { usePokemonContext } from '../contexts/PokemonContext'
 import { useMoves } from '../queries/moves'
 import { usePokemonById } from '../queries/pokemon'
 import { calculateTypeEffectiveness, NONE_TYPE_MARKER } from '@/constants/types'
-import {
-  DeleteIcon,
-  SuperEffectiveIcon,
-  NotVeryEffectiveIcon,
-  ImmuneIcon,
-} from './icons'
+import { DeleteIcon } from './icons'
+import { TypeEffectivenessIcon } from './TypeEffectivenessIcon'
 import './TeamPokemon.css'
 
 type PokemonMoves = Array<{
@@ -238,17 +234,17 @@ const TeamPokemon = ({
           ? 'team-pokemon-container-selected'
           : 'team-pokemon-container-unselected',
         hoveredOffensiveTypes.length > 0 &&
-          hasHoveredOffensiveType &&
-          'team-pokemon-container-highlighted',
+        hasHoveredOffensiveType &&
+        'team-pokemon-container-highlighted',
         hoveredOffensiveTypes.length > 0 &&
-          !hasHoveredOffensiveType &&
-          'team-pokemon-container-dimmed',
+        !hasHoveredOffensiveType &&
+        'team-pokemon-container-dimmed',
         hoveredDefensiveTypes.length > 0 &&
-          hasHighlightedMoves &&
-          'team-pokemon-container-highlighted',
+        hasHighlightedMoves &&
+        'team-pokemon-container-highlighted',
         hoveredDefensiveTypes.length > 0 &&
-          !hasHighlightedMoves &&
-          'team-pokemon-container-dimmed',
+        !hasHighlightedMoves &&
+        'team-pokemon-container-dimmed',
         isLoadingPokemon && 'opacity-50'
       )}
       style={{
@@ -278,8 +274,8 @@ const TeamPokemon = ({
         className={cn(
           'team-pokemon-left',
           hoveredDefensiveTypes.length > 0 &&
-            !hasHighlightedMoves &&
-            'team-pokemon-left-dimmed'
+          !hasHighlightedMoves &&
+          'team-pokemon-left-dimmed'
         )}
       >
         {/* Image and Name container */}
@@ -386,39 +382,11 @@ const TeamPokemon = ({
                       battleTypes
                     )
 
-                    let icon = null
-                    if (effectiveness === 0) {
-                      // Immune - cross
-                      icon = (
-                        <ImmuneIcon className="team-pokemon-effectiveness-icon-svg" />
-                      )
-                    } else if (effectiveness < 1) {
-                      // Resistant - triangle
-                      icon = (
-                        <NotVeryEffectiveIcon className="team-pokemon-effectiveness-icon-svg" />
-                      )
-                    } else if (effectiveness > 1) {
-                      // Weak - circle
-                      icon = (
-                        <SuperEffectiveIcon className="team-pokemon-effectiveness-icon-svg" />
-                      )
-                    }
-
                     return (
-                      <AnimatePresence>
-                        {icon && (
-                          <motion.span
-                            key={`${move.type}-${effectiveness}`}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="team-pokemon-effectiveness-icon"
-                          >
-                            {icon}
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
+                      <TypeEffectivenessIcon
+                        effectiveness={effectiveness}
+                        className="team-pokemon-effectiveness-icon-svg"
+                      />
                     )
                   })()}
                 <MovesCombobox
@@ -428,8 +396,8 @@ const TeamPokemon = ({
                   selectedMoves={
                     displayedPokemon
                       ? displayedMoves
-                          .filter((m, i) => m !== null && i !== index)
-                          .map(m => m!.name)
+                        .filter((m, i) => m !== null && i !== index)
+                        .map(m => m!.name)
                       : []
                   }
                   onValueChange={(moveName, moveType, damageClass) => {
@@ -437,10 +405,10 @@ const TeamPokemon = ({
                     const newMoves = [...displayedMoves]
                     newMoves[index] = moveName
                       ? {
-                          name: moveName,
-                          type: moveType || '',
-                          damage_class: damageClass,
-                        }
+                        name: moveName,
+                        type: moveType || '',
+                        damage_class: damageClass,
+                      }
                       : null
                     setPokemonMoves(displayedPokemon.id, newMoves)
                   }}

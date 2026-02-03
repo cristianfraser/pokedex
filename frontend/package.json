@@ -19,6 +19,8 @@
     "server:install": "cd ../server && npm install"
   },
   "dependencies": {
+    "@crfrsr/design-system-core": "file:../../crfrsr/packages/core",
+    "@crfrsr/design-system-react": "file:../../crfrsr/packages/react",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-slot": "^1.2.4",

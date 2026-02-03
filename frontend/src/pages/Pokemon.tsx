@@ -216,12 +216,16 @@ const Pokemon = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
-              {totalCount > 0 && (
-                <p className="mt-2 text-sm text-gray-600">
-                  Showing {filteredPokemon.length} of {totalCount} Pokémon
-                  {debouncedSearchTerm && ' (filtered)'}
-                </p>
-              )}
+              <p className="mt-2 text-sm text-gray-600">
+                {totalCount === 0 && isLoading ? (
+                  'Loading...'
+                ) : (
+                  <>
+                    Showing {filteredPokemon.length} of {totalCount} Pokémon
+                    {debouncedSearchTerm && ' (filtered)'}
+                  </>
+                )}
+              </p>
               {isError && (
                 <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-red-600 text-sm mb-2">
@@ -239,21 +243,6 @@ const Pokemon = () => {
             </div>
 
             <div className="relative">
-              {/* Loading overlay - show when initial loading or when fetching (search change) with existing data */}
-              {(isLoading ||
-                (isFetching &&
-                  !isFetchingNextPage &&
-                  filteredPokemon.length > 0)) && (
-                <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10 rounded-lg">
-                  <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                    <p className="mt-2 text-sm text-gray-600">
-                      Loading Pokémon...
-                    </p>
-                  </div>
-                </div>
-              )}
-
               {/* Table with opacity when fetching (search change), but not when loading next page */}
               <div
                 className={`transition-opacity duration-200 ${
@@ -454,25 +443,22 @@ const Pokemon = () => {
                   </div>
                 </div>
               </div>
+              {/* Loading indicator - show for initial load, fetching with existing data, or loading next page */}
+              {(isLoading ||
+                (isFetching &&
+                  !isFetchingNextPage &&
+                  filteredPokemon.length > 0) ||
+                hasNextPage) && (
+                <div ref={loadingIndicatorRef} className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                  <p className="mt-2 text-gray-600 text-sm">
+                    {isLoading || (isFetching && !isFetchingNextPage && filteredPokemon.length > 0)
+                      ? 'Loading Pokémon...'
+                      : 'Loading more Pokémon...'}
+                  </p>
+                </div>
+              )}
             </div>
-
-            {/* Loading indicator for next page */}
-            {hasNextPage && !isFetchingNextPage && (
-              <div ref={loadingIndicatorRef} className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                <p className="mt-2 text-gray-600 text-sm">
-                  Loading more Pokémon...
-                </p>
-              </div>
-            )}
-            {isFetchingNextPage && (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                <p className="mt-2 text-gray-600 text-sm">
-                  Loading more Pokémon...
-                </p>
-              </div>
-            )}
 
             {/* End of list indicator */}
             {!hasNextPage &&

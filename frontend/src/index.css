@@ -18,8 +18,8 @@
   font-family: 'EssentiarumVG';
   src:
     /* url('/EssentiarumVG.woff2') format('woff2'), */
-    /* url('/EssentiarumVG.woff') format('woff'), */ url('/EssentiarumVG [Web].ttf')
-    format('truetype');
+    /* url('/EssentiarumVG.woff') format('woff'), */
+    url('/EssentiarumVG [Web].ttf') format('truetype');
   /* url('/EssentiarumVG.otf') format('opentype'); */
   font-weight: normal;
   font-style: normal;
@@ -52,28 +52,34 @@
   }
 
   .scrollable {
-    overflow: auto; /* or overflow-y: auto */
-    scrollbar-width: thin; /* Firefox - thin scrollbar */
-    scrollbar-color: rgba(0, 0, 0, 0.2) transparent; /* Firefox - thumb and track */
-    -ms-overflow-style: -ms-autohiding-scrollbar; /* IE and Edge */
+    overflow: auto;
+    /* or overflow-y: auto */
+    scrollbar-width: thin;
+    /* Firefox - thin scrollbar */
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    /* Firefox - thumb and track */
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    /* IE and Edge */
   }
 
   .scrollable::-webkit-scrollbar {
-    width: 1px; /* Chrome, Safari, Opera - 1px width */
+    width: 1px;
+    /* Chrome, Safari, Opera - 1px width */
   }
 
   .scrollable::-webkit-scrollbar-track {
-    background: transparent; /* Chrome, Safari, Opera - track background */
+    background: transparent;
+    /* Chrome, Safari, Opera - track background */
   }
 
   .scrollable::-webkit-scrollbar-thumb {
-    background-color: rgba(
-      0,
-      0,
-      0,
-      0.2
-    ); /* Chrome, Safari, Opera - thumb color */
-    border-radius: 0; /* Chrome, Safari, Opera - no border radius */
+    background-color: rgba(0,
+        0,
+        0,
+        0.2);
+    /* Chrome, Safari, Opera - thumb color */
+    border-radius: 0;
+    /* Chrome, Safari, Opera - no border radius */
   }
 
   .font-pokemon {
@@ -103,14 +109,12 @@
     position: relative;
     pointer-events: none;
     margin: 10px auto 0;
-    transform: perspective(82em) rotateX(19deg) rotateZ(-12deg) rotateY(30deg)
-      translateX(50px);
+    transform: perspective(82em) rotateX(19deg) rotateZ(-12deg) rotateY(30deg) translateX(50px);
   }
 
   @media (max-width: 768px) {
     .demo-pokemon-transform {
-      transform: perspective(82em) rotateX(13deg) rotateZ(-8deg) rotateY(40deg)
-        translateX(-40px) scale(0.9);
+      transform: perspective(82em) rotateX(13deg) rotateZ(-8deg) rotateY(40deg) translateX(-40px) scale(0.9);
     }
   }
 }
@@ -125,6 +129,7 @@
     -moz-user-select: none;
     -ms-user-select: none;
   }
+
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
@@ -152,6 +157,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -249,6 +255,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
