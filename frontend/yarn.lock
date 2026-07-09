@@ -230,9 +230,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@crfrsr/ui@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@crfrsr/ui@npm:1.0.0"
+"@crfrsr/ui@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@crfrsr/ui@npm:1.0.1"
   dependencies:
     "@crfrsr/core": "npm:^1.0.0"
     "@radix-ui/react-popover": "npm:^1.1.2"
@@ -242,7 +242,7 @@ __metadata:
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 1a54671b79b06a7901f93175a4d653fb2568a97418640cbdd8be3e8fc5a6e4c5eedc9fc2e0104845914b21ddf75cdcafcb73e14b4ef9063be5b2721295c54349
+  checksum: 3570bafb308e80ce8fea865feecd14a375a1b0ffa6a37faa4f0747376c868fd0a7ab57ed928de1aedd21d13078b43576f3a68258a26c19274e5fb78dcecb9d81
   languageName: node
   linkType: hard
 
@@ -4455,7 +4455,7 @@ __metadata:
   resolution: "pokedex@workspace:."
   dependencies:
     "@crfrsr/core": "npm:^1.0.0"
-    "@crfrsr/ui": "npm:^1.0.0"
+    "@crfrsr/ui": "npm:^1.0.1"
     "@radix-ui/react-tooltip": "npm:^1.2.8"
     "@reach/dialog": "npm:^0.18.0"
     "@tanstack/react-query": "npm:^5.90.7"
