@@ -1,4 +1,6 @@
 import { Routes, Route, Outlet } from 'react-router-dom'
+import { ThemeProvider } from '@crfrsr/design-system-react'
+import { pokedexTheme } from './theme'
 import { PokemonProvider } from './contexts/PokemonContext'
 import { StyleProvider } from './contexts/StyleContext'
 import { TooltipProvider } from './components/ui/tooltip'
@@ -39,13 +41,15 @@ function AppContent() {
 
 function App() {
   return (
-    <TooltipProvider delayDuration={0}>
-      <StyleProvider>
-        <PokemonProvider>
-          <AppContent />
-        </PokemonProvider>
-      </StyleProvider>
-    </TooltipProvider>
+    <ThemeProvider theme={pokedexTheme}>
+      <TooltipProvider delayDuration={0}>
+        <StyleProvider>
+          <PokemonProvider>
+            <AppContent />
+          </PokemonProvider>
+        </StyleProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   )
 }
 

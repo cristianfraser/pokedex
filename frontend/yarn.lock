@@ -225,14 +225,14 @@ __metadata:
 
 "@crfrsr/design-system-core@file:../../crfrsr/packages/core::locator=pokedex%40workspace%3A.":
   version: 1.0.0
-  resolution: "@crfrsr/design-system-core@file:../../crfrsr/packages/core#../../crfrsr/packages/core::hash=9abd32&locator=pokedex%40workspace%3A."
-  checksum: ff686acd2f4ce94527e014527b6ed11ca515e09edf8a792064bb4eb19c8567f59a2ef44699040f7d337707a4d0e7524ce209e479c477705e3a22ab0376284c80
+  resolution: "@crfrsr/design-system-core@file:../../crfrsr/packages/core#../../crfrsr/packages/core::hash=3c9aee&locator=pokedex%40workspace%3A."
+  checksum: efe80c148396acc6385bc5ff3795d76ecbd7fe161fb88b231e22c02f5dbfbda2a2c1728e5be600956c1f52c8922fb46978e7134ba2cc53837ddb39ab91a68d8a
   languageName: node
   linkType: hard
 
 "@crfrsr/design-system-react@file:../../crfrsr/packages/react::locator=pokedex%40workspace%3A.":
   version: 1.0.0
-  resolution: "@crfrsr/design-system-react@file:../../crfrsr/packages/react#../../crfrsr/packages/react::hash=dedf20&locator=pokedex%40workspace%3A."
+  resolution: "@crfrsr/design-system-react@file:../../crfrsr/packages/react#../../crfrsr/packages/react::hash=ae0180&locator=pokedex%40workspace%3A."
   dependencies:
     "@crfrsr/design-system-core": "npm:^1.0.0"
     "@radix-ui/react-popover": "npm:^1.1.2"
@@ -242,7 +242,7 @@ __metadata:
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: d6cf5cfd09e7ecb38d1352018228b182ad5b037c1b3a80f57b0dcdb2af3b0ed82d21ef9cff4bea60289c7c8de79ebeb9c301f44c161ff48436c3ebac12a469ce
+  checksum: 015d5391420522d28e2b5acaa3362574822c4a9afa326cdbb10c256c8ff56d424dea9865525e6c7977197b0d3feab28cbc9b63c19dd5aa3b8da983c3d023902c
   languageName: node
   linkType: hard
 
