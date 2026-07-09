@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import Button from '../components/Button'
+import { Button } from '@crfrsr/design-system-react'
 import Card from '../components/Card'
 import DemoPokemonTeamBattleInfo from '../components/DemoPokemonTeamBattleInfo'
 

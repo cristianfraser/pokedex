@@ -6,7 +6,6 @@
   "packageManager": "yarn@4.0.2",
   "scripts": {
     "preinstall": "corepack enable",
-    "postinstall": "node -e \"try { require('@crfrsr/design-system-react'); } catch(e) { console.log('Optional dependency @crfrsr/design-system-react not found, skipping...'); }\"",
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -19,21 +18,14 @@
     "server:seed": "cd ../server && npm run seed",
     "server:install": "cd ../server && npm install"
   },
-  "optionalDependencies": {
-    "@crfrsr/design-system-core": "file:../../crfrsr/packages/core",
-    "@crfrsr/design-system-react": "file:../../crfrsr/packages/react"
-  },
   "dependencies": {
-    "@radix-ui/react-dialog": "^1.1.15",
-    "@radix-ui/react-popover": "^1.1.15",
-    "@radix-ui/react-slot": "^1.2.4",
+    "@crfrsr/design-system-core": "file:../../crfrsr/packages/core",
+    "@crfrsr/design-system-react": "file:../../crfrsr/packages/react",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@reach/dialog": "^0.18.0",
     "@tanstack/react-query": "^5.90.7",
     "@tanstack/react-virtual": "^3.13.12",
-    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "cmdk": "^1.1.1",
     "framer-motion": "11.0.7",
     "lucide-react": "^0.553.0",
     "react": "^18.2.0",
@@ -59,5 +51,9 @@
     "tailwindcss": "^3.3.5",
     "typescript": "^5.2.2",
     "vite": "^4.5.14"
+  },
+  "_resolutionsComment": "Local dev only: @crfrsr packages aren't on npm yet, so design-system-react's `@crfrsr/design-system-core: ^1.0.0` dep is pinned to the local build. Remove once published.",
+  "resolutions": {
+    "@crfrsr/design-system-core": "file:../../crfrsr/packages/core"
   }
 }

@@ -2,10 +2,8 @@
 
 import * as React from 'react'
 import { ChevronsUpDown } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { CommandItem } from '@/components/ui/command'
+import { Button, Combobox, CommandItem } from '@crfrsr/design-system-react'
 import { useAllPokemonBasic } from '@/queries/pokemon'
-import { Combobox } from './Combobox'
 
 interface PokemonOptionProps {
   pokemon: { name: string; id: number; pokedex_number: number }
@@ -93,7 +91,8 @@ export function PokemonCombobox({
       placeholder="Search pokemon..."
       emptyMessage="No pokemon found."
       loadingMessage="Loading pokemon..."
-      popoverWidth="w-[200px]"
+      popoverWidth="200px"
+      inputClassName="h-4 text-3xs"
       estimateItemSize={28}
     />
   )

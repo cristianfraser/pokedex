@@ -211,18 +211,6 @@
     opacity: 1;
   }
 
-  .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
-  }
-
-  .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:hover:bg-primary-600;
-  }
-
-  .btn-secondary {
-    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:hover:bg-gray-200;
-  }
-
   /* Custom Modal Styles */
   .reach-dialog {
     @apply rounded-xl shadow-2xl max-w-4xl w-full;
@@ -252,11 +240,34 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/*
+ * crfrsr design-system theming for pokedex.
+ * Pokedex's look lives here: it overrides the library's --crfrsr-* defaults.
+ * Loaded after tokens.css (imported first in main.tsx), so these win.
+ */
+:root {
+  --crfrsr-font-family-base: 'PKMN RBYGSC', sans-serif;
+
+  /* Primary = sky (old .btn-primary used primary-600 / primary-700 on hover). */
+  --crfrsr-color-primary: #0284c7;
+  --crfrsr-color-primary-dark: #0369a1;
+  --crfrsr-color-text-on-primary: #ffffff;
+  --crfrsr-color-focus-ring: #0ea5e9;
+
+  /* Secondary button = neutral gray (old .btn-secondary: gray-200/300, gray-900 text). */
+  --crfrsr-btn-secondary-bg: #e5e7eb;
+  --crfrsr-btn-secondary-bg-hover: #d1d5db;
+  --crfrsr-btn-secondary-color: #111827;
+
+  /* Neutrals used by the combobox surfaces / text / borders. */
+  --crfrsr-color-surface: #ffffff;
+  --crfrsr-color-surface-hover: #f3f4f6;
+  --crfrsr-color-text: #111827;
+  --crfrsr-color-text-secondary: #6b7280;
+  --crfrsr-color-border: #e5e7eb;
 }

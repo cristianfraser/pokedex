@@ -8,7 +8,6 @@ import Pokemon from './pages/Pokemon'
 import PokemonDetail from './pages/PokemonDetail'
 import About from './pages/About'
 import Team from './pages/Team'
-import ThemeProviderWrapper from './components/ThemeProviderWrapper'
 
 function AppContent() {
   return (
@@ -40,15 +39,13 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProviderWrapper skipBodyFontFamily>
-      <TooltipProvider delayDuration={0}>
-        <StyleProvider>
-          <PokemonProvider>
-            <AppContent />
-          </PokemonProvider>
-        </StyleProvider>
-      </TooltipProvider>
-    </ThemeProviderWrapper>
+    <TooltipProvider delayDuration={0}>
+      <StyleProvider>
+        <PokemonProvider>
+          <AppContent />
+        </PokemonProvider>
+      </StyleProvider>
+    </TooltipProvider>
   )
 }
 

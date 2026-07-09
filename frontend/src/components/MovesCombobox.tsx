@@ -2,11 +2,9 @@
 
 import * as React from 'react'
 import { ChevronsUpDown } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { CommandItem } from '@/components/ui/command'
+import { Button, Combobox, CommandItem } from '@crfrsr/design-system-react'
 import { useMoves } from '@/queries/moves'
 import TypePill from './TypePill'
-import { Combobox } from './Combobox'
 import { cn } from '@/lib/utils'
 
 interface MovesOptionProps {
@@ -145,7 +143,8 @@ export function MovesCombobox({
       placeholder="Search move..."
       emptyMessage="No move found."
       loadingMessage="Loading moves..."
-      popoverWidth="w-[137.5px]"
+      popoverWidth="137.5px"
+      inputClassName="h-4 text-3xs"
       estimateItemSize={28}
       showClearButton={!!value}
       onClear={() => onValueChange?.('', '')}

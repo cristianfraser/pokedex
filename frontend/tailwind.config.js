@@ -2,6 +2,9 @@
 export default {
   darkMode: ['class'],
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  // The crfrsr design system ships reset.css (a preflight equivalent) as the
+  // single shared reset, so Tailwind's own preflight is disabled here.
+  corePlugins: { preflight: false },
   theme: {
     extend: {
       colors: {
