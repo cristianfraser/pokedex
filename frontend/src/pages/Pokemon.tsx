@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
-import { Button } from '@crfrsr/design-system-react'
+import { Button } from '@crfrsr/ui'
 import TypePill from '../components/TypePill'
 import BlurImage from '../components/BlurImage'
 import { usePokemonList, PokemonDetail } from '../queries/pokemon'

@@ -5,9 +5,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 // Design-system CSS first, so the app's Tailwind utilities (in index.css)
 // load afterward and win when passed via className.
-import '@crfrsr/design-system-react/reset.css'
-import '@crfrsr/design-system-react/tokens.css'
-import '@crfrsr/design-system-react/styles.css'
+import '@crfrsr/ui/reset.css'
+import '@crfrsr/ui/tokens.css'
+import '@crfrsr/ui/styles.css'
 import './index.css'
 import versionData from '../version.json'
 

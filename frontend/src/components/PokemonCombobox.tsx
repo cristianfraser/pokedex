@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { ChevronsUpDown } from 'lucide-react'
-import { Button, Combobox, CommandItem } from '@crfrsr/design-system-react'
+import { Button, Combobox, CommandItem } from '@crfrsr/ui'
 import { useAllPokemonBasic } from '@/queries/pokemon'
 
 interface PokemonOptionProps {

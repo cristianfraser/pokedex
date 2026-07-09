@@ -1,5 +1,5 @@
 import { Routes, Route, Outlet } from 'react-router-dom'
-import { ThemeProvider } from '@crfrsr/design-system-react'
+import { ThemeProvider } from '@crfrsr/ui'
 import { pokedexTheme } from './theme'
 import { PokemonProvider } from './contexts/PokemonContext'
 import { StyleProvider } from './contexts/StyleContext'

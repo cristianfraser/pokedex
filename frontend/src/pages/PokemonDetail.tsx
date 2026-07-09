@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchPokemonById } from '../queries/pokemon'
 import type { PokemonDetail } from '../queries/pokemon'
 import Modal from '../components/Modal'
-import { Button } from '@crfrsr/design-system-react'
+import { Button } from '@crfrsr/ui'
 import TypePill from '../components/TypePill'
 
 const PokemonDetail = () => {

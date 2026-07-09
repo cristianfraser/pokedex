@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { Pill } from '@crfrsr/design-system-react'
+import { Pill } from '@crfrsr/ui'
 import { typeColors, typeColorsDark, typeLetters } from '@/constants/types'
 
 interface TypePillProps {

@@ -1,4 +1,4 @@
-import type { ThemeOverrides } from '@crfrsr/design-system-core'
+import type { ThemeOverrides } from '@crfrsr/core'
 
 /**
  * Pokedex's design-system theme. Single source of truth for the app's look:

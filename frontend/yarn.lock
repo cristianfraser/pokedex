@@ -223,18 +223,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@crfrsr/design-system-core@file:../../crfrsr/packages/core::locator=pokedex%40workspace%3A.":
+"@crfrsr/core@npm:^1.0.0":
   version: 1.0.0
-  resolution: "@crfrsr/design-system-core@file:../../crfrsr/packages/core#../../crfrsr/packages/core::hash=3c9aee&locator=pokedex%40workspace%3A."
-  checksum: efe80c148396acc6385bc5ff3795d76ecbd7fe161fb88b231e22c02f5dbfbda2a2c1728e5be600956c1f52c8922fb46978e7134ba2cc53837ddb39ab91a68d8a
+  resolution: "@crfrsr/core@npm:1.0.0"
+  checksum: fbc4ca0829b7f93b112462466440a606f1f796ee7a399a7141cb88bff962e3b133e14cdfd7a78a9bd6bf20284faf28eb50392817227fbb06e72110843303cd33
   languageName: node
   linkType: hard
 
-"@crfrsr/design-system-react@file:../../crfrsr/packages/react::locator=pokedex%40workspace%3A.":
+"@crfrsr/ui@npm:^1.0.0":
   version: 1.0.0
-  resolution: "@crfrsr/design-system-react@file:../../crfrsr/packages/react#../../crfrsr/packages/react::hash=ae0180&locator=pokedex%40workspace%3A."
+  resolution: "@crfrsr/ui@npm:1.0.0"
   dependencies:
-    "@crfrsr/design-system-core": "npm:^1.0.0"
+    "@crfrsr/core": "npm:^1.0.0"
     "@radix-ui/react-popover": "npm:^1.1.2"
     "@tanstack/react-virtual": "npm:^3.10.8"
     clsx: "npm:^2.1.1"
@@ -242,7 +242,7 @@ __metadata:
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 015d5391420522d28e2b5acaa3362574822c4a9afa326cdbb10c256c8ff56d424dea9865525e6c7977197b0d3feab28cbc9b63c19dd5aa3b8da983c3d023902c
+  checksum: 1a54671b79b06a7901f93175a4d653fb2568a97418640cbdd8be3e8fc5a6e4c5eedc9fc2e0104845914b21ddf75cdcafcb73e14b4ef9063be5b2721295c54349
   languageName: node
   linkType: hard
 
@@ -4454,8 +4454,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "pokedex@workspace:."
   dependencies:
-    "@crfrsr/design-system-core": "file:../../crfrsr/packages/core"
-    "@crfrsr/design-system-react": "file:../../crfrsr/packages/react"
+    "@crfrsr/core": "npm:^1.0.0"
+    "@crfrsr/ui": "npm:^1.0.0"
     "@radix-ui/react-tooltip": "npm:^1.2.8"
     "@reach/dialog": "npm:^0.18.0"
     "@tanstack/react-query": "npm:^5.90.7"
