@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import { createDatabase } from '../db/schema.js'
-import { Pool } from 'pg'
 
 const router = Router()
-const pool = createDatabase()
+// Read-only: the API never writes, so an accidental INSERT/UPDATE fails loudly here.
+const db = createDatabase({ readonly: true })
 
 // Get Pokemon list with pagination, search, and type filtering
 router.get('/list', async (req, res) => {
@@ -17,43 +17,38 @@ router.get('/list', async (req, res) => {
     // Build WHERE clause based on filters
     let whereClause = 'WHERE 1=1'
     const params: any[] = []
-    let paramIndex = 1
 
     if (search) {
-      whereClause += ` AND p.name ILIKE $${paramIndex}`
+      // SQLite's LIKE is case-insensitive for ASCII, matching Postgres ILIKE here.
+      whereClause += ` AND p.name LIKE ?`
       params.push(`%${search}%`)
-      paramIndex++
     }
 
     if (type) {
       whereClause += ` AND EXISTS (
         SELECT 1 FROM pokemon_types pt
         JOIN types t ON pt.type_id = t.id
-        WHERE pt.pokemon_id = p.id AND LOWER(t.name) = LOWER($${paramIndex})
+        WHERE pt.pokemon_id = p.id AND LOWER(t.name) = LOWER(?)
       )`
       params.push(type)
-      paramIndex++
     }
 
     // Get total count
-    const countResult = await pool.query(
-      `
+    const countRow = db
+      .prepare(
+        `
       SELECT COUNT(DISTINCT p.id) as count
       FROM pokemon p
       ${whereClause}
-    `,
-      params
-    )
-    const totalCount = parseInt(countResult.rows[0].count)
-
-    // Add limit and offset to params for the main query
-    const limitOffsetParams = [...params, limit, offset]
-    const limitParamIndex = paramIndex
-    const offsetParamIndex = paramIndex + 1
+    `
+      )
+      .get(...params) as { count: number }
+    const totalCount = Number(countRow.count)
 
     // Get paginated Pokemon with all details
-    const pokemonListResult = await pool.query(
-      `
+    const pokemonList = db
+      .prepare(
+        `
       SELECT DISTINCT
         p.id, p.name, p.pokedex_number, p.height, p.weight, p.base_experience,
         p.sprite_front_default, p.sprite_front_shiny, p.sprite_official_artwork,
@@ -61,12 +56,10 @@ router.get('/list', async (req, res) => {
       FROM pokemon p
       ${whereClause}
       ORDER BY p.pokedex_number ASC
-      LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}
-    `,
-      limitOffsetParams
-    )
-
-    const pokemonList = pokemonListResult.rows as Array<{
+      LIMIT ? OFFSET ?
+    `
+      )
+      .all(...params, limit, offset) as Array<{
       id: number
       name: string
       pokedex_number: number
@@ -85,26 +78,22 @@ router.get('/list', async (req, res) => {
     }>
 
     // Get types and stats for each Pokemon
-    const results = await Promise.all(
-      pokemonList.map(async p => {
-        const typesResult = await pool.query(
-          `SELECT t.name, pt.slot
-           FROM types t
-           JOIN pokemon_types pt ON t.id = pt.type_id
-           WHERE pt.pokemon_id = $1
-           ORDER BY pt.slot ASC`,
-          [p.id]
-        )
+    const typesForPokemon = db.prepare(
+      `SELECT t.name, pt.slot
+       FROM types t
+       JOIN pokemon_types pt ON t.id = pt.type_id
+       WHERE pt.pokemon_id = ?
+       ORDER BY pt.slot ASC`
+    )
+    const statsForPokemon = db.prepare(
+      `SELECT stat_name, base_stat, effort, short_name
+       FROM pokemon_stats
+       WHERE pokemon_id = ?`
+    )
 
-        const statsResult = await pool.query(
-          `SELECT stat_name, base_stat, effort, short_name
-           FROM pokemon_stats
-           WHERE pokemon_id = $1`,
-          [p.id]
-        )
-
-        const types = typesResult.rows as Array<{ name: string; slot: number }>
-        const stats = statsResult.rows as Array<{
+    const results = pokemonList.map(p => {
+        const types = typesForPokemon.all(p.id) as Array<{ name: string; slot: number }>
+        const stats = statsForPokemon.all(p.id) as Array<{
           stat_name: string
           base_stat: number
           effort: number
@@ -172,8 +161,7 @@ router.get('/list', async (req, res) => {
           is_mythical: p.is_mythical === 1,
           dominant_color: p.dominant_color || undefined,
         }
-      })
-    )
+    })
 
     const hasNext = offset + limit < totalCount
     const hasPrevious = offset > 0
@@ -204,11 +192,11 @@ router.get('/list', async (req, res) => {
 // Get all Pokemon basic info (id, name, pokedex_number only)
 router.get('/all/basic', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, name, pokedex_number FROM pokemon ORDER BY pokedex_number ASC'
-    )
+    const rows = db
+      .prepare('SELECT id, name, pokedex_number FROM pokemon ORDER BY pokedex_number ASC')
+      .all() as Array<{ id: number; name: string; pokedex_number: number }>
 
-    const pokemonBasic = result.rows.map(row => ({
+    const pokemonBasic = rows.map(row => ({
       id: row.id,
       name: row.name,
       pokedex_number: row.pokedex_number,
@@ -224,16 +212,9 @@ router.get('/all/basic', async (req, res) => {
 // Get Pokemon by ID
 router.get('/:id', async (req, res) => {
   try {
-    const pokemonResult = await pool.query(
-      'SELECT * FROM pokemon WHERE id = $1',
-      [req.params.id]
-    )
-
-    if (pokemonResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Pokemon not found' })
-    }
-
-    const pokemon = pokemonResult.rows[0] as {
+    const pokemon = db
+      .prepare('SELECT * FROM pokemon WHERE id = ?')
+      .get(req.params.id) as {
       id: number
       name: string
       pokedex_number: number
@@ -249,28 +230,31 @@ router.get('/:id', async (req, res) => {
       habitat: string | null
       flavor_text: string | null
       dominant_color: string | null
+    } | undefined
+
+    if (!pokemon) {
+      return res.status(404).json({ error: 'Pokemon not found' })
     }
 
     // Get types
-    const typesResult = await pool.query(
-      `SELECT t.name, pt.slot
+    const types = db
+      .prepare(
+        `SELECT t.name, pt.slot
        FROM types t
        JOIN pokemon_types pt ON t.id = pt.type_id
-       WHERE pt.pokemon_id = $1
-       ORDER BY pt.slot ASC`,
-      [pokemon.id]
-    )
+       WHERE pt.pokemon_id = ?
+       ORDER BY pt.slot ASC`
+      )
+      .all(pokemon.id) as Array<{ name: string; slot: number }>
 
     // Get stats
-    const statsResult = await pool.query(
-      `SELECT stat_name, base_stat, effort, short_name
+    const stats = db
+      .prepare(
+        `SELECT stat_name, base_stat, effort, short_name
        FROM pokemon_stats
-       WHERE pokemon_id = $1`,
-      [pokemon.id]
-    )
-
-    const types = typesResult.rows as Array<{ name: string; slot: number }>
-    const stats = statsResult.rows as Array<{
+       WHERE pokemon_id = ?`
+      )
+      .all(pokemon.id) as Array<{
       stat_name: string
       base_stat: number
       effort: number

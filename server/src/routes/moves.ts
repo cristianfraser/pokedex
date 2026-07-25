@@ -1,9 +1,9 @@
 import { Router } from 'express'
 import { createDatabase } from '../db/schema.js'
-import { Pool } from 'pg'
 
 const router = Router()
-const pool = createDatabase()
+// Read-only: the API never writes, so an accidental INSERT/UPDATE fails loudly here.
+const db = createDatabase({ readonly: true })
 
 // Get moves list with pagination (or all moves for a pokemon)
 router.get('/', async (req, res) => {
@@ -20,12 +20,11 @@ router.get('/', async (req, res) => {
         JOIN move_types mt ON m.id = mt.move_id
         JOIN types t ON mt.type_id = t.id
         JOIN pokemon_moves pm ON m.id = pm.move_id
-        WHERE pm.pokemon_id = $1
+        WHERE pm.pokemon_id = ?
         ORDER BY m.id ASC
       `
 
-      const movesResult = await pool.query(query, [pokemonId])
-      const moves = movesResult.rows as Array<{
+      const moves = db.prepare(query).all(pokemonId) as Array<{
         id: number
         name: string
         type_name: string
@@ -52,20 +51,19 @@ router.get('/', async (req, res) => {
         JOIN move_types mt ON m.id = mt.move_id
         JOIN types t ON mt.type_id = t.id
         ORDER BY m.id ASC
-        LIMIT $1 OFFSET $2
+        LIMIT ? OFFSET ?
       `
       const countQuery = 'SELECT COUNT(*) as count FROM moves'
 
-      const movesResult = await pool.query(query, [limit, offset])
-      const moves = movesResult.rows as Array<{
+      const moves = db.prepare(query).all(limit, offset) as Array<{
         id: number
         name: string
         type_name: string
         damage_class: string
       }>
 
-      const countResult = await pool.query(countQuery)
-      const totalCount = parseInt(countResult.rows[0].count)
+      const countRow = db.prepare(countQuery).get() as { count: number }
+      const totalCount = Number(countRow.count)
 
       const hasNext = offset + limit < totalCount
       const hasPrevious = offset > 0
@@ -98,15 +96,7 @@ router.get('/', async (req, res) => {
 // Get move by ID
 router.get('/:id', async (req, res) => {
   try {
-    const moveResult = await pool.query('SELECT * FROM moves WHERE id = $1', [
-      req.params.id,
-    ])
-
-    if (moveResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Move not found' })
-    }
-
-    const move = moveResult.rows[0] as {
+    const move = db.prepare('SELECT * FROM moves WHERE id = ?').get(req.params.id) as {
       id: number
       name: string
       accuracy: number | null
@@ -117,18 +107,21 @@ router.get('/:id', async (req, res) => {
       damage_class: string
       effect_text: string | null
       short_effect_text: string | null
+    } | undefined
+
+    if (!move) {
+      return res.status(404).json({ error: 'Move not found' })
     }
 
     // Get move type
-    const typeResult = await pool.query(
-      `SELECT t.name
+    const type = db
+      .prepare(
+        `SELECT t.name
        FROM types t
        JOIN move_types mt ON t.id = mt.type_id
-       WHERE mt.move_id = $1`,
-      [req.params.id]
-    )
-
-    const type = typeResult.rows[0] as { name: string } | undefined
+       WHERE mt.move_id = ?`
+      )
+      .get(req.params.id) as { name: string } | undefined
 
     // Format response to match frontend expectations
     const response = {

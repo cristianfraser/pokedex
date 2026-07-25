@@ -80,3 +80,8 @@ dist
 # Temporary folders
 tmp/
 temp/
+
+# SQLite sidecars — the snapshot itself (server/data/pokedex.db) IS committed,
+# but WAL/shm files are per-process runtime state.
+*.db-wal
+*.db-shm

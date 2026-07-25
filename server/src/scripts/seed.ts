@@ -1,5 +1,5 @@
 import { createDatabase, initializeSchema } from '../db/schema.js'
-import { Pool } from 'pg'
+import type { Database as SqliteDatabase } from 'better-sqlite3'
 
 const POKEAPI_BASE = 'https://pokeapi.co/api/v2'
 
@@ -113,24 +113,24 @@ interface PokeAPIPokedex {
   }>
 }
 
-async function seedTypes(pool: Pool) {
+async function seedTypes(db: SqliteDatabase) {
   console.log('Seeding types...')
   const response = await fetchWithRetry(`${POKEAPI_BASE}/type?limit=100`)
   const data = (await response.json()) as PokeAPIListResponse
 
   const typeNames = data.results.map((t: PokeAPIType) => t.name)
 
+  const insertType = db.prepare(
+    'INSERT INTO types (name) VALUES (?) ON CONFLICT (name) DO NOTHING'
+  )
   for (const typeName of typeNames) {
-    await pool.query(
-      'INSERT INTO types (name) VALUES ($1) ON CONFLICT (name) DO NOTHING',
-      [typeName]
-    )
+    insertType.run(typeName)
   }
 
   console.log(`Seeded ${typeNames.length} types`)
 }
 
-async function seedPokemon(pool: Pool, limit?: number) {
+async function seedPokemon(db: SqliteDatabase, limit?: number) {
   console.log('Seeding Pokemon...')
 
   const pageSize = 300
@@ -185,18 +185,13 @@ async function seedPokemon(pool: Pool, limit?: number) {
           speciesData.flavor_text_entries.find(e => e.language.name === 'en')
             ?.flavor_text || null
 
-        // Use a transaction for inserting Pokemon and related data
-        const client = await pool.connect()
-        try {
-          await client.query('BEGIN')
-
-          // Insert Pokemon
-          await client.query(
-            `INSERT INTO pokemon (
+        // Insert Pokemon and its related rows atomically
+        const insertPokemon = db.prepare(
+          `INSERT INTO pokemon (
               id, name, pokedex_number, height, weight, base_experience,
               sprite_front_default, sprite_front_shiny, sprite_official_artwork,
               is_legendary, is_mythical, color, habitat, flavor_text
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (id) DO UPDATE SET
               name = EXCLUDED.name,
               pokedex_number = EXCLUDED.pokedex_number,
@@ -210,8 +205,33 @@ async function seedPokemon(pool: Pool, limit?: number) {
               is_mythical = EXCLUDED.is_mythical,
               color = EXCLUDED.color,
               habitat = EXCLUDED.habitat,
-              flavor_text = EXCLUDED.flavor_text`,
-            [
+              flavor_text = EXCLUDED.flavor_text`
+        )
+        const insertPokemonType = db.prepare(
+          `INSERT INTO pokemon_types (pokemon_id, type_id, slot)
+               VALUES (?, (SELECT id FROM types WHERE name = ?), ?)
+               ON CONFLICT (pokemon_id, type_id) DO NOTHING`
+        )
+        const insertPokemonStat = db.prepare(
+          `INSERT INTO pokemon_stats (pokemon_id, stat_name, base_stat, effort, short_name)
+               VALUES (?, ?, ?, ?, ?)
+               ON CONFLICT (pokemon_id, stat_name) DO UPDATE SET
+                 base_stat = EXCLUDED.base_stat,
+                 effort = EXCLUDED.effort,
+                 short_name = EXCLUDED.short_name`
+        )
+
+        const statShortNames: Record<string, string> = {
+          'hp': 'hp',
+          'attack': 'atk',
+          'defense': 'def',
+          'special-attack': 'sp. atk',
+          'special-defense': 'sp. def',
+          'speed': 'speed',
+        }
+
+        const writePokemon = db.transaction(() => {
+          insertPokemon.run([
               pokemonData.id,
               englishName,
               pokedexNumber,
@@ -227,48 +247,24 @@ async function seedPokemon(pool: Pool, limit?: number) {
               speciesData.color?.name || null,
               speciesData.habitat?.name || null,
               flavorText,
-            ]
-          )
+          ])
 
-          // Insert types
           for (const typeEntry of pokemonData.types) {
-            await client.query(
-              `INSERT INTO pokemon_types (pokemon_id, type_id, slot)
-               VALUES ($1, (SELECT id FROM types WHERE name = $2), $3)
-               ON CONFLICT (pokemon_id, type_id) DO NOTHING`,
-              [pokemonData.id, typeEntry.type.name, typeEntry.slot]
-            )
+            insertPokemonType.run(pokemonData.id, typeEntry.type.name, typeEntry.slot)
           }
 
-          // Insert stats
-          const statShortNames: Record<string, string> = {
-            'hp': 'hp',
-            'attack': 'atk',
-            'defense': 'def',
-            'special-attack': 'sp. atk',
-            'special-defense': 'sp. def',
-            'speed': 'speed',
-          }
           for (const stat of pokemonData.stats) {
             const shortName = statShortNames[stat.stat.name] || stat.stat.name
-            await client.query(
-              `INSERT INTO pokemon_stats (pokemon_id, stat_name, base_stat, effort, short_name)
-               VALUES ($1, $2, $3, $4, $5)
-               ON CONFLICT (pokemon_id, stat_name) DO UPDATE SET
-                 base_stat = EXCLUDED.base_stat,
-                 effort = EXCLUDED.effort,
-                 short_name = EXCLUDED.short_name`,
-              [pokemonData.id, stat.stat.name, stat.base_stat, stat.effort, shortName]
+            insertPokemonStat.run(
+              pokemonData.id,
+              stat.stat.name,
+              stat.base_stat,
+              stat.effort,
+              shortName
             )
           }
-
-          await client.query('COMMIT')
-        } catch (error) {
-          await client.query('ROLLBACK')
-          throw error
-        } finally {
-          client.release()
-        }
+        })
+        writePokemon()
 
         processed++
 
@@ -291,8 +287,37 @@ async function seedPokemon(pool: Pool, limit?: number) {
   console.log(`Seeded ${processed} Pokemon`)
 }
 
-async function seedMoves(pool: Pool, limit?: number) {
+async function seedMoves(db: SqliteDatabase, limit?: number) {
   console.log('Seeding moves...')
+
+  const insertMove = db.prepare(
+    `INSERT INTO moves (
+              id, name, accuracy, effect_chance, pp, priority, power,
+              damage_class, effect_text, short_effect_text
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (id) DO UPDATE SET
+              name = EXCLUDED.name,
+              accuracy = EXCLUDED.accuracy,
+              effect_chance = EXCLUDED.effect_chance,
+              pp = EXCLUDED.pp,
+              priority = EXCLUDED.priority,
+              power = EXCLUDED.power,
+              damage_class = EXCLUDED.damage_class,
+              effect_text = EXCLUDED.effect_text,
+              short_effect_text = EXCLUDED.short_effect_text`
+  )
+  const findType = db.prepare('SELECT id FROM types WHERE name = ?')
+  const insertMoveType = db.prepare(
+    `INSERT INTO move_types (move_id, type_id)
+               VALUES (?, (SELECT id FROM types WHERE name = ?))
+               ON CONFLICT (move_id, type_id) DO NOTHING`
+  )
+  const findPokemon = db.prepare('SELECT id FROM pokemon WHERE id = ?')
+  const insertPokemonMove = db.prepare(
+    `INSERT INTO pokemon_moves (pokemon_id, move_id)
+                   VALUES (?, ?)
+                   ON CONFLICT (pokemon_id, move_id) DO NOTHING`
+  )
 
   let offset = 0
   const pageSize = 100
@@ -319,28 +344,8 @@ async function seedMoves(pool: Pool, limit?: number) {
           e => e.language.name === 'en'
         )
 
-        // Use a transaction for inserting move and related data
-        const client = await pool.connect()
-        try {
-          await client.query('BEGIN')
-
-          // Insert move
-          await client.query(
-            `INSERT INTO moves (
-              id, name, accuracy, effect_chance, pp, priority, power,
-              damage_class, effect_text, short_effect_text
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            ON CONFLICT (id) DO UPDATE SET
-              name = EXCLUDED.name,
-              accuracy = EXCLUDED.accuracy,
-              effect_chance = EXCLUDED.effect_chance,
-              pp = EXCLUDED.pp,
-              priority = EXCLUDED.priority,
-              power = EXCLUDED.power,
-              damage_class = EXCLUDED.damage_class,
-              effect_text = EXCLUDED.effect_text,
-              short_effect_text = EXCLUDED.short_effect_text`,
-            [
+        const writeMove = db.transaction(() => {
+          insertMove.run([
               moveData.id,
               moveData.name,
               moveData.accuracy,
@@ -351,21 +356,11 @@ async function seedMoves(pool: Pool, limit?: number) {
               moveData.damage_class.name,
               effectEntry?.effect || null,
               effectEntry?.short_effect || null,
-            ]
-          )
+          ])
 
           // Insert move type (only if type exists)
-          const typeCheck = await client.query(
-            'SELECT id FROM types WHERE name = $1',
-            [moveData.type.name]
-          )
-          if (typeCheck.rows.length > 0) {
-            await client.query(
-              `INSERT INTO move_types (move_id, type_id)
-               VALUES ($1, (SELECT id FROM types WHERE name = $2))
-               ON CONFLICT (move_id, type_id) DO NOTHING`,
-              [moveData.id, moveData.type.name]
-            )
+          if (findType.get(moveData.type.name)) {
+            insertMoveType.run(moveData.id, moveData.type.name)
           } else {
             console.warn(
               `Type ${moveData.type.name} not found for move ${moveData.name}`
@@ -378,31 +373,13 @@ async function seedMoves(pool: Pool, limit?: number) {
             const pokemonId = parseInt(
               pokemon.url.split('/').filter(Boolean).pop() || '0'
             )
-            if (pokemonId) {
-              // Check if Pokemon exists before inserting relationship
-              const pokemonCheck = await client.query(
-                'SELECT id FROM pokemon WHERE id = $1',
-                [pokemonId]
-              )
-              if (pokemonCheck.rows.length > 0) {
-                await client.query(
-                  `INSERT INTO pokemon_moves (pokemon_id, move_id)
-                   VALUES ($1, $2)
-                   ON CONFLICT (pokemon_id, move_id) DO NOTHING`,
-                  [pokemonId, moveData.id]
-                )
-              }
-              // Silently skip if Pokemon doesn't exist yet
+            // Silently skip if the Pokemon isn't in the database yet
+            if (pokemonId && findPokemon.get(pokemonId)) {
+              insertPokemonMove.run(pokemonId, moveData.id)
             }
           }
-
-          await client.query('COMMIT')
-        } catch (error) {
-          await client.query('ROLLBACK')
-          throw error
-        } finally {
-          client.release()
-        }
+        })
+        writeMove()
 
         totalProcessed++
 
@@ -429,19 +406,19 @@ async function seedMoves(pool: Pool, limit?: number) {
 }
 
 async function main() {
-  const pool = createDatabase()
+  const db = createDatabase()
 
   try {
     console.log('Starting database seed...')
 
     // Initialize schema first
     console.log('Initializing database schema...')
-    await initializeSchema(pool)
+    initializeSchema(db)
     console.log('Database schema initialized')
 
-    await seedTypes(pool)
-    await seedPokemon(pool) // Seed all Pokemon (can add limit if needed)
-    await seedMoves(pool) // Seed all moves (can add limit if needed)
+    await seedTypes(db)
+    await seedPokemon(db, seedLimit()) // all Pokemon unless POKEDEX_SEED_LIMIT is set
+    await seedMoves(db, seedLimit()) // all moves unless POKEDEX_SEED_LIMIT is set
 
     console.log('Database seed completed successfully!')
 
@@ -449,7 +426,7 @@ async function main() {
     console.log('\nCalculating dominant colors from images...')
     try {
       const { calculateDominantColors } = await import('./calculate-dominant-colors.js')
-      await calculateDominantColors(pool)
+      await calculateDominantColors(db)
       console.log('Dominant colors calculated successfully!')
     } catch (error) {
       console.warn('Warning: Could not calculate dominant colors:', (error as Error).message)
@@ -459,8 +436,22 @@ async function main() {
     console.error('Error seeding database:', error)
     process.exit(1)
   } finally {
-    await pool.end()
+    db.close()
   }
+}
+
+/**
+ * Optional cap for smoke-testing the pipeline without a 30+ minute full run:
+ * POKEDEX_SEED_LIMIT=5 yarn seed
+ */
+function seedLimit(): number | undefined {
+  const raw = process.env.POKEDEX_SEED_LIMIT?.trim()
+  if (!raw) return undefined
+  const n = Number(raw)
+  if (!Number.isInteger(n) || n <= 0) {
+    throw new Error(`POKEDEX_SEED_LIMIT must be a positive integer, got "${raw}"`)
+  }
+  return n
 }
 
 main()

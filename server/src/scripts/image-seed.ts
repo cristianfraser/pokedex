@@ -1,5 +1,5 @@
 import { createDatabase } from '../db/schema.js'
-import { Pool } from 'pg'
+import type { Database as SqliteDatabase } from 'better-sqlite3'
 import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import { dirname, join, extname } from 'path'
@@ -100,11 +100,11 @@ interface PokemonRow {
   sprite_official_artwork: string | null
 }
 
-async function seedMissingImages(pool: Pool) {
+async function seedMissingImages(db: SqliteDatabase) {
   console.log('Finding Pokemon with missing images...')
 
   // Find Pokemon that still have external URLs (not starting with /pokemon/)
-  const result = await pool.query<PokemonRow>(`
+  const pokemonToUpdate = db.prepare(`
     SELECT id, name, sprite_front_default, sprite_front_shiny, sprite_official_artwork
     FROM pokemon
     WHERE (sprite_front_default IS NOT NULL 
@@ -114,9 +114,8 @@ async function seedMissingImages(pool: Pool) {
        OR (sprite_official_artwork IS NOT NULL 
            AND sprite_official_artwork NOT LIKE '/pokemon/%')
     ORDER BY id
-  `)
+  `).all() as PokemonRow[]
 
-  const pokemonToUpdate = result.rows
   console.log(`Found ${pokemonToUpdate.length} Pokemon with missing images`)
 
   if (pokemonToUpdate.length === 0) {
@@ -149,27 +148,14 @@ async function seedMissingImages(pool: Pool) {
       ) || pokemon.sprite_official_artwork
 
       // Update database with local paths
-      const client = await pool.connect()
-      try {
-        await client.query('BEGIN')
-
-        await client.query(
-          `UPDATE pokemon 
-           SET sprite_front_default = $1,
-               sprite_front_shiny = $2,
-               sprite_official_artwork = $3
-           WHERE id = $4`,
-          [frontDefaultPath, frontShinyPath, officialArtworkPath, pokemon.id]
-        )
-
-        await client.query('COMMIT')
-        updated++
-      } catch (error) {
-        await client.query('ROLLBACK')
-        throw error
-      } finally {
-        client.release()
-      }
+      db.prepare(
+        `UPDATE pokemon 
+           SET sprite_front_default = ?,
+               sprite_front_shiny = ?,
+               sprite_official_artwork = ?
+           WHERE id = ?`
+      ).run(frontDefaultPath, frontShinyPath, officialArtworkPath, pokemon.id)
+      updated++
 
       processed++
 
@@ -189,17 +175,17 @@ async function seedMissingImages(pool: Pool) {
 }
 
 async function main() {
-  const pool = createDatabase()
+  const db = createDatabase()
 
   try {
     console.log('Starting image seed...')
-    await seedMissingImages(pool)
+    await seedMissingImages(db)
     console.log('Image seed completed successfully!')
   } catch (error) {
     console.error('Error seeding images:', error)
     process.exit(1)
   } finally {
-    await pool.end()
+    db.close()
   }
 }
 

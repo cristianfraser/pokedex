@@ -11,24 +11,25 @@
     "seed": "tsx src/scripts/seed.ts",
     "image-seed": "tsx src/scripts/image-seed.ts",
     "db:migrate": "tsx src/db/migrate.ts",
-    "migrate:stat-short-names": "tsx src/db/migrations/add-stat-short-names.ts",
-    "migrate:dominant-color": "tsx src/db/migrations/add-dominant-color.ts",
     "calculate-colors": "tsx src/scripts/calculate-dominant-colors.ts",
-    "verify-seed": "tsx src/scripts/verify-seed.ts"
+    "verify-seed": "tsx src/scripts/verify-seed.ts",
+    "db:import-postgres": "tsx src/scripts/import-from-postgres.ts"
   },
   "dependencies": {
+    "better-sqlite3": "^11.7.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "get-pixels": "^3.3.3",
-    "pg": "^8.11.3",
     "sharp": "^0.34.5"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/get-pixels": "^3",
     "@types/node": "^20.10.6",
     "@types/pg": "^8.10.9",
+    "pg": "^8.11.3",
     "tsx": "^4.7.0",
     "typescript": "^5.2.2"
   }

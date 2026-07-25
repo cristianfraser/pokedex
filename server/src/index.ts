@@ -2,8 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import pokemonRoutes from './routes/pokemon.js'
 import movesRoutes from './routes/moves.js'
-import { initializeSchema, createDatabase } from './db/schema.js'
+import { databasePath } from './db/schema.js'
 import path from 'path'
+import { existsSync } from 'fs'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -26,15 +27,16 @@ app.use(
 )
 app.use(express.json())
 
-// Initialize database if it doesn't exist
-const pool = createDatabase()
-initializeSchema(pool)
-  .then(() => {
-    console.log('Database initialized')
-  })
-  .catch(error => {
-    console.error('Error initializing database:', error)
-  })
+// The database is a committed, read-only SQLite snapshot shipped with the app — there is
+// nothing to create or migrate at boot. Routes open it themselves (read-only); fail fast
+// here if the file is missing rather than serving empty results.
+if (!existsSync(databasePath())) {
+  console.error(
+    `Database not found at ${databasePath()}. ` +
+      `Run "yarn db:import-postgres" or "yarn seed" to build it.`
+  )
+  process.exit(1)
+}
 
 // Routes
 app.use('/api/pokemon', pokemonRoutes)
@@ -46,5 +48,5 @@ app.get('/health', (req, res) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`)
+  console.log(`Server running on http://localhost:${PORT} (db: ${databasePath()})`)
 })

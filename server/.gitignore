@@ -1,6 +1,9 @@
 node_modules/
 dist/
-data/
+# The Pokémon dataset is a read-only snapshot the app ships with, so it IS committed;
+# everything else under data/ (scratch imports, WAL sidecars) stays out.
+data/*
+!data/pokedex.db
 *.log
 .env
 

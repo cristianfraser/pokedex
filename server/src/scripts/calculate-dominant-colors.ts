@@ -2,7 +2,7 @@ import sharp from 'sharp'
 import { readdirSync, existsSync } from 'fs'
 import { join } from 'path'
 import { createDatabase } from '../db/schema.js'
-import { Pool } from 'pg'
+import type { Database as SqliteDatabase } from 'better-sqlite3'
 
 async function getDominantColorAdvanced(imagePath: string): Promise<string> {
   try {
@@ -83,7 +83,7 @@ async function getDominantColorAdvanced(imagePath: string): Promise<string> {
   }
 }
 
-export async function calculateDominantColors(pool: Pool) {
+export async function calculateDominantColors(db: SqliteDatabase) {
   // Path to the pokemon images directory
   const imageDir = join(process.cwd(), '..', 'frontend', 'public', 'pokemon')
 
@@ -100,7 +100,8 @@ export async function calculateDominantColors(pool: Pool) {
 
   console.log(`Found ${files.length} front-default images`)
 
-  const client = await pool.connect()
+  const findPokemon = db.prepare('SELECT id FROM pokemon WHERE id = ?')
+  const setDominantColor = db.prepare('UPDATE pokemon SET dominant_color = ? WHERE id = ?')
 
   try {
     let processed = 0
@@ -121,12 +122,7 @@ export async function calculateDominantColors(pool: Pool) {
       const pokemonId = parseInt(match[1], 10)
 
       // Check if pokemon exists in database
-      const pokemonCheck = await client.query(
-        'SELECT id FROM pokemon WHERE id = $1',
-        [pokemonId]
-      )
-
-      if (pokemonCheck.rows.length === 0) {
+      if (!findPokemon.get(pokemonId)) {
         console.warn(`Pokemon with ID ${pokemonId} not found in database, skipping ${file}`)
         skipped++
         continue
@@ -136,10 +132,7 @@ export async function calculateDominantColors(pool: Pool) {
       const color = await getDominantColorAdvanced(imagePath)
 
       // Update database
-      await client.query(
-        'UPDATE pokemon SET dominant_color = $1 WHERE id = $2',
-        [color, pokemonId]
-      )
+      setDominantColor.run(color, pokemonId)
 
       processed++
       updated++
@@ -156,23 +149,21 @@ export async function calculateDominantColors(pool: Pool) {
   } catch (error) {
     console.error('Error calculating dominant colors:', error)
     throw error
-  } finally {
-    client.release()
   }
 }
 
 async function main() {
-  const pool = createDatabase()
+  const db = createDatabase()
 
   try {
     console.log('Starting dominant color calculation...')
-    await calculateDominantColors(pool)
+    await calculateDominantColors(db)
     console.log('Dominant color calculation completed successfully!')
   } catch (error) {
     console.error('Error calculating dominant colors:', error)
     process.exit(1)
   } finally {
-    await pool.end()
+    db.close()
   }
 }
 
