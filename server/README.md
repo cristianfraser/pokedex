@@ -6,17 +6,17 @@ Node.js backend server for the Pokedex application.
 
 1. Install dependencies:
 ```bash
-npm install
+corepack yarn install
 ```
 
 2. Initialize the database:
 ```bash
-npm run db:migrate
+yarn db:migrate
 ```
 
 3. Seed the database with data from PokeAPI:
 ```bash
-npm run seed
+yarn seed
 ```
 
 Note: The seed script will fetch all Pokemon and moves from PokeAPI. This may take a while (30+ minutes) depending on your connection speed. The script includes rate limiting to be respectful to PokeAPI.
@@ -25,7 +25,7 @@ Note: The seed script will fetch all Pokemon and moves from PokeAPI. This may ta
 
 Run the development server:
 ```bash
-npm run dev
+yarn dev
 ```
 
 The server will run on `http://localhost:3001`

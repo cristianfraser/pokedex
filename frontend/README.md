@@ -21,7 +21,7 @@ A modern React application built with TypeScript, Vite, and Tailwind CSS to expl
 - **Styling**: Tailwind CSS with PostCSS and autoprefixer
 - **Routing**: React Router v6
 - **Code Quality**: ESLint, Prettier
-- **Package Manager**: npm
+- **Package Manager**: Yarn 4 (via Corepack)
 - **Node Version**: 20.10.0 (LTS)
 
 ## 📁 Project Structure
@@ -52,7 +52,7 @@ src/
 ### Prerequisites
 
 - Node.js 20.10.0 or later (use the version specified in `.nvmrc`)
-- npm (comes with Node.js)
+- Corepack (comes with Node.js) — enables the pinned Yarn 4 release
 
 ### Installation
 
@@ -66,25 +66,25 @@ src/
 2. **Install dependencies**:
 
    ```bash
-   npm install
+   corepack yarn install
    ```
 
 3. **Start the development server**:
 
    ```bash
-   npm run dev
+   yarn dev
    ```
 
 4. **Open your browser** and navigate to `http://localhost:5173`
 
 ### Available Scripts
 
-- `npm run dev` - Start the development server
-- `npm run build` - Build the project for production
-- `npm run preview` - Preview the production build
-- `npm run lint` - Run ESLint to check for code issues
-- `npm run lint:fix` - Fix ESLint issues automatically
-- `npm run format` - Format code with Prettier
+- `yarn dev` - Start the development server
+- `yarn build` - Build the project for production
+- `yarn preview` - Preview the production build
+- `yarn lint` - Run ESLint to check for code issues
+- `yarn lint:fix` - Fix ESLint issues automatically
+- `yarn format` - Format code with Prettier
 
 ## 🎨 Styling
 
@@ -174,7 +174,7 @@ The app uses React Router v6 with the following routes:
 ## 📦 Building for Production
 
 ```bash
-npm run build
+yarn build
 ```
 
 The built files will be in the `dist` directory, ready for deployment.
@@ -184,7 +184,7 @@ The built files will be in the `dist` directory, ready for deployment.
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Run linting and formatting: `npm run lint:fix && npm run format`
+4. Run linting and formatting: `yarn lint:fix && yarn format`
 5. Commit your changes
 6. Push to your fork
 7. Create a pull request
